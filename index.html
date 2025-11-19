@@ -802,9 +802,20 @@
   function openMvp() {
   window.open('/mvp-demo/lvs_demo_full.html', '_blank');
 }
+
+  // --- Adaptive iframe height ---
+window.addEventListener('load', adjustMvpHeight);
+window.addEventListener('resize', adjustMvpHeight);
+
+function adjustMvpHeight() {
+  const frame = document.querySelector('.mvp-frame iframe');
+  if (!frame) return;
+  frame.style.height = Math.max(600, window.innerHeight * 0.85) + 'px';
+}
 </script>
 </body>
 </html>
+
 
 
 
