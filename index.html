@@ -794,9 +794,13 @@
 
 <script>
   function scrollToId(id) {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  setTimeout(() => {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 80); // лёгкая задержка — работает мягче
+}
 
   // dummy hook — когда будет реальный URL, просто поменяешь внутри
   function openMvp() {
@@ -815,6 +819,7 @@ function adjustMvpHeight() {
 </script>
 </body>
 </html>
+
 
 
 
