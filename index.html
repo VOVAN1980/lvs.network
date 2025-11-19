@@ -302,23 +302,20 @@
     }
 
     .hero-logo-wrap {
-      width: min(260px, 70vw);
-      aspect-ratio: 1 / 1;
-      border-radius: 999px;
-      padding: 10px;
-      background:
-        radial-gradient(circle at 30% 0, rgba(250,250,250,0.2), transparent 45%),
-        radial-gradient(circle at 70% 110%, rgba(56,189,248,0.5), transparent 60%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+  width: min(400px, 75vw);      /* Увеличили по кругу */
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  padding: 0;                   /* УБРАЛИ пустое пространство сверху/снизу */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    .hero-logo-wrap img {
-      width: 118%;
-      height: auto;
-      display: block;
-    }
+.hero-logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;          /* Чтобы логотип не обрезался */
+}
 
     .hero-logo-caption {
       text-align: center;
@@ -820,6 +817,7 @@ function adjustMvpHeight() {
 </script>
 </body>
 </html>
+
 
 
 
