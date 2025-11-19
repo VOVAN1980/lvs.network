@@ -1,1 +1,337 @@
-.
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>LVS — Full Browser Demo</title>
+<style>
+  :root{
+    --bg:#071428;--card:#061525;--mut:#9fb6d6;--accent:#2b6df6;--ok:#26c281;--bad:#ef4444;
+    --ink:#e6f6ff;--grid:#0c1e34;--edge:#8dc7ff;--edge2:#b2ffcc
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,var(--bg),#02101b);color:var(--ink);padding:10px}
+  h1{font-size:18px;margin:0 0 10px}
+  .wrap{display:flex;gap:10px;flex-wrap:wrap}
+  .card{background:linear-gradient(180deg,var(--card),#051826);border-radius:12px;padding:10px;flex:1 1 340px;min-width:310px;box-shadow:0 6px 18px rgba(0,0,0,.6)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  label{font-size:12px;color:var(--mut)}
+  input,select,button,textarea{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--ink)}
+  button{cursor:pointer}
+  .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);font-weight:700}
+  .mut{color:var(--mut);font-size:12px}
+  .list{max-height:220px;overflow:auto;margin-top:8px}
+  .item{display:flex;justify-content:space-between;gap:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.02);margin-bottom:8px}
+  .log{background:rgba(0,0,0,.2);padding:8px;border-radius:8px;height:160px;overflow:auto;font-family:monospace;font-size:12px;margin-top:8px;white-space:pre-wrap}
+  canvas{width:100%;display:block;border-radius:10px;background:linear-gradient(180deg,#041826,#01121a)}
+  .btnAccent{background:var(--accent);color:white;border:0}
+  .btnOk{background:var(--ok);color:#021;border:0}
+  .btnBad{background:var(--bad);color:white;border:0}
+  footer{margin-top:8px;color:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+  <h1>LVS — Full Browser Demo (VU + TC + Vault + Regenerator)</h1>
+
+  <div class="wrap">
+    <!-- LEFT: Network + controls -->
+    <div class="card" style="flex:1 1 460px">
+      <div class="row">
+        <label>Узлы:</label><input id="nodesCount" type="number" value="12" min="3" style="width:90px"/>
+        <button id="genBtn" class="btnAccent">Сгенерировать</button>
+        <button id="resetBtn" class="btnBad">Сброс</button>
+        <button id="autoBtn">Auto on/off</button>
+        <button id="burstBtn">Burst ×10</button>
+      </div>
+
+      <canvas id="netCanvas" height="260" style="margin-top:8px"></canvas>
+
+      <div class="row" style="justify-content:space-between;margin-top:6px">
+        <div class="mut">Узлы: <span id="nodeCount" class="pill">0</span></div>
+        <div class="mut">Подтв.TX: <span id="confirmedCount" class="pill">0</span></div>
+        <div class="mut">Отказы: <span id="rejectCount" class="pill">0</span></div>
+        <div class="mut">Auto: <span id="autoState" class="pill">off</span></div>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <button id="exportBtn">Экспорт JSON</button>
+        <button id="importBtn">Импорт JSON</button>
+        <input id="fileInput" type="file" accept="application/json" style="display:none">
+        <button id="saveBtn">Сохранить в браузер</button>
+        <button id="loadBtn">Загрузить из браузера</button>
+        <button id="clearStorageBtn" class="btnBad">Очистить браузер</button>
+      </div>
+
+      <div class="mut" style="margin-top:8px">Последние связи</div>
+      <div id="recent" class="log"></div>
+    </div>
+
+    <!-- RIGHT: Transactions + stats + nodes -->
+    <div class="card" style="flex:1 1 420px">
+      <div class="mut">Транзакции</div>
+      <div class="row" style="margin-top:6px">
+        <select id="sender"></select>
+        <select id="receiver"></select>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <input id="amount" type="number" value="50" min="1" style="width:120px"/>
+        <button id="sendBtn" class="btnOk">Отправить</button>
+        <button id="simTrustBtn">Validators +TC</button>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1">
+          <div class="mut">TC / время</div>
+          <canvas id="tcCanvas" height="140"></canvas>
+        </div>
+        <div style="flex:1">
+          <div class="mut">Reject % / время</div>
+          <canvas id="rejCanvas" height="140"></canvas>
+        </div>
+      </div>
+
+      <div class="mut" style="margin-top:8px">Узлы сети</div>
+      <div id="nodesList" class="list"></div>
+
+      <div class="mut" style="margin-top:8px">Журнал</div>
+      <div id="log" class="log"></div>
+    </div>
+  </div>
+
+  <footer>Самодостаточный демо-прототип: VU (ценность), TC (доверие), Vault Guard (несгораемый минимум), Cross-Audit (перекрёстная проверка), авто-симуляция, визуализация, экспорт/импорт, авто-сохранение.</footer>
+
+<script>
+/* ======= Core helpers ======= */
+function uid(){ return Math.random().toString(36).slice(2,10) }
+function now(){ return new Date().toLocaleTimeString() }
+function shuffle(a){ return a.sort(()=>Math.random()-0.5) }
+function clamp(x,a,b){ return Math.max(a, Math.min(b,x)) }
+function esc(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]) }
+
+/* ======= Data models ======= */
+class Node {
+  constructor(name, vu, vault_min, role='user'){
+    this.id = uid(); this.name = name; this.vu = vu; this.vault_min = vault_min; this.tc = 0;
+    this.role = role; this.knownTx = {}; this.pos = {x:0,y:0}
+  }
+  canSend(amount){ return (this.vu - amount) >= this.vault_min }
+  applyTx(tx){
+    if(tx.receiver===this.id) this.vu += tx.amount
+    if(tx.sender===this.id){ if(!this.canSend(tx.amount)) return false; this.vu -= tx.amount }
+    this.knownTx[tx.id]=tx; return true
+  }
+}
+class Transaction { constructor(sender, receiver, amount){ this.id=uid(); this.sender=sender; this.receiver=receiver; this.amount=amount; this.t=Date.now() } }
+
+/* ======= Ledger / Engine ======= */
+class Ledger {
+  constructor(){
+    this.nodes={}; this.confirmed={}; this.txPool={};
+    this.confirmedCount=0; this.rejectCount=0;
+    this.recent=[]; // for visualization
+    this.logEl = document.getElementById('log');
+    this.recentEl = document.getElementById('recent');
+    // canvases
+    this.net = document.getElementById('netCanvas');
+    this.netCtx = this.net.getContext('2d');
+    this.tcCv = document.getElementById('tcCanvas'); this.tcCtx = this.tcCv.getContext('2d');
+    this.rjCv = document.getElementById('rejCanvas'); this.rjCtx = this.rjCv.getContext('2d');
+    // stats time series
+    this.ts = { t:[], avgTC:[], rej:[] };
+    // resize rendering
+    const resize=()=>{ this.renderAll() };
+    window.addEventListener('resize', resize);
+  }
+  register(node){ this.nodes[node.id]=node }
+  _short(s){ return s.slice(0,6) }
+  _sn(id){ return this.nodes[id]?this.nodes[id].name:'??' }
+  _log(s){ this.logEl.innerText = `[${now()}] ${s}\n` + this.logEl.innerText }
+  _tickStats(){
+    const arr = Object.values(this.nodes); const avgTC = arr.length? (arr.reduce((a,b)=>a+b.tc,0)/arr.length):0;
+    const rej = (this.confirmedCount+this.rejectCount)>0 ? (100*this.rejectCount/(this.confirmedCount+this.rejectCount)) : 0;
+    const t = new Date().toLocaleTimeString();
+    this.ts.t.push(t); this.ts.avgTC.push(avgTC); this.ts.rej.push(rej);
+    if(this.ts.t.length>60){ this.ts.t.shift(); this.ts.avgTC.shift(); this.ts.rej.shift(); }
+  }
+  broadcast(tx, origin){
+    const s=this.nodes[tx.sender], r=this.nodes[tx.receiver];
+    if(!s||!r){ this._log('Unknown nodes'); return [false,'unknown'] }
+    if(!s.canSend(tx.amount)){ this._log('VaultGuard prevented transfer'); return [false,'vault'] }
+    // cross-audit
+    const accepted = this.crossAudit(tx, origin);
+    if(accepted){
+      for(const id in this.nodes){ if(!this.nodes[id].applyTx(tx)){ origin.tc=Math.max(0, origin.tc-2); this._log('Apply failed'); return [false,'apply'] } }
+      this.confirmed[tx.id]=tx; this.confirmedCount++; origin.tc += 1;
+      this.recent.unshift({from:tx.sender,to:tx.receiver,amt:tx.amount,t:Date.now()}); if(this.recent.length>32) this.recent.pop();
+      this._log(`✅ ${this._short(tx.id)} ${this._sn(tx.sender)}→${this._sn(tx.receiver)}:${tx.amount}`);
+      this._tickStats(); this.renderAll(); return [true,'ok'];
+    } else {
+      origin.tc = Math.max(0, origin.tc-2); this.rejectCount++;
+      this._log(`❌ rejected ${this._short(tx.id)}`); this._tickStats(); this.renderAll(); return [false,'reject'];
+    }
+  }
+  crossAudit(tx, origin){
+    const vals = Object.values(this.nodes).filter(n=>n.id!==origin.id);
+    if(vals.length===0){ origin.tc += 1; return true }
+    const pick = shuffle(vals).slice(0, Math.min(3, vals.length));
+    const votes = pick.map(v=> Math.random() < (0.65 + Math.min(0.35, v.tc/100)) );
+    const accepted = votes.filter(Boolean).length > Math.floor(votes.length/2);
+    pick.forEach(v=> { accepted ? v.tc+=0.2 : v.tc=Math.max(0, v.tc-0.5) });
+    return accepted;
+  }
+  /* ---- UI Rendering ---- */
+  renderLists(){
+    // nodes list
+    const nl = document.getElementById('nodesList'); nl.innerHTML='';
+    for(const id in this.nodes){
+      const n=this.nodes[id]; const div=document.createElement('div'); div.className='item';
+      div.innerHTML = `<div><b>${esc(n.name)}</b><div class="mut">id:${n.id}</div></div>
+        <div style="text-align:right"><div>VU:<b>${n.vu}</b></div><div class="mut">vault:${n.vault_min} | TC:${n.tc.toFixed(2)} | ${n.role}</div></div>`;
+      nl.appendChild(div);
+    }
+    // selects
+    const selS=document.getElementById('sender'), selR=document.getElementById('receiver');
+    const prevS=selS.value, prevR=selR.value; selS.innerHTML=''; selR.innerHTML='';
+    for(const id in this.nodes){
+      const n=this.nodes[id]; const opt = `<option value="${id}">${esc(n.name)} (VU:${n.vu} | TC:${n.tc.toFixed(1)})</option>`;
+      selS.insertAdjacentHTML('beforeend',opt); selR.insertAdjacentHTML('beforeend',opt);
+    }
+    selS.value = prevS || selS.options[0]?.value; selR.value = prevR || selR.options[1]?.value || selR.options[0]?.value;
+    // counters
+    document.getElementById('nodeCount').innerText = Object.keys(this.nodes).length;
+    document.getElementById('confirmedCount').innerText = this.confirmedCount;
+    document.getElementById('rejectCount').innerText = this.rejectCount;
+  }
+  renderRecent(){
+    this.recentEl.innerText = this.recent.slice(0,14).map(e=>`${this._sn(e.from)}→${this._sn(e.to)}:${e.amt}`).join('\n');
+  }
+  renderNet(){
+    const ctx=this.netCtx, W=this.net.width=this.net.clientWidth, H=this.net.height=this.net.height; // fixed height
+    ctx.clearRect(0,0,W,H);
+    const arr=Object.values(this.nodes), n=arr.length, cx=W/2, cy=H/2, R=Math.max(60, Math.min(cx,cy)-50);
+    arr.forEach((node,i)=>{ const a=(i/n)*Math.PI*2 - Math.PI/2; node.pos.x=cx+Math.cos(a)*R; node.pos.y=cy+Math.sin(a)*R; });
+    // edges
+    this.recent.slice(0,24).forEach((e,i)=>{ const f=this.nodes[e.from], t=this.nodes[e.to]; if(!f||!t) return;
+      const a=1-i/24; ctx.beginPath(); ctx.strokeStyle=`rgba(140,200,255,${a})`; ctx.lineWidth=2; ctx.moveTo(f.pos.x,f.pos.y); ctx.lineTo(t.pos.x,t.pos.y); ctx.stroke();
+    });
+    // nodes
+    arr.forEach(node=>{
+      const r = node.role==='validator'?16:12;
+      ctx.beginPath(); ctx.fillStyle=node.role==='validator'?'rgba(140,230,140,.12)':'rgba(150,200,255,.06)';
+      ctx.strokeStyle=node.role==='validator'?'rgba(80,200,80,.9)':'rgba(70,140,220,.9)'; ctx.lineWidth=1.6;
+      ctx.arc(node.pos.x,node.pos.y,r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#e6f6ff'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+      ctx.fillText(node.name, node.pos.x, node.pos.y+r+12);
+    });
+  }
+  renderChart(ctx, W, H, data, color){
+    ctx.clearRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=1;
+    for(let i=0;i<5;i++){ const y=i*(H/4); ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    if(data.length<2) return;
+    const max = Math.max(...data)*1.1 || 1;
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2;
+    data.forEach((v,ix)=>{ const x = ix*(W/(data.length-1)); const y = H - (v/max)*H; if(ix===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.stroke();
+  }
+  renderStats(){
+    const W1=this.tcCv.width=this.tcCv.clientWidth, H1=this.tcCv.height=this.tcCv.height;
+    const W2=this.rjCv.width=this.rjCv.clientWidth, H2=this.rjCv.height=this.rjCv.height;
+    this.renderChart(this.tcCtx,W1,H1,this.ts.avgTC,'#8dc7ff');
+    this.renderChart(this.rjCtx,W2,H2,this.ts.rej,'#b2ffcc');
+  }
+  renderAll(){
+    this.renderLists(); this.renderRecent(); this.renderNet(); this.renderStats();
+  }
+  /* ---- Persistence ---- */
+  exportState(){
+    return JSON.stringify({
+      nodes:Object.values(this.nodes).map(n=>({id:n.id,name:n.name,vu:n.vu,vault_min:n.vault_min,tc:n.tc,role:n.role})),
+      confirmedCount:this.confirmedCount, rejectCount:this.rejectCount, recent:this.recent, ts:this.ts
+    });
+  }
+  importState(json){
+    const o = JSON.parse(json); this.nodes={};
+    o.nodes.forEach(n=>{ const nd = new Node(n.name,n.vu,n.vault_min,n.role); nd.id=n.id; nd.tc=n.tc; this.register(nd) });
+    this.confirmedCount=o.confirmedCount||0; this.rejectCount=o.rejectCount||0; this.recent=o.recent||[]; this.ts=o.ts||{t:[],avgTC:[],rej:[]};
+    this._log('State imported'); this.renderAll();
+  }
+}
+
+/* ======= App wiring ======= */
+const ledger = new Ledger();
+let auto=false, autoTimer=null;
+
+function seedNetwork(count=12){
+  ledger.nodes={}; ledger.confirmed={}; ledger.txPool={}; ledger.confirmedCount=0; ledger.rejectCount=0; ledger.recent=[]; ledger.ts={t:[],avgTC:[],rej:[]};
+  const roles=['user','user','user','validator','validator']; // чаще пользователи
+  for(let i=0;i<count;i++){
+    const role = roles[Math.floor(Math.random()*roles.length)];
+    const name = role==='validator'?`V${i+1}`:`U${i+1}`;
+    const vu = Math.floor(Math.random()*900)+(role==='validator'?60:20);
+    const vault_min = Math.max(5, Math.floor(vu*0.06));
+    const n = new Node(name,vu,vault_min,role); if(role==='validator') n.tc = Math.random()*7+1;
+    ledger.register(n);
+  }
+  ledger._log(`Сеть создана: ${count} узлов`); ledger._tickStats(); ledger.renderAll();
+}
+
+/* UI events */
+document.getElementById('genBtn').addEventListener('click', ()=> seedNetwork(Math.max(3,Number(document.getElementById('nodesCount').value)||12)));
+document.getElementById('resetBtn').addEventListener('click', ()=>{ if(confirm('Сбросить сеть?')) seedNetwork(12) });
+document.getElementById('sendBtn').addEventListener('click', ()=>{
+  const s=document.getElementById('sender').value, r=document.getElementById('receiver').value, amt=Math.max(1,Number(document.getElementById('amount').value)||0);
+  if(!s||!r) return ledger._log('Выберите узлы'); if(s===r) return ledger._log('Отправитель=получатель');
+  ledger.broadcast(new Transaction(s,r,amt), ledger.nodes[s]);
+});
+document.getElementById('simTrustBtn').addEventListener('click', ()=>{
+  Object.values(ledger.nodes).forEach(n=>{ if(n.role==='validator') n.tc += 5 });
+  ledger._log('Validators получили +5 TC'); ledger._tickStats(); ledger.renderAll();
+});
+document.getElementById('burstBtn').addEventListener('click', ()=> burst(10));
+
+document.getElementById('autoBtn').addEventListener('click', ()=>{
+  auto=!auto; document.getElementById('autoState').innerText=auto?'on':'off'; if(auto) startAuto(); else stopAuto();
+});
+function startAuto(){ stopAuto(); const tick=()=>{ burst(1); autoTimer=setTimeout(tick, 900+Math.random()*1400) }; tick() }
+function stopAuto(){ if(autoTimer) clearTimeout(autoTimer); autoTimer=null }
+
+function burst(n=1){
+  const ids=Object.keys(ledger.nodes); if(ids.length<2) return;
+  for(let i=0;i<n;i++){
+    const s=ids[Math.floor(Math.random()*ids.length)]; let r=s; while(r===s) r=ids[Math.floor(Math.random()*ids.length)];
+    const sender=ledger.nodes[s]; const amt=Math.max(1, Math.floor(Math.random()*Math.min(200, Math.max(10, sender.vu*0.25))));
+    ledger.broadcast(new Transaction(s,r,amt), sender);
+  }
+}
+
+/* Export/Import/Persistence */
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const data = ledger.exportState(); const a=document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data],{type:'application/json'})); a.download='lvs_state.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', (ev)=>{
+  const f=ev.target.files[0]; if(!f) return; const reader=new FileReader();
+  reader.onload=()=>{ try{ ledger.importState(reader.result) }catch(e){ ledger._log('Import failed') } };
+  reader.readAsText(f);
+});
+const LS_KEY='LVS_FULL_STATE_V1';
+document.getElementById('saveBtn').addEventListener('click', ()=>{ localStorage.setItem(LS_KEY, ledger.exportState()); ledger._log('Сохранено в браузере') });
+document.getElementById('loadBtn').addEventListener('click', ()=>{
+  const s=localStorage.getItem(LS_KEY); if(!s) return ledger._log('В браузере нет сохранения'); try{ ledger.importState(s) }catch(e){ ledger._log('Load failed') }
+});
+document.getElementById('clearStorageBtn').addEventListener('click', ()=>{ localStorage.removeItem(LS_KEY); ledger._log('Сохранение очищено') });
+
+/* Boot: попытаться загрузить сохранённое, иначе сгенерировать сеть */
+(function boot(){
+  const saved = localStorage.getItem(LS_KEY);
+  if(saved){ try{ ledger.importState(saved); ledger._log('Загружено из браузера'); }catch(_){ seedNetwork(12) } }
+  else seedNetwork(12);
+  // включим авто по умолчанию
+  auto=true; document.getElementById('autoState').innerText='on'; startAuto();
+})();
+</script>
+</body>
+</html>
