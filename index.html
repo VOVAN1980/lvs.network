@@ -1,250 +1,297 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>LVS – Living Value System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta
-    name="description"
-    content="LVS (Living Value System) – a next-generation value network based on trust, protection and regenerative consensus."
-  />
-  <link rel="stylesheet" href="style.css">
-  <script src="js/main.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LVS Network — Living Value System</title>
+  <meta name="description"
+        content="LVS Network is a post-blockchain value system where value is secured by trust, protection and regeneration — not by blocks, mining or gas fees. Live MVP runs in the browser up to 1200 nodes.">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body id="top">
-<div class="page">
-
-  <!-- HEADER -->
-  <header class="header">
-    <nav class="nav">
-      <div class="nav-left">
-        <div class="nav-logo-circle">
-          <!-- круглое лого -->
-          <img src="img/lvs-logo-circle.png" alt="LVS logo">
+  <!-- Header -->
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a href="#top" class="brand">
+        <img src="img/lvs-logo.png" alt="LVS logo" class="brand-mark">
+        <div class="brand-text">
+          <span class="brand-title">LVS Network</span>
+          <span class="brand-sub">Living Value System</span>
         </div>
-        <div class="nav-titles">
-          <div class="nav-title-main">LVS</div>
-          <div class="nav-title-sub">Living Value System</div>
-        </div>
-      </div>
+      </a>
 
-      <div class="nav-center">
-        <a href="#about" class="nav-link">About</a>
-        <a href="#mvp" class="nav-link">Live MVP</a>
-        <a href="#docs" class="nav-link">Docs</a>
-      </div>
-
-      <div class="nav-right">
-        <button class="btn btn-ghost" data-scroll="#mvp">
-          Live demo
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-toggle" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
         </button>
-        <button class="btn btn-primary" data-scroll="#docs">
-          For investors
-        </button>
-      </div>
-    </nav>
+        <ul class="nav-list">
+          <li><a href="#hero" data-scroll>Overview</a></li>
+          <li><a href="#mvp" data-scroll>Live MVP</a></li>
+          <li><a href="#how" data-scroll>How it works</a></li>
+          <li><a href="#docs" data-scroll>Docs</a></li>
+          <li><a href="#investors" data-scroll>For investors</a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <!-- HERO -->
+  <!-- Hero -->
   <main>
-    <section class="section hero">
-      <div class="hero-text">
-        <div class="hero-kicker">Post-blockchain value network</div>
-        <h1 class="hero-title">Living Value System</h1>
-        <p class="hero-sub">
-          LVS is a new decentralized system where value is secured by
-          <strong>trust, protection and regeneration</strong> – not by blocks,
-          mining or gas fees.
-        </p>
-        <div class="hero-tagline">Value that lives.</div>
-
-        <div class="hero-actions">
-          <button class="btn btn-primary" data-scroll="#mvp">
-            Open live MVP
-          </button>
-          <button class="btn btn-ghost" data-scroll="#about">
-            How LVS works
-          </button>
-        </div>
-
-        <p class="hero-meta">
-          Already implemented: <strong>browser simulation</strong> up to
-          <strong>1200 nodes</strong>, trust dynamics, rejections and
-          self-healing behaviour – even on a phone.
-        </p>
-      </div>
-
-      <aside class="hero-logo-card">
-        <div class="hero-logo-wrap">
-          <!-- большое лого -->
-          <img src="img/lvs-logo-full.png" alt="LVS – Living Value System">
-        </div>
-        <p class="hero-logo-caption">
-          <span>LVS</span> turns <strong>trust</strong> and a protected minimum
-          balance into the core of a new financial layer.
-        </p>
-      </aside>
-    </section>
-
-    <!-- ABOUT -->
-    <section id="about" class="section">
-      <h2 class="section-heading">Why LVS is different</h2>
-      <p class="section-subtitle">
-        LVS replaces heavy blockchain consensus with a light-weight,
-        trust-driven and self-healing architecture. No blocks, no mining –
-        but the network still remembers, protects and recovers.
-      </p>
-
-      <div class="features-grid">
-        <article class="feature-card">
-          <div class="feature-label">VU – Value Units</div>
-          <h3 class="feature-title">Pure value without gas and blocks</h3>
-          <p class="feature-text">
-            VU are the basic units of value in LVS. They move instantly between
-            nodes without paying gas fees or waiting for the next block.
+    <section id="hero" class="section hero">
+      <div class="shell hero-inner">
+        <div class="hero-left">
+          <p class="eyebrow">Post-blockchain value network</p>
+          <h1>Living Value System</h1>
+          <p class="hero-lead">
+            LVS is a new decentralized system where value is secured by
+            <span class="accent">trust, protection and regeneration</span> —
+            not by blocks, mining or gas fees.
           </p>
-        </article>
-
-        <article class="feature-card">
-          <div class="feature-label">TC – Trust Credits</div>
-          <h3 class="feature-title">Trust becomes a measurable asset</h3>
-          <p class="feature-text">
-            Every useful action in the network increases Trust Credits.
-            TC amplify the impact of honest nodes and limit the influence of
-            malicious ones.
+          <p class="hero-note">
+            Already running: browser simulation up to
+            <strong>1200 nodes</strong> with trust dynamics, rejections and
+            self-healing behaviour — even on a phone.
           </p>
-        </article>
 
-        <article class="feature-card">
-          <div class="feature-label">Vault Guard</div>
-          <h3 class="feature-title">A protected minimum that never burns</h3>
-          <p class="feature-text">
-            Vault Guard makes it impossible to lose everything in a single
-            mistake. A protected minimum of VU is always reserved for recovery
-            and future operations.
-          </p>
-        </article>
-
-        <article class="feature-card">
-          <div class="feature-label">Regenerative consensus</div>
-          <h3 class="feature-title">The network heals itself</h3>
-          <p class="feature-text">
-            Cross-Audit and regenerative consensus allow LVS to detect
-            inconsistent behaviour, reject bad transactions and restore
-            coherence of the network without hard forks.
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <!-- MVP -->
-    <section id="mvp" class="section">
-      <h2 class="section-heading">Live MVP</h2>
-      <p class="section-subtitle">
-        Browser-based simulation of LVS: from a small network up to 1200 nodes,
-        with real-time transfers, trust dynamics and rejection statistics.
-      </p>
-
-      <div class="mvp-layout">
-        <div class="mvp-panel">
-          <h3 class="mvp-title">What the demo shows</h3>
-          <p>
-            The demo runs entirely in the browser: users, validators, value
-            transfers and trust evolution over time.
-          </p>
-          <div class="badge-row">
-            <span class="badge badge-gold">Up to 1200 nodes</span>
-            <span class="badge badge-teal">Runs in browser</span>
-            <span class="badge badge-dark">Trust &amp; rejections</span>
+          <div class="hero-actions">
+            <!-- Путь к демо можешь поменять внутри main.js -->
+            <button class="btn btn-primary" id="btn-open-mvp">
+              Open live MVP
+            </button>
+            <a href="#how" class="btn btn-ghost" data-scroll>
+              How LVS works
+            </a>
           </div>
-          <p>
-            You can generate a network, send VU between nodes, reward validators
-            and watch how TC grows or collapses based on behaviour.
-          </p>
-          <p class="mvp-meta">
-            Current MVP is a <strong>live prototype</strong>, not the final
-            protocol implementation.
-          </p>
 
-          <div class="mvp-buttons">
-            <button class="btn btn-primary" id="openMvpBtn">
+          <div class="hero-tags">
+            <span>Trust-based consensus</span>
+            <span>Vault Guard</span>
+            <span>Regenerative network</span>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="logo-orb">
+            <img src="img/lvs-logo-full.png" alt="LVS — Living Value System">
+          </div>
+          <p class="hero-caption">
+            Value that lives — a network that heals itself instead of forking.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live MVP -->
+    <section id="mvp" class="section section-alt">
+      <div class="shell">
+        <header class="section-head">
+          <h2>Live MVP</h2>
+          <p>
+            Fully client-side browser simulation of LVS: from a small local
+            network to <strong>1200 nodes</strong>, with real-time transfers,
+            trust evolution and rejection statistics.
+          </p>
+        </header>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>What the demo shows</h3>
+            <ul class="list-bullets">
+              <li>Users and validators sending VU (Value Units) between nodes.</li>
+              <li>Trust Credits (TC) growing or collapsing based on behaviour.</li>
+              <li>Rejected transactions and how they propagate across the network.</li>
+              <li>Self-healing network behaviour under stress.</li>
+            </ul>
+            <p class="small">
+              The MVP is a <strong>live prototype</strong> of the economic
+              and consensus layer — not the final protocol implementation.
+            </p>
+            <button class="btn btn-primary btn-wide" id="btn-open-mvp-2">
               Launch full-screen demo
             </button>
-            <button class="btn btn-ghost" data-scroll="#docs">
-              View docs
-            </button>
           </div>
-        </div>
 
-        <div class="mvp-frame">
-          <!-- Если захочешь – просто раскомментируй iframe и положи файл в /mvp-demo/ -->
-          <!--
-          <iframe
-            src="mvp-demo/lvs_demo_full.html"
-            title="LVS Network – browser demo"
-          ></iframe>
-          -->
-          <div class="mvp-placeholder">
-            <strong>MVP preview</strong><br>
-            Replace this placeholder with an
-            <code>&lt;iframe src="mvp-demo/lvs_demo_full.html"&gt;</code>
-            once the full demo file is uploaded.
+          <div class="card card-mvp-stats">
+            <h3>Demo capabilities</h3>
+            <dl class="stats">
+              <div>
+                <dt>Nodes per run</dt>
+                <dd>10 – 1200</dd>
+              </div>
+              <div>
+                <dt>Environment</dt>
+                <dd>Pure browser, no backend</dd>
+              </div>
+              <div>
+                <dt>Network view</dt>
+                <dd>Interactive graph with live edges</dd>
+              </div>
+              <div>
+                <dt>Trust analytics</dt>
+                <dd>TC growth, rejections and vault protection</dd>
+              </div>
+            </dl>
+            <p class="small">
+              The same logic can later be migrated into a native LVS node
+              implementation or integrated with third-party products.
+            </p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- DOCS -->
-    <section id="docs" class="section">
-      <h2 class="section-heading">Docs &amp; investor package</h2>
-      <p class="section-subtitle">
-        LVS already has technical and business materials: whitepaper,
-        pitch deck and one-pager.
-      </p>
-
-      <div class="features-grid">
-        <article class="feature-card">
-          <div class="feature-label">Whitepaper</div>
-          <h3 class="feature-title">Full technical description</h3>
-          <p class="feature-text">
-            Architecture, economics, security, consensus and long-term vision
-            of a post-blockchain value system.
+    <!-- How it works -->
+    <section id="how" class="section">
+      <div class="shell">
+        <header class="section-head">
+          <h2>How LVS works</h2>
+          <p>
+            Instead of mining blocks, LVS turns <strong>trust</strong> and
+            <strong>useful actions</strong> into measurable assets and uses
+            them to secure the network.
           </p>
-        </article>
+        </header>
 
-        <article class="feature-card">
-          <div class="feature-label">Investors</div>
-          <h3 class="feature-title">Pitch Deck &amp; One-Pager</h3>
-          <p class="feature-text">
-            Problem, solution, market, competition and why LVS can become a new
-            financial layer above existing infrastructure.
-          </p>
-        </article>
+        <div class="grid-3">
+          <div class="card">
+            <h3>Trust Credits (TC)</h3>
+            <p>
+              Every confirmed useful action in the network grants Trust Credits
+              to honest nodes. TC amplify their impact and limit malicious ones.
+            </p>
+            <p class="small">
+              TC are not a token — they are an internal reputation layer that
+              backs value transfers.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Vault Guard</h3>
+            <p>
+              A protected minimum of VU that never burns. Even in extreme cases
+              a node cannot lose everything in a single mistake.
+            </p>
+            <p class="small">
+              Vault Guard always reserves a recovery buffer for future
+              operations.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Regenerative consensus</h3>
+            <p>
+              Cross-Audit between validators plus regenerative rules allow the
+              network to detect inconsistency, reject bad transactions and
+              restore coherence without hard forks.
+            </p>
+            <p class="small">
+              Bad behaviour costs trust; honest work rebuilds it over time.
+            </p>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <p class="docs-hint">
-        Later you can link real PDFs here, for example:
-        <code>&lt;a href="docs/LVS_Whitepaper_v1.pdf" target="_blank"&gt;Open Whitepaper&lt;/a&gt;</code>
-      </p>
+    <!-- Docs & investor package -->
+    <section id="docs" class="section section-alt">
+      <div class="shell">
+        <header class="section-head">
+          <h2>Docs & investor package</h2>
+          <p>
+            LVS already has technical and business materials. PDFs can be
+            updated as the protocol evolves.
+          </p>
+        </header>
+
+        <div class="grid-3">
+          <article class="card">
+            <h3>Whitepaper</h3>
+            <p>
+              Full technical description of the architecture, economics,
+              security and consensus model of a post-blockchain value system.
+            </p>
+            <!-- Обновишь ссылки на реальные файлы, когда зальёшь PDFs -->
+            <a href="docs/LVS_whitepaper_en.pdf" class="link" target="_blank">
+              Open whitepaper (PDF)
+            </a>
+          </article>
+
+          <article class="card">
+            <h3>Full technical description</h3>
+            <p>
+              Detailed explanation of VU, TC, Vault Guard, validators,
+              cross-audit, rejection rules and long-term system design.
+            </p>
+            <a href="docs/LVS_technical_en.pdf" class="link" target="_blank">
+              Open technical doc (PDF)
+            </a>
+          </article>
+
+          <article class="card">
+            <h3>Pitch Deck & One-Pager</h3>
+            <p>
+              Problem, solution, market, competition and why LVS can become a
+              new financial layer above existing infrastructure.
+            </p>
+            <a href="docs/LVS_pitchdeck_en.pdf" class="link" target="_blank">
+              Open pitch deck (PDF)
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Investors focus -->
+    <section id="investors" class="section">
+      <div class="shell">
+        <header class="section-head">
+          <h2>For investors & partners</h2>
+          <p>
+            LVS is designed as a long-term, neutral value layer that can power
+            applications, financial products and real-world infrastructure.
+          </p>
+        </header>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Why now</h3>
+            <ul class="list-bullets">
+              <li>People want stability, not speculative volatility.</li>
+              <li>
+                Existing chains are expensive, slow or politically fragile.
+              </li>
+              <li>
+                LVS focuses on protected value and measurable trust instead
+                of raw hash power.
+              </li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>What is ready today</h3>
+            <ul class="list-bullets">
+              <li>Concept, economics and protocol design.</li>
+              <li>Working MVP in the browser up to 1200 nodes.</li>
+              <li>Brand, visuals and investor-ready documentation.</li>
+            </ul>
+            <p class="small">
+              Next steps: native node implementation, test networks and
+              integration pilots with real-world partners.
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <div>
-        © 2025 LVS – Living Value System. All rights reserved.<br>
-        Built by the founder with the assistance of AI tools.
-      </div>
-      <div class="footer-links">
-        <a href="#top" data-scroll="#top">Back to top</a>
-        <a href="#docs" data-scroll="#docs">Docs</a>
-        <a href="#mvp" data-scroll="#mvp">MVP</a>
-      </div>
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <p>© 2025 LVS — Living Value System. All rights reserved.</p>
+      <a href="#top" class="footer-link" data-scroll>Back to top</a>
     </div>
   </footer>
 
-</div>
+  <script src="js/main.js" defer></script>
 </body>
 </html>
-
