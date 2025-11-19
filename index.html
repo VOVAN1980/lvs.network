@@ -1,297 +1,819 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LVS Network — Living Value System</title>
-  <meta name="description"
-        content="LVS Network is a post-blockchain value system where value is secured by trust, protection and regeneration — not by blocks, mining or gas fees. Live MVP runs in the browser up to 1200 nodes.">
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body id="top">
-  <!-- Header -->
-  <header class="site-header">
-    <div class="shell header-inner">
-      <a href="#top" class="brand">
-        <img src="img/lvs-logo.png" alt="LVS logo" class="brand-mark">
-        <div class="brand-text">
-          <span class="brand-title">LVS Network</span>
-          <span class="brand-sub">Living Value System</span>
-        </div>
-      </a>
+  <meta charset="utf-8" />
+  <title>LVS – Living Value System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="LVS (Living Value System) – a post-blockchain decentralized value network based on trust, protection and regenerative consensus."
+  />
 
-      <nav class="nav" aria-label="Main navigation">
-        <button class="nav-toggle" aria-label="Toggle navigation">
-          <span></span><span></span><span></span>
+  <style>
+    :root {
+      --bg-main: #05080d;
+      --bg-alt: #070c12;
+      --gold: #d8b56a;
+      --gold-soft: #f2cf85;
+      --teal: #37d3c2;
+      --text-main: #e7edf7;
+      --text-muted: #8a92a6;
+      --border-soft: rgba(216,181,106,0.22);
+      --radius-xl: 24px;
+      --shadow-soft: 0 24px 60px rgba(0,0,0,0.6);
+      --max-width: 1120px;
+      --transition-fast: 0.18s ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #101827 0, #030712 55%, #000 100%);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(
+        to bottom,
+        rgba(3,7,18,0.9),
+        rgba(3,7,18,0.65),
+        transparent
+      );
+      border-bottom: 1px solid rgba(148,163,184,0.25);
+    }
+
+    .nav {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #7ff5f0, #0891b2 45%, #022c22 90%);
+      border: 2px solid rgba(234,179,8,0.95);
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,0.8),
+        0 0 22px rgba(45,212,191,0.8);
+      overflow: hidden;
+    }
+
+    /* сюда ты вставишь реальное круглое лого */
+    .nav-logo-circle img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .nav-title-main {
+      font-size: 15px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .nav-title-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .nav-links a {
+      position: relative;
+      padding-bottom: 2px;
+    }
+
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0%;
+      height: 1px;
+      background: linear-gradient(to right, var(--gold), var(--teal));
+      transition: width var(--transition-fast);
+    }
+
+    .nav-links a:hover {
+      color: var(--gold-soft);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: rgba(15,23,42,0.85);
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform var(--transition-fast),
+                  box-shadow var(--transition-fast),
+                  border-color var(--transition-fast),
+                  background var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn span {
+      font-size: 15px;
+    }
+
+    .btn-primary {
+      border-color: rgba(234,179,8,0.9);
+      background: radial-gradient(circle at 20% 0, #facc15, #b45309 60%, #451a03 100%);
+      color: #030712;
+      box-shadow:
+        0 0 0 1px rgba(250,204,21,0.6),
+        0 16px 30px rgba(234,179,8,0.45);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 0 1px rgba(250,250,250,0.2),
+        0 20px 40px rgba(234,179,8,0.6);
+      background: radial-gradient(circle at 20% 0, #fef3c7, #f59e0b 55%, #7c2d12 100%);
+    }
+
+    .btn-ghost {
+      background: rgba(15,23,42,0.95);
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(148,163,184,0.9);
+      background: rgba(15,23,42,1);
+      transform: translateY(-1px);
+    }
+
+    /* main layout */
+
+    main {
+      flex: 1;
+    }
+
+    .section {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 40px 16px;
+    }
+
+    @media (min-width: 960px) {
+      .section {
+        padding: 64px 16px;
+      }
+    }
+
+    /* Hero */
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0,1.2fr);
+      gap: 32px;
+      align-items: center;
+    }
+
+    @media (min-width: 960px) {
+      .hero {
+        grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr);
+      }
+    }
+
+    .hero-kicker {
+      font-size: 12px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: clamp(32px, 5vw, 40px);
+      line-height: 1.08;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      margin-bottom: 10px;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin-bottom: 20px;
+    }
+
+    .hero-tagline {
+      font-size: 14px;
+      color: var(--teal);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .hero-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .hero-meta strong {
+      color: var(--gold-soft);
+    }
+
+    .hero-logo-card {
+      border-radius: var(--radius-xl);
+      background: radial-gradient(circle at 0% 0%, #1e293b 0, #020617 55%, #000 100%);
+      border: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-soft);
+      padding: 20px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .hero-logo-wrap {
+      width: min(260px, 70vw);
+      aspect-ratio: 1 / 1;
+      border-radius: 999px;
+      padding: 10px;
+      background:
+        radial-gradient(circle at 30% 0, rgba(250,250,250,0.2), transparent 45%),
+        radial-gradient(circle at 70% 110%, rgba(56,189,248,0.5), transparent 60%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-logo-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+    }
+
+    .hero-logo-caption {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .hero-logo-caption span {
+      color: var(--gold-soft);
+    }
+
+    /* Features */
+
+    .section-heading {
+      font-size: 22px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      margin-bottom: 4px;
+    }
+
+    .section-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin-bottom: 22px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: minmax(0,1fr);
+      gap: 14px;
+    }
+
+    @media (min-width: 768px) {
+      .features-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+      }
+    }
+
+    .feature-card {
+      border-radius: 18px;
+      padding: 16px 16px 14px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: linear-gradient(
+        135deg,
+        rgba(15,23,42,0.92),
+        rgba(15,23,42,0.98)
+      );
+      box-shadow: 0 18px 40px rgba(15,23,42,0.75);
+    }
+
+    .feature-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--teal);
+      margin-bottom: 8px;
+    }
+
+    .feature-title {
+      font-size: 15px;
+      color: var(--gold-soft);
+      margin-bottom: 6px;
+    }
+
+    .feature-text {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* MVP section */
+
+    .mvp-layout {
+      display: grid;
+      grid-template-columns: minmax(0,1.05fr) minmax(0,0.95fr);
+      gap: 22px;
+    }
+
+    @media (max-width: 959px) {
+      .mvp-layout {
+        grid-template-columns: minmax(0,1fr);
+      }
+    }
+
+    .mvp-panel {
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-soft);
+      background: radial-gradient(circle at 0 0, #111827 0, #020617 60%, #000 100%);
+      box-shadow: var(--shadow-soft);
+      padding: 16px;
+      font-size: 13px;
+    }
+
+    .mvp-panel h3 {
+      font-size: 15px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      margin-bottom: 8px;
+    }
+
+    .mvp-panel p {
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .mvp-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    .mvp-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.5);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .badge-gold {
+      border-color: rgba(234,179,8,0.9);
+      color: var(--gold-soft);
+    }
+
+    .badge-teal {
+      border-color: rgba(45,212,191,0.8);
+      color: var(--teal);
+    }
+
+    .mvp-frame {
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(30,64,175,0.8);
+      background: radial-gradient(circle at 0 0, #1e293b 0, #020617 60%, #000 100%);
+      min-height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .mvp-placeholder {
+      text-align: center;
+      padding: 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .mvp-placeholder strong {
+      color: var(--gold-soft);
+    }
+
+    .mvp-hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .mvp-frame iframe {
+      border: none;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* footer */
+
+    footer {
+      border-top: 1px solid rgba(30,64,175,0.5);
+      margin-top: 40px;
+      padding: 18px 16px 26px;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: radial-gradient(circle at top, #020617 0, #000 60%);
+    }
+
+    .footer-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    @media (min-width: 768px) {
+      .footer-inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+
+    .footer-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .footer-right a {
+      color: var(--text-muted);
+    }
+
+    .footer-right a:hover {
+      color: var(--gold-soft);
+    }
+
+    /* small screen tweaks */
+
+    @media (max-width: 640px) {
+      .nav {
+        flex-wrap: wrap;
+      }
+      .nav-links {
+        display: none;
+      }
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn {
+        justify-content: center;
+        width: 100%;
+      }
+      .hero-logo-card {
+        margin-top: -6px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <div class="nav-logo-circle">
+          <!-- здесь ставишь своё круглое лого -->
+          <!-- <img src="/img/lvs-logo-circle.png" alt="LVS logo" /> -->
+        </div>
+        <div>
+          <div class="nav-title-main">LVS</div>
+          <div class="nav-title-sub">Living Value System</div>
+        </div>
+      </div>
+
+      <div class="nav-links">
+        <a href="#about">About</a>
+        <a href="#mvp">Live MVP</a>
+        <a href="#docs">Docs</a>
+      </div>
+
+      <div class="nav-cta">
+        <button class="btn btn-ghost" onclick="scrollToId('mvp')">
+          Live demo
         </button>
-        <ul class="nav-list">
-          <li><a href="#hero" data-scroll>Overview</a></li>
-          <li><a href="#mvp" data-scroll>Live MVP</a></li>
-          <li><a href="#how" data-scroll>How it works</a></li>
-          <li><a href="#docs" data-scroll>Docs</a></li>
-          <li><a href="#investors" data-scroll>For investors</a></li>
-        </ul>
-      </nav>
+        <button class="btn btn-primary" onclick="scrollToId('docs')">
+          <span>⟶</span> For investors
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- Hero -->
   <main>
-    <section id="hero" class="section hero">
-      <div class="shell hero-inner">
-        <div class="hero-left">
-          <p class="eyebrow">Post-blockchain value network</p>
-          <h1>Living Value System</h1>
-          <p class="hero-lead">
+    <!-- HERO -->
+    <section class="section">
+      <div class="hero">
+        <div>
+          <div class="hero-kicker">Post-blockchain value network</div>
+          <h1 class="hero-title">Living Value System</h1>
+          <p class="hero-sub">
             LVS is a new decentralized system where value is secured by
-            <span class="accent">trust, protection and regeneration</span> —
-            not by blocks, mining or gas fees.
+            <strong>trust, protection and regeneration</strong> – not by blocks,
+            mining or gas fees.
           </p>
-          <p class="hero-note">
-            Already running: browser simulation up to
-            <strong>1200 nodes</strong> with trust dynamics, rejections and
-            self-healing behaviour — even on a phone.
-          </p>
+          <div class="hero-tagline">Value that lives.</div>
 
           <div class="hero-actions">
-            <!-- Путь к демо можешь поменять внутри main.js -->
-            <button class="btn btn-primary" id="btn-open-mvp">
+            <button class="btn btn-primary" onclick="scrollToId('mvp')">
               Open live MVP
             </button>
-            <a href="#how" class="btn btn-ghost" data-scroll>
+            <button class="btn btn-ghost" onclick="scrollToId('about')">
               How LVS works
-            </a>
-          </div>
-
-          <div class="hero-tags">
-            <span>Trust-based consensus</span>
-            <span>Vault Guard</span>
-            <span>Regenerative network</span>
-          </div>
-        </div>
-
-        <div class="hero-right">
-          <div class="logo-orb">
-            <img src="img/lvs-logo-full.png" alt="LVS — Living Value System">
-          </div>
-          <p class="hero-caption">
-            Value that lives — a network that heals itself instead of forking.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Live MVP -->
-    <section id="mvp" class="section section-alt">
-      <div class="shell">
-        <header class="section-head">
-          <h2>Live MVP</h2>
-          <p>
-            Fully client-side browser simulation of LVS: from a small local
-            network to <strong>1200 nodes</strong>, with real-time transfers,
-            trust evolution and rejection statistics.
-          </p>
-        </header>
-
-        <div class="grid-2">
-          <div class="card">
-            <h3>What the demo shows</h3>
-            <ul class="list-bullets">
-              <li>Users and validators sending VU (Value Units) between nodes.</li>
-              <li>Trust Credits (TC) growing or collapsing based on behaviour.</li>
-              <li>Rejected transactions and how they propagate across the network.</li>
-              <li>Self-healing network behaviour under stress.</li>
-            </ul>
-            <p class="small">
-              The MVP is a <strong>live prototype</strong> of the economic
-              and consensus layer — not the final protocol implementation.
-            </p>
-            <button class="btn btn-primary btn-wide" id="btn-open-mvp-2">
-              Launch full-screen demo
             </button>
           </div>
 
-          <div class="card card-mvp-stats">
-            <h3>Demo capabilities</h3>
-            <dl class="stats">
-              <div>
-                <dt>Nodes per run</dt>
-                <dd>10 – 1200</dd>
-              </div>
-              <div>
-                <dt>Environment</dt>
-                <dd>Pure browser, no backend</dd>
-              </div>
-              <div>
-                <dt>Network view</dt>
-                <dd>Interactive graph with live edges</dd>
-              </div>
-              <div>
-                <dt>Trust analytics</dt>
-                <dd>TC growth, rejections and vault protection</dd>
-              </div>
-            </dl>
-            <p class="small">
-              The same logic can later be migrated into a native LVS node
-              implementation or integrated with third-party products.
-            </p>
+          <div class="hero-meta">
+            Already implemented: <strong>browser simulation</strong> up to
+            <strong>1200 nodes</strong>, trust dynamics, rejections and
+            self-healing behaviour – even on a phone.
+          </div>
+        </div>
+
+        <aside class="hero-logo-card">
+          <div class="hero-logo-wrap">
+            <!-- тут ставишь большое лого с текстом или без -->
+            <!-- <img src="/img/lvs-logo-full.png" alt="LVS – Living Value System" /> -->
+          </div>
+          <div class="hero-logo-caption">
+            <span>LVS</span> turns
+            <strong>trust</strong> and a protected minimum balance into the core
+            of a new financial network.
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ABOUT / FEATURES -->
+    <section id="about" class="section">
+      <h2 class="section-heading">Why LVS is different</h2>
+      <p class="section-subtitle">
+        LVS replaces heavy blockchain consensus with a light-weight,
+        trust-driven and self-healing architecture. No blocks, no mining –
+        but the network still remembers, protects and recovers.
+      </p>
+
+      <div class="features-grid">
+        <article class="feature-card">
+          <div class="feature-label">VU – Value Units</div>
+          <h3 class="feature-title">Pure value without gas and blocks</h3>
+          <p class="feature-text">
+            VU are the basic units of value in LVS. They move instantly between
+            nodes without paying gas fees or waiting for the next block.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-label">TC – Trust Credits</div>
+          <h3 class="feature-title">Trust turns into a measurable asset</h3>
+          <p class="feature-text">
+            Every useful action in the network increases Trust Credits.
+            TC amplify the impact of honest nodes and limit the influence of
+            malicious ones.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-label">Vault Guard</div>
+          <h3 class="feature-title">A protected minimum that never burns</h3>
+          <p class="feature-text">
+            Vault Guard makes it impossible to lose everything in a single
+            mistake. A protected minimum of VU is always reserved for recovery
+            and future operations.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-label">Regenerative consensus</div>
+          <h3 class="feature-title">The network heals itself</h3>
+          <p class="feature-text">
+            Cross-Audit and regenerative consensus allow LVS to detect
+            inconsistent behaviour, reject bad transactions and restore
+            coherence of the network without hard forks.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- MVP SECTION -->
+    <section id="mvp" class="section">
+      <h2 class="section-heading">Live MVP</h2>
+      <p class="section-subtitle">
+        Browser-based simulation of LVS: from a small network up to 1200 nodes,
+        with real-time transfers, trust dynamics and rejection statistics.
+      </p>
+
+      <div class="mvp-layout">
+        <div class="mvp-panel">
+          <h3>What you see in the MVP</h3>
+          <p>
+            The demo shows a fully client-side LVS simulation: users, validators,
+            value transfers and trust evolution over time.
+          </p>
+          <div class="mvp-badge-row">
+            <span class="badge badge-gold">Up to 1200 nodes</span>
+            <span class="badge badge-teal">Runs in browser</span>
+            <span class="badge">Trust &amp; rejections</span>
+          </div>
+          <p>
+            You can generate a network, send VU between nodes, reward validators
+            and watch how trust (TC) grows or collapses based on behaviour.
+          </p>
+          <p class="mvp-meta">
+            The current MVP is a <strong>live prototype</strong>, not a final
+            protocol implementation. It exists to prove that LVS logic works
+            and scales on real hardware.
+          </p>
+          <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:10px;">
+            <button class="btn btn-primary" onclick="openMvp()">
+              Launch full-screen demo
+            </button>
+            <button class="btn btn-ghost" onclick="scrollToId('docs')">
+              View docs &amp; papers
+            </button>
+          </div>
+        </div>
+
+        <div class="mvp-frame">
+          <!--
+            Вариант 1: вставить iframe, если MVP будет лежать отдельной страницей:
+            <iframe src="mvp-demo/lvs_demo_v2.html" title="LVS MVP demo"></iframe>
+          -->
+          <div class="mvp-placeholder">
+            <strong>MVP preview</strong><br />
+            Replace this placeholder with an
+            <code>&lt;iframe src="..."&gt;</code>
+            once you host the demo page (CodePen, GitHub Pages or your own server).
+            <div class="mvp-hint">
+              Recommended: host <code>lvs_demo_v2.html</code> in
+              <code>/mvp-demo/</code> and set
+              <code>iframe src="/mvp-demo/lvs_demo_v2.html"</code>.
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- How it works -->
-    <section id="how" class="section">
-      <div class="shell">
-        <header class="section-head">
-          <h2>How LVS works</h2>
-          <p>
-            Instead of mining blocks, LVS turns <strong>trust</strong> and
-            <strong>useful actions</strong> into measurable assets and uses
-            them to secure the network.
+    <!-- DOCS / INVESTORS -->
+    <section id="docs" class="section">
+      <h2 class="section-heading">Docs &amp; investor package</h2>
+      <p class="section-subtitle">
+        LVS is already documented for technical and business audiences:
+        whitepaper, pitch deck and one-pager are ready for review.
+      </p>
+
+      <div class="features-grid">
+        <article class="feature-card">
+          <div class="feature-label">Documentation</div>
+          <h3 class="feature-title">White Paper</h3>
+          <p class="feature-text">
+            Full LVS White Paper (13 sections): architecture, economics,
+            security, consensus and long-term vision of a post-blockchain
+            value system.
           </p>
-        </header>
+        </article>
 
-        <div class="grid-3">
-          <div class="card">
-            <h3>Trust Credits (TC)</h3>
-            <p>
-              Every confirmed useful action in the network grants Trust Credits
-              to honest nodes. TC amplify their impact and limit malicious ones.
-            </p>
-            <p class="small">
-              TC are not a token — they are an internal reputation layer that
-              backs value transfers.
-            </p>
-          </div>
-
-          <div class="card">
-            <h3>Vault Guard</h3>
-            <p>
-              A protected minimum of VU that never burns. Even in extreme cases
-              a node cannot lose everything in a single mistake.
-            </p>
-            <p class="small">
-              Vault Guard always reserves a recovery buffer for future
-              operations.
-            </p>
-          </div>
-
-          <div class="card">
-            <h3>Regenerative consensus</h3>
-            <p>
-              Cross-Audit between validators plus regenerative rules allow the
-              network to detect inconsistency, reject bad transactions and
-              restore coherence without hard forks.
-            </p>
-            <p class="small">
-              Bad behaviour costs trust; honest work rebuilds it over time.
-            </p>
-          </div>
-        </div>
+        <article class="feature-card">
+          <div class="feature-label">Investors</div>
+          <h3 class="feature-title">Pitch Deck &amp; One-Pager</h3>
+          <p class="feature-text">
+            Concise materials for funds and accelerators: problem, solution,
+            market, competitive landscape and the role of LVS as a new
+            financial layer.
+          </p>
+        </article>
       </div>
-    </section>
 
-    <!-- Docs & investor package -->
-    <section id="docs" class="section section-alt">
-      <div class="shell">
-        <header class="section-head">
-          <h2>Docs & investor package</h2>
-          <p>
-            LVS already has technical and business materials. PDFs can be
-            updated as the protocol evolves.
-          </p>
-        </header>
-
-        <div class="grid-3">
-          <article class="card">
-            <h3>Whitepaper</h3>
-            <p>
-              Full technical description of the architecture, economics,
-              security and consensus model of a post-blockchain value system.
-            </p>
-            <!-- Обновишь ссылки на реальные файлы, когда зальёшь PDFs -->
-            <a href="docs/LVS_whitepaper_en.pdf" class="link" target="_blank">
-              Open whitepaper (PDF)
-            </a>
-          </article>
-
-          <article class="card">
-            <h3>Full technical description</h3>
-            <p>
-              Detailed explanation of VU, TC, Vault Guard, validators,
-              cross-audit, rejection rules and long-term system design.
-            </p>
-            <a href="docs/LVS_technical_en.pdf" class="link" target="_blank">
-              Open technical doc (PDF)
-            </a>
-          </article>
-
-          <article class="card">
-            <h3>Pitch Deck & One-Pager</h3>
-            <p>
-              Problem, solution, market, competition and why LVS can become a
-              new financial layer above existing infrastructure.
-            </p>
-            <a href="docs/LVS_pitchdeck_en.pdf" class="link" target="_blank">
-              Open pitch deck (PDF)
-            </a>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Investors focus -->
-    <section id="investors" class="section">
-      <div class="shell">
-        <header class="section-head">
-          <h2>For investors & partners</h2>
-          <p>
-            LVS is designed as a long-term, neutral value layer that can power
-            applications, financial products and real-world infrastructure.
-          </p>
-        </header>
-
-        <div class="grid-2">
-          <div class="card">
-            <h3>Why now</h3>
-            <ul class="list-bullets">
-              <li>People want stability, not speculative volatility.</li>
-              <li>
-                Existing chains are expensive, slow or politically fragile.
-              </li>
-              <li>
-                LVS focuses on protected value and measurable trust instead
-                of raw hash power.
-              </li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>What is ready today</h3>
-            <ul class="list-bullets">
-              <li>Concept, economics and protocol design.</li>
-              <li>Working MVP in the browser up to 1200 nodes.</li>
-              <li>Brand, visuals and investor-ready documentation.</li>
-            </ul>
-            <p class="small">
-              Next steps: native node implementation, test networks and
-              integration pilots with real-world partners.
-            </p>
-          </div>
-        </div>
+      <div style="margin-top:18px; font-size:13px; color:var(--text-muted);">
+        You can link your PDF files directly from here once they are hosted, for example:
+        <br />
+        <code>&lt;a href="/whitepaper/LVS_WhitePaper_v1.pdf" target="_blank"&gt;Open White Paper&lt;/a&gt;</code>
       </div>
     </section>
   </main>
 
-  <!-- Footer -->
-  <footer class="site-footer">
-    <div class="shell footer-inner">
-      <p>© 2025 LVS — Living Value System. All rights reserved.</p>
-      <a href="#top" class="footer-link" data-scroll>Back to top</a>
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        © 2025 LVS – Living Value System. All rights reserved.<br />
+        Built by the founder with the assistance of AI tools.
+      </div>
+      <div class="footer-right">
+        <a href="#top" onclick="scrollToId('top')">Back to top</a>
+        <a href="#docs">Docs</a>
+        <a href="#mvp">MVP</a>
+      </div>
     </div>
   </footer>
 
-  <script src="js/main.js" defer></script>
+</div>
+
+<script>
+  function scrollToId(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // dummy hook — когда будет реальный URL, просто поменяешь внутри
+  function openMvp() {
+    // пример: window.open('/mvp-demo/lvs_demo_v2.html', '_blank');
+    alert("Set real MVP URL in openMvp() before going public.");
+  }
+</script>
 </body>
 </html>
