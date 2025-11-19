@@ -466,9 +466,12 @@
   overflow: hidden;
   border: 1px solid rgba(30,64,175,0.8);
   background: radial-gradient(circle at 0 0, #1e293b 0, #020617 60%, #000 100%);
-  height: 620px;            /* нормальная рабочая высота */
+  min-height: 260px;
   display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
+  box-shadow: 0 0 40px rgba(34, 211, 238, 0.18);
 }
 
     .mvp-placeholder {
@@ -819,6 +822,7 @@ function adjustMvpHeight() {
 </script>
 </body>
 </html>
+
 
 
 
