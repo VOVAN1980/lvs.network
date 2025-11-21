@@ -36,10 +36,10 @@
 
   <canvas id="lvsCanvas" width="400" height="400"></canvas>
 
-  <!-- тут подключаем твой browser-node.js -->
-  <script src="/browser-node.js"></script>
+  <!-- ПРАВИЛЬНЫЙ ПУТЬ -->
+  <script src="../browser-node.js"></script>
+
   <script>
-    // ДЛЯ ЛОКАЛЬНОГО ТЕСТА: gateway на этом же компе
     const GATEWAY_URL = "ws://127.0.0.1:9001/ws";
 
     const node = new LVSBrowserNode(
@@ -47,6 +47,7 @@
       GATEWAY_URL,
       "lvsCanvas"
     );
+
     node.start();
   </script>
 </body>
