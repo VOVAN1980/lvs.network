@@ -6,222 +6,264 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg: #020617;
-      --card-bg: #020617;
-      --card-border: #1f2937;
-      --card-shadow: 0 0 30px rgba(34,211,238,0.22);
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --accent: #38bdf8;
+      color-scheme: dark;
     }
-
-    * { box-sizing: border-box; }
-
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
-      background: radial-gradient(circle at top, #0b1120 0, #020617 55%, #000 100%);
-      color: var(--text-main);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       min-height: 100vh;
+      background: radial-gradient(circle at top, #020617 0, #000814 55%, #020617 100%);
+      color: #e5e7eb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: flex-start;
       padding: 32px 16px 40px;
     }
-
-    .page {
-      width: 100%;
-      max-width: 1040px;
-    }
-
     h1 {
       font-size: 22px;
-      text-align: center;
-      margin: 0 0 8px;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f9fafb;
+      margin: 0 0 6px;
+      text-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
     }
-
     .subtitle {
       font-size: 12px;
-      color: var(--text-muted);
+      color: #9ca3af;
       text-align: center;
-      max-width: 540px;
-      margin: 0 auto 32px;
-      line-height: 1.6;
+      max-width: 720px;
+      line-height: 1.4;
+      margin-bottom: 32px;
     }
 
-    .grid {
+    .layout {
       display: grid;
-      grid-template-columns: minmax(260px, 340px) minmax(260px, 1fr);
+      grid-template-columns: minmax(260px, 320px) minmax(320px, 520px);
       gap: 24px;
-    }
-
-    @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
+      width: 100%;
+      max-width: 1080px;
     }
 
     .card {
-      background: var(--card-bg);
+      background: radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%);
       border-radius: 18px;
-      border: 1px solid var(--card-border);
-      box-shadow: var(--card-shadow);
-      padding: 18px 20px;
+      border: 1px solid rgba(15, 23, 42, 0.9);
+      box-shadow:
+        0 0 35px rgba(8, 47, 73, 0.65),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      padding: 14px 18px 16px;
     }
 
     .card-title {
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.14em;
-      color: var(--text-muted);
-      margin-bottom: 10px;
+      color: #cbd5f5;
+      margin-bottom: 8px;
     }
 
-    .status-row {
+    .status-grid {
+      font-size: 11px;
+      line-height: 1.6;
+      color: #9ca3af;
+    }
+    .status-grid-row {
       display: flex;
       justify-content: space-between;
-      font-size: 12px;
-      line-height: 1.6;
     }
-
-    .status-row span:first-child {
-      color: var(--text-muted);
+    .status-label {
+      opacity: 0.75;
     }
-
-    .status-row span:last-child {
-      font-variant-numeric: tabular-nums;
+    .status-value {
+      color: #e5e7eb;
     }
-
-    .status-row .status-pill {
-      padding: 2px 8px;
+    .status-value.status {
+      font-weight: 600;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
       border-radius: 999px;
-      font-size: 11px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      text-transform: lowercase;
+      margin-right: 6px;
+      background: #6b7280;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.0);
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .status-dot.connected {
+      background: #22c55e;
+      box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.65);
+    }
+    .status-dot.connecting {
+      background: #eab308;
+      box-shadow: 0 0 6px 1px rgba(234, 179, 8, 0.55);
+    }
+    .status-dot.error {
+      background: #ef4444;
+      box-shadow: 0 0 6px 1px rgba(248, 113, 113, 0.75);
     }
 
-    .status-pill.ok {
-      border-color: rgba(34,197,94,0.7);
-      color: #bbf7d0;
-    }
-
-    .status-pill.err {
-      border-color: rgba(248,113,113,0.8);
-      color: #fecaca;
-    }
-
-    .status-pill.pending {
-      border-color: rgba(56,189,248,0.6);
-      color: #e0f2fe;
-    }
-
-    /* canvas card */
-    .canvas-card {
+    .canvas-shell {
+      padding: 22px;
+      border-radius: 22px;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), #020617 70%);
+      box-shadow:
+        0 0 60px rgba(8, 47, 73, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 26px;
     }
 
-    #lvsCanvas {
-      background: #020617;
+    canvas {
+      background: radial-gradient(circle at center, #020617 0, #000814 52%, #020617 100%);
       border-radius: 18px;
-      border: 1px solid #111827;
-      box-shadow: 0 0 40px rgba(8, 47, 73, 0.9);
-      width: 100%;
-      max-width: 420px;
-      height: auto;
-      aspect-ratio: 1 / 1;
-      display: block;
+      border: 1px solid rgba(30, 64, 175, 0.75);
+      box-shadow:
+        0 0 32px rgba(56, 189, 248, 0.22),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
     }
 
-    /* event log */
-    .log-card {
-      margin-top: 24px;
-    }
-
-    #logBody {
-      margin: 0;
+    .log-box {
       font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 11px;
       line-height: 1.45;
-      color: var(--text-muted);
-      max-height: 200px;
+      height: 150px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(30, 64, 175, 0.5);
+      color: #9ca3af;
       overflow-y: auto;
-      padding-right: 4px;
-      white-space: pre-wrap;
-      word-break: break-word;
+      white-space: pre;
     }
 
-    #logBody span.ts {
-      color: #64748b;
-    }
-
-    #logBody span.tag {
-      color: #38bdf8;
-    }
-
-    #logBody span.msg {
-      color: #e5e7eb;
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: minmax(260px, 1fr);
+      }
     }
   </style>
 </head>
 <body>
-  <div class="page">
-    <h1>LVS – Browser Node</h1>
-    <p class="subtitle">
-      This browser is running as a live LVS node and connects to the Rust gateway.
-      Drift is visualized as a moving dot on the canvas.<br>
-      Fully compatible with LVS Rust Core (gateway + nodes).
-    </p>
+  <h1>LVS – Browser Node</h1>
+  <div class="subtitle">
+    This browser is running as a live LVS node and connects to the Rust gateway.<br>
+    Drift is visualized as a moving dot on the canvas. Fully compatible with LVS Rust Core (gateway + nodes).
+  </div>
 
-    <div class="grid">
-      <!-- LEFT: node status + log -->
-      <div>
-        <div class="card">
-          <div class="card-title">Node status</div>
-
-          <div class="status-row">
-            <span>Status:</span>
-            <span id="statusText" class="status-pill pending">connecting...</span>
+  <div class="layout">
+    <!-- LEFT COLUMN -->
+    <div class="column-left">
+      <div class="card">
+        <div class="card-title">Node status</div>
+        <div class="status-grid">
+          <div class="status-grid-row">
+            <span class="status-label">Status:</span>
+            <span class="status-value status">
+              <span id="statusDot" class="status-dot"></span>
+              <span id="statusText">connecting…</span>
+            </span>
           </div>
-          <div class="status-row">
-            <span>Node ID:</span>
-            <span id="nodeIdText">browser-node-1</span>
+          <div class="status-grid-row">
+            <span class="status-label">Node ID:</span>
+            <span id="nodeIdText" class="status-value">browser-node-1</span>
           </div>
-          <div class="status-row">
-            <span>Cycle:</span>
-            <span id="cycleText">0</span>
+          <div class="status-grid-row">
+            <span class="status-label">Cycle:</span>
+            <span id="cycleText" class="status-value">0</span>
           </div>
-          <div class="status-row">
-            <span>VU:</span>
-            <span id="vuText">100.00</span>
+          <div class="status-grid-row">
+            <span class="status-label">VU:</span>
+            <span id="vuText" class="status-value">100.00</span>
           </div>
-          <div class="status-row">
-            <span>TC:</span>
-            <span id="tcText">0.50</span>
+          <div class="status-grid-row">
+            <span class="status-label">TC:</span>
+            <span id="tcText" class="status-value">0.50</span>
           </div>
-          <div class="status-row">
-            <span>Peers:</span>
-            <span id="peersText">—</span>
+          <div class="status-grid-row">
+            <span class="status-label">Peers:</span>
+            <span id="peersText" class="status-value">—</span>
           </div>
-        </div>
-
-        <div class="card log-card">
-          <div class="card-title">Event log</div>
-          <pre id="logBody"></pre>
         </div>
       </div>
 
-      <!-- RIGHT: canvas -->
-      <div class="card canvas-card">
-        <canvas id="lvsCanvas" width="400" height="400"></canvas>
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">Event log</div>
+        <div id="eventLog" class="log-box"></div>
       </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="canvas-shell">
+      <canvas id="lvsCanvas" width="420" height="420"></canvas>
     </div>
   </div>
 
-  <!-- JS логика браузер-ноды -->
+  <!-- JS-логика браузерной ноды -->
   <script src="../browser-node.js"></script>
+
+  <script>
+    const statusDot  = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const nodeIdText = document.getElementById('nodeIdText');
+    const cycleText  = document.getElementById('cycleText');
+    const vuText     = document.getElementById('vuText');
+    const tcText     = document.getElementById('tcText');
+    const peersText  = document.getElementById('peersText');
+    const eventLog   = document.getElementById('eventLog');
+
+    function pushLog(line) {
+      const now = new Date();
+      const ts = now.toTimeString().slice(0, 8);
+      eventLog.textContent += `[${ts}] ${line}\n`;
+      eventLog.scrollTop = eventLog.scrollHeight;
+    }
+
+    function setStatus(status) {
+      statusText.textContent = status;
+      statusDot.classList.remove('connected', 'connecting', 'error');
+      if (status === 'connected') statusDot.classList.add('connected');
+      else if (status === 'connecting…' || status === 'connecting') statusDot.classList.add('connecting');
+      else if (status === 'error') statusDot.classList.add('error');
+    }
+
+    const node = new LVSBrowserNode({
+      nodeId: 'browser-node-1',
+      gatewayUrl: 'ws://127.0.0.1:9001/ws',
+      canvasId: 'lvsCanvas',
+
+      onStatus(status) {
+        setStatus(status);
+        pushLog(`status → ${status}`);
+      },
+
+      onMetrics({ cycle, vu, tc }) {
+        cycleText.textContent = String(cycle);
+        vuText.textContent = vu.toFixed(2);
+        tcText.textContent = tc.toFixed(2);
+      },
+
+      onPeers(peers) {
+        const ids = peers.map(p => p.node_id).sort();
+        peersText.textContent = ids.length ? ids.join(', ') : '—';
+        if (ids.length) {
+          pushLog(`peers → ${ids.join(', ')}`);
+        }
+      },
+
+      onEvent(line) {
+        pushLog(line);
+      }
+    });
+
+    nodeIdText.textContent = node.nodeId;
+    pushLog('browser node UI initialized');
+    node.start();
+  </script>
 </body>
 </html>
