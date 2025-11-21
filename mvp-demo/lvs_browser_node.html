@@ -8,133 +8,113 @@
   <style>
     body {
       margin: 0;
-      background: radial-gradient(circle at center, #0f172a 0%, #020617 60%);
+      background: #020617;
       color: #e5e7eb;
       font-family: system-ui, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 40px;
+      gap: 40px;
     }
 
     h1 {
-      margin-bottom: 10px;
-      font-size: 26px;
+      margin: 0;
+      font-size: 22px;
       font-weight: 600;
-      letter-spacing: 0.5px;
-      color: #38bdf8;
-      text-shadow: 0 0 12px rgba(56,189,248,0.4);
     }
 
-    .subtitle {
-      margin-bottom: 30px;
-      color: #94a3b8;
-      font-size: 14px;
-      text-align: center;
-      max-width: 600px;
-      line-height: 1.4;
+    /* Контейнер для двух панелей сверху (Status + Log) */
+    .top-row {
+      display: flex;
+      flex-direction: row;
+      gap: 40px;
+      justify-content: center;
+      align-items: stretch;
+      width: 100%;
+      max-width: 1000px;
     }
 
-    /* Панель */
     .panel {
-      width: 420px;
-      background: rgba(15,23,42,0.55);
-      border: 1px solid rgba(51,65,85,0.6);
-      border-radius: 14px;
-      box-shadow: 0 0 35px rgba(34,211,238,0.15);
-      padding: 22px 24px;
-      margin-bottom: 35px;
-      backdrop-filter: blur(8px);
-    }
-
-    .label { 
-      color: #64748b; 
-      font-size: 13px; 
-      margin-top: 6px; 
-    }
-
-    .value { 
-      color: #e2e8f0; 
-      font-size: 15px; 
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-
-    /* Canvas */
-    #lvsCanvas {
-      margin-top: 5px;
-      background: #020617;
+      flex: 1;
+      background: rgba(15,23,42,0.7);
       border: 1px solid #1e293b;
-      border-radius: 14px;
-      width: 420px;
-      height: 420px;
-      box-shadow: 0 0 45px rgba(14,165,233,0.18);
+      border-radius: 12px;
+      box-shadow: 0 0 40px rgba(34,211,238,0.2);
+      padding: 20px;
+      min-height: 260px;
     }
 
-    /* Event log */
-    #log {
-      height: 150px;
-      overflow-y: auto;
-      background: rgba(10,20,35,0.65);
-      border-radius: 10px;
-      padding: 12px;
+    .label {
+      color: #64748b;
       font-size: 12px;
-      color: #9ca3af;
-      border: 1px solid #1e293b;
-      font-family: "JetBrains Mono", monospace;
-      line-height: 1.35;
-      box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
     }
 
-    #log::-webkit-scrollbar {
-      width: 6px;
+    .value {
+      color: #e2e8f0;
+      font-size: 14px;
+      margin-bottom: 8px;
     }
 
-    #log::-webkit-scrollbar-thumb {
-      background: #334155;
+    #log {
+      height: 200px;
+      overflow-y: auto;
+      background: rgba(10,20,30,0.6);
       border-radius: 8px;
+      padding: 10px;
+      font-size: 11px;
+      color: #9ca3af;
+      border: 1px solid #1f2937;
+      margin-top: 10px;
+    }
+
+    /* Канвас — строго центр */
+    #lvsCanvas {
+      display: block;
+      margin: 0 auto;
+      background: #020617;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      box-shadow: 0 0 30px rgba(34,211,238,0.22);
     }
   </style>
 </head>
 
 <body>
-
   <h1>LVS – Browser Node</h1>
-  <div class="subtitle">
-    This browser is running as a live LVS node and connects to the Rust gateway.<br>
-    Drift is visualized as a moving dot on the canvas.<br>
-    Fully compatible with LVS Rust Core (gateway + nodes).
+
+  <!-- Две панели в одну линию -->
+  <div class="top-row">
+    <!-- Left panel -->
+    <div class="panel">
+      <div class="label">Status:</div>
+      <div class="value" id="st"></div>
+
+      <div class="label">Node ID:</div>
+      <div class="value" id="nid"></div>
+
+      <div class="label">Cycle:</div>
+      <div class="value" id="cy"></div>
+
+      <div class="label">VU:</div>
+      <div class="value" id="vu"></div>
+
+      <div class="label">TC:</div>
+      <div class="value" id="tc"></div>
+
+      <div class="label">Peers:</div>
+      <div class="value" id="peersList"></div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="panel">
+      <div class="label">EVENT LOG</div>
+      <div id="log"></div>
+    </div>
   </div>
 
-  <!-- STATUS PANEL -->
-  <div class="panel">
-    <div class="label">Status:</div>
-    <div class="value" id="st"></div>
-
-    <div class="label">Node ID:</div>
-    <div class="value" id="nid"></div>
-
-    <div class="label">Cycle:</div>
-    <div class="value" id="cy">0</div>
-
-    <div class="label">VU:</div>
-    <div class="value" id="vu">0.00</div>
-
-    <div class="label">TC:</div>
-    <div class="value" id="tc">0.00</div>
-
-    <div class="label">Peers:</div>
-    <div class="value" id="peersList">—</div>
-  </div>
-
-  <!-- CANVAS -->
-  <canvas id="lvsCanvas" width="420" height="420"></canvas>
-
-  <!-- EVENT LOG -->
-  <div class="panel">
-    <div class="label">EVENT LOG</div>
-    <div id="log"></div>
-  </div>
+  <!-- Канвас строго по центру -->
+  <canvas id="lvsCanvas" width="400" height="400"></canvas>
 
   <script src="../browser-node.js"></script>
 
@@ -149,41 +129,22 @@
     const peersList = document.getElementById("peersList");
     const log = document.getElementById("log");
 
-    // UI CALLBACKS
-    node.onStatus = (s) => {
-      st.innerText = s;
-      node.onEvent(`status → ${s}`);
-    };
-
+    node.onStatus = (s) => st.innerText = s;
     node.onCycle = (c, v, t) => {
       cy.innerText = c;
       vu.innerText = v.toFixed(2);
       tc.innerText = t.toFixed(2);
     };
-
     node.onPeers = (peers) => {
-      const list = peers.map(p => p.node_id).join(", ");
-      peersList.innerText = list || "—";
-      node.onEvent(`peers → ${list}`);
+      peersList.innerText = peers.join(", ") || "—";
     };
-
-    node.onHello = (id) => {
-      node.onEvent(`hello from: ${id}`);
-    };
-
-    node.onSDM = (d) => {
-      // можно писать в лог каждую дельту — но это слишком часто
-    };
-
     node.onEvent = (txt) => {
-      const t = new Date().toLocaleTimeString();
-      log.innerHTML += `[${t}] ${txt}<br>`;
+      const d = new Date().toLocaleTimeString();
+      log.innerHTML += `[${d}] ${txt}<br>`;
       log.scrollTop = log.scrollHeight;
     };
 
     nid.innerText = node.nodeId;
-    node.onEvent("browser node UI initialized");
-
     node.start();
   </script>
 </body>
