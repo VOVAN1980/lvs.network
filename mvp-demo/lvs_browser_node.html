@@ -8,113 +8,118 @@
   <style>
     body {
       margin: 0;
-      background: #020617;
+      background: radial-gradient(circle at top, #0a1122, #020617 60%);
       color: #e5e7eb;
       font-family: system-ui, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 40px;
-      gap: 40px;
     }
 
     h1 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 26px;
+      letter-spacing: 0.5px;
+      color: #cce6ff;
+      text-shadow: 0 0 12px rgba(0, 188, 255, 0.35);
     }
 
-    /* Контейнер для двух панелей сверху (Status + Log) */
-    .top-row {
+    .subtitle {
+      font-size: 13px;
+      margin-bottom: 30px;
+      color: #8ea2bf;
+      text-align: center;
+      max-width: 480px;
+    }
+
+    .wrap {
       display: flex;
-      flex-direction: row;
       gap: 40px;
-      justify-content: center;
-      align-items: stretch;
-      width: 100%;
-      max-width: 1000px;
+      margin-top: 20px;
+      align-items: flex-start;
     }
 
     .panel {
-      flex: 1;
-      background: rgba(15,23,42,0.7);
+      width: 340px;
+      background: rgba(15,23,42,0.8);
       border: 1px solid #1e293b;
       border-radius: 12px;
-      box-shadow: 0 0 40px rgba(34,211,238,0.2);
+      box-shadow: 0 0 40px rgba(34,211,238,0.14);
       padding: 20px;
-      min-height: 260px;
     }
 
-    .label {
-      color: #64748b;
+    .label { color: #64748b; font-size: 12px; margin-top: 4px; }
+    .value { color: #e2e8f0; font-size: 14px; font-weight: 500; }
+
+    #peersList {
       font-size: 12px;
-    }
-
-    .value {
-      color: #e2e8f0;
-      font-size: 14px;
-      margin-bottom: 8px;
+      color: #94a3b8;
+      line-height: 1.3;
     }
 
     #log {
-      height: 200px;
+      height: 170px;
       overflow-y: auto;
-      background: rgba(10,20,30,0.6);
+      background: rgba(8,12,20,0.5);
       border-radius: 8px;
-      padding: 10px;
-      font-size: 11px;
+      padding: 12px;
+      font-size: 12px;
       color: #9ca3af;
       border: 1px solid #1f2937;
-      margin-top: 10px;
+      font-family: "Consolas", monospace;
     }
 
-    /* Канвас — строго центр */
     #lvsCanvas {
-      display: block;
-      margin: 0 auto;
-      background: #020617;
       border: 1px solid #1f2937;
-      border-radius: 12px;
-      box-shadow: 0 0 30px rgba(34,211,238,0.22);
+      border-radius: 14px;
+      background: #020617;
+      box-shadow: 0 0 40px rgba(0,180,255,0.28);
     }
   </style>
 </head>
 
 <body>
-  <h1>LVS – Browser Node</h1>
 
-  <!-- Две панели в одну линию -->
-  <div class="top-row">
-    <!-- Left panel -->
+  <h1>LVS – Browser Node</h1>
+  <div class="subtitle">
+    This browser is running as a live LVS node and connects to the Rust gateway.<br>
+    Drift is visualized as a moving dot on the canvas. Fully compatible with LVS Rust Core.
+  </div>
+
+  <div class="wrap">
+
+    <!-- LEFT COLUMN -->
     <div class="panel">
       <div class="label">Status:</div>
-      <div class="value" id="st"></div>
+      <div class="value" id="st">—</div>
 
       <div class="label">Node ID:</div>
       <div class="value" id="nid"></div>
 
       <div class="label">Cycle:</div>
-      <div class="value" id="cy"></div>
+      <div class="value" id="cy">0</div>
 
       <div class="label">VU:</div>
-      <div class="value" id="vu"></div>
+      <div class="value" id="vu">0</div>
 
       <div class="label">TC:</div>
-      <div class="value" id="tc"></div>
+      <div class="value" id="tc">0</div>
 
-      <div class="label">Peers:</div>
-      <div class="value" id="peersList"></div>
+      <div class="label" style="margin-top:10px;">Peers:</div>
+      <div class="value" id="peersList">—</div>
     </div>
 
-    <!-- Right panel -->
+    <!-- CANVAS -->
+    <canvas id="lvsCanvas" width="420" height="420"></canvas>
+
+    <!-- RIGHT COLUMN -->
     <div class="panel">
-      <div class="label">EVENT LOG</div>
+      <div class="label" style="margin-bottom:8px;">EVENT LOG</div>
       <div id="log"></div>
     </div>
-  </div>
 
-  <!-- Канвас строго по центру -->
-  <canvas id="lvsCanvas" width="400" height="400"></canvas>
+  </div>
 
   <script src="../browser-node.js"></script>
 
@@ -129,23 +134,37 @@
     const peersList = document.getElementById("peersList");
     const log = document.getElementById("log");
 
-    node.onStatus = (s) => st.innerText = s;
+    // status
+    node.onStatus = (s) => {
+      st.innerText = s;
+      addLog(`status → ${s}`);
+    };
+
+    // cycles
     node.onCycle = (c, v, t) => {
       cy.innerText = c;
       vu.innerText = v.toFixed(2);
       tc.innerText = t.toFixed(2);
     };
+
+    // peers
     node.onPeers = (peers) => {
-      peersList.innerText = peers.join(", ") || "—";
-    };
-    node.onEvent = (txt) => {
-      const d = new Date().toLocaleTimeString();
-      log.innerHTML += `[${d}] ${txt}<br>`;
-      log.scrollTop = log.scrollHeight;
+      peersList.innerText = peers.length ? peers.join(", ") : "—";
+      addLog(`peers → ${peers.join(", ")}`);
     };
 
+    // log helper
+    function addLog(text) {
+      const tm = new Date().toLocaleTimeString();
+      log.innerHTML += `[${tm}] ${text}<br>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
     nid.innerText = node.nodeId;
+    addLog("browser node UI initialized");
+
     node.start();
   </script>
+
 </body>
 </html>
