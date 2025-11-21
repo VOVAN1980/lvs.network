@@ -8,93 +8,125 @@
   <style>
     body {
       margin: 0;
-      background: #0a0f1e;
-      color: #e5e7eb;
+      background: #020617;
+      color: #e2e8f0;
       font-family: system-ui, sans-serif;
-      padding: 40px;
-    }
-
-    /* --- MAIN GRID --- */
-    .main-wrap {
       display: flex;
-      flex-direction: row;
-      gap: 40px;
-      justify-content: center;
-      align-items: flex-start;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 10px;
     }
 
+    h1 {
+      font-size: 26px;
+      margin-bottom: 30px;
+      color: #38bdf8;
+      text-shadow: 0 0 15px rgba(56,189,248,0.4);
+    }
+
+    /* ГЛАВНАЯ СЕТКА (как DEMO) */
+    .grid {
+      display: grid;
+      grid-template-columns: 300px 450px 350px;
+      gap: 30px;
+      width: 1200px;
+      max-width: 95%;
+    }
+
+    /* ПАНЕЛИ */
     .panel {
-      width: 320px;
-      background: rgba(15,23,42,0.7);
+      background: rgba(15,23,42,0.85);
       border: 1px solid #1e293b;
       border-radius: 12px;
-      box-shadow: 0 0 40px rgba(34,211,238,0.18);
-      padding: 18px 20px;
+      padding: 20px;
+      box-shadow: 0 0 30px rgba(34,211,238,0.15);
     }
 
-    .label { color: #64748b; font-size: 12px; margin-top: 6px; }
-    .value { color: #e2e8f0; font-size: 14px; }
-
-    #peersList span {
-      color: #0ea5e9;
-      margin-right: 6px;
+    .panel h2 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #7dd3fc;
+      font-weight: 600;
     }
 
+    .label {
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .value {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    /* PEERS LIST */
+    #peersList div {
+      margin: 2px 0;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    /* EVENT LOG */
     #log {
-      height: 160px;
+      height: 260px;
       overflow-y: auto;
-      background: rgba(10,20,30,0.6);
-      border-radius: 8px;
       padding: 10px;
-      font-size: 11px;
-      color: #9ca3af;
+      background: #0f172a;
+      border-radius: 8px;
       border: 1px solid #1f2937;
+      font-size: 12px;
+      color: #9ca3af;
     }
 
+    /* CANVAS */
     #lvsCanvas {
+      width: 100%;
+      height: 100%;
       background: #020617;
       border: 1px solid #1f2937;
       border-radius: 12px;
-      box-shadow: 0 0 30px rgba(34,211,238,0.22);
+      box-shadow: 0 0 35px rgba(34,211,238,0.2);
     }
   </style>
 </head>
 
 <body>
 
-  <h1 style="text-align:center; margin-bottom:35px;">LVS – Browser Node</h1>
+  <h1>LVS — Browser Node</h1>
 
-  <div class="main-wrap">
+  <div class="grid">
 
     <!-- LEFT PANEL -->
-    <div class="panel" style="flex-shrink:0;">
+    <div class="panel">
+      <h2>NODE STATUS</h2>
+
       <div class="label">Status:</div>
-      <div class="value" id="st"></div>
+      <div class="value" id="st">–</div>
 
       <div class="label">Node ID:</div>
-      <div class="value" id="nid"></div>
+      <div class="value" id="nid">–</div>
 
       <div class="label">Cycle:</div>
       <div class="value" id="cy">0</div>
 
       <div class="label">VU:</div>
-      <div class="value" id="vu">0.00</div>
+      <div class="value" id="vu">0</div>
 
       <div class="label">TC:</div>
-      <div class="value" id="tc">0.50</div>
+      <div class="value" id="tc">0</div>
 
-      <div class="label">Peers:</div>
-      <div class="value" id="peersList">—</div>
+      <div class="label" style="margin-top: 10px;">Peers:</div>
+      <div id="peersList"></div>
     </div>
 
-    <!-- CANVAS -->
-    <div>
+    <!-- CANVAS CENTER -->
+    <div class="panel" style="padding:0; display:flex; align-items:center; justify-content:center;">
       <canvas id="lvsCanvas" width="420" height="420"></canvas>
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="panel" style="width:380px;">
-      <div class="label" style="margin-bottom:6px;">EVENT LOG</div>
+    <!-- EVENT LOG -->
+    <div class="panel">
+      <h2>EVENT LOG</h2>
       <div id="log"></div>
     </div>
 
@@ -124,14 +156,10 @@
     };
 
     node.onPeers = (peers) => {
-      if (!peers || peers.length === 0) {
-        peersList.innerHTML = "—";
-        return;
-      }
-
-      peersList.innerHTML = peers
-        .map(p => `<span>●</span>${p.node_id}`)
-        .join("<br>");
+      peersList.innerHTML = "";
+      peers.forEach(p => {
+        peersList.innerHTML += `<div>• ${p}</div>`;
+      });
     };
 
     node.onEvent = (txt) => {
@@ -142,5 +170,6 @@
 
     node.start();
   </script>
+
 </body>
 </html>
