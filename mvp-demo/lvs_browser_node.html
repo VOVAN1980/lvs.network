@@ -9,136 +9,167 @@
       margin: 0;
       background: #020617;
       color: #e5e7eb;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 22px;
-      gap: 20px;
+      justify-content: flex-start;
+      padding: 20px;
+      gap: 16px;
     }
+    h1 { font-size: 18px; margin: 0; }
+    .info { font-size: 12px; color: #9ca3af; max-width: 520px; text-align: center; }
 
-    h1 {
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      margin: 0;
-      color: #38bdf8;
-    }
-
-    .info {
-      font-size: 13px;
-      color: #9ca3af;
-      max-width: 520px;
-      text-align: center;
-      line-height: 1.45em;
-    }
-
-    .panel {
-      border: 1px solid #1e293b;
-      background: #0a0f1c;
-      border-radius: 14px;
-      padding: 14px 18px;
-      width: 440px;
-      font-size: 13px;
-      box-shadow: 0 0 20px rgba(0, 180, 255, 0.12);
-    }
-
-    .panel-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
-
-    .log {
-      width: 440px;
-      height: 140px;
-      background: #0c111e;
+    .card {
+      background: #020617;
       border: 1px solid #1f2937;
       border-radius: 12px;
-      padding: 8px 10px;
+      box-shadow: 0 0 30px rgba(34,211,238,0.18);
+      padding: 14px 18px;
+      width: 360px;
       font-size: 12px;
-      overflow-y: auto;
+    }
+    .card-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #38bdf8;
+      margin-bottom: 6px;
+    }
+    .card-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 0;
+    }
+    .label {
       color: #9ca3af;
-      box-shadow: inset 0 0 12px rgba(0, 180, 255, 0.08);
-      line-height: 1.35em;
+    }
+    .value {
+      color: #e5e7eb;
     }
 
     canvas {
       background: #020617;
       border: 1px solid #1f2937;
       border-radius: 12px;
-      box-shadow: 0 0 40px rgba(34, 211, 238, 0.25);
+      box-shadow: 0 0 30px rgba(34,211,238,0.22);
+      width: 360px;
+      height: 360px;
+    }
+
+    .log {
+      background: #020617;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      box-shadow: 0 0 24px rgba(15,23,42,0.9);
+      padding: 10px 12px;
+      width: 360px;
+      height: 120px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      overflow-y: auto;
+      white-space: pre-wrap;
     }
   </style>
 </head>
-
 <body>
   <h1>LVS – Browser Node</h1>
-
   <div class="info">
     This browser is running as a live LVS node and connects to the Rust gateway.
     Drift is visualized as a moving dot on the canvas.<br>
     Fully compatible with LVS Rust Core (gateway + nodes).
   </div>
 
-  <!-- Status Panel -->
-  <div class="panel">
-    <div class="panel-row"><span>Status:</span> <span id="st"></span></div>
-    <div class="panel-row"><span>Node ID:</span> <span id="nid"></span></div>
-    <div class="panel-row"><span>Cycle:</span> <span id="cy"></span></div>
-    <div class="panel-row"><span>VU:</span> <span id="vu"></span></div>
-    <div class="panel-row"><span>TC:</span> <span id="tc"></span></div>
-    <div class="panel-row"><span>Peers:</span> <span id="pr"></span></div>
+  <!-- top status card -->
+  <div class="card">
+    <div class="card-title">Node status</div>
+    <div class="card-row">
+      <span class="label">Status:</span>
+      <span class="value" id="status">–</span>
+    </div>
+    <div class="card-row">
+      <span class="label">Node ID:</span>
+      <span class="value" id="node-id">browser-node-1</span>
+    </div>
+    <div class="card-row">
+      <span class="label">Cycle:</span>
+      <span class="value" id="cycle">0</span>
+    </div>
+    <div class="card-row">
+      <span class="label">VU:</span>
+      <span class="value" id="vu">0.00</span>
+    </div>
+    <div class="card-row">
+      <span class="label">TC:</span>
+      <span class="value" id="tc">0.00</span>
+    </div>
+    <div class="card-row">
+      <span class="label">Peers:</span>
+      <span class="value" id="peers">–</span>
+    </div>
   </div>
 
-  <canvas id="lvsCanvas" width="400" height="400"></canvas>
+  <!-- main canvas -->
+  <canvas id="lvsCanvas" width="360" height="360"></canvas>
 
-  <div class="log" id="log"></div>
+  <!-- bottom log -->
+  <div class="card">
+    <div class="card-title">Event log</div>
+    <div id="log" class="log"></div>
+  </div>
 
-  <!-- Подключение JS -->
+  <!-- класс ноды -->
   <script src="../browser-node.js"></script>
 
   <script>
     const GATEWAY_URL = "ws://127.0.0.1:9001/ws";
+    const NODE_ID = "browser-node-1";
 
-    const node = new LVSBrowserNode("browser-node-1", GATEWAY_URL, "lvsCanvas");
-    node.start();
-
-    // ui
-    const st = document.getElementById("st");
-    const pr = document.getElementById("pr");
-    const cy = document.getElementById("cy");
-    const vu = document.getElementById("vu");
-    const tc = document.getElementById("tc");
-    const nid = document.getElementById("nid");
-    const lg = document.getElementById("log");
-
-    nid.textContent = node.nodeId;
-
-    // Переопределяем callback-и браузерного узла
-    node.onStatus = (txt) => st.textContent = txt;
-
-    node.onPeers = (list) => {
-      pr.textContent = list.map(x => x.node_id).join(", ");
-      appendLog("Peers: " + pr.textContent);
+    const els = {
+      status: document.getElementById("status"),
+      nodeId: document.getElementById("node-id"),
+      cycle: document.getElementById("cycle"),
+      vu: document.getElementById("vu"),
+      tc: document.getElementById("tc"),
+      peers: document.getElementById("peers"),
+      log: document.getElementById("log"),
     };
 
-    node.onCycle = (n, vuVal, tcVal) => {
-      cy.textContent = n;
-      vu.textContent = vuVal.toFixed(2);
-      tc.textContent = tcVal.toFixed(2);
-    };
-
-    node.onHello = (who) => appendLog("HELLO from " + who);
-    node.onSDM = (d) => appendLog("SDM drift=" + d.toFixed(4));
-
-    function appendLog(t) {
-      const line = document.createElement("div");
-      line.textContent = "[" + new Date().toLocaleTimeString() + "] " + t;
-      lg.appendChild(line);
-      lg.scrollTop = lg.scrollHeight;
+    function logLine(text) {
+      const t = new Date().toLocaleTimeString();
+      els.log.textContent += `[${t}] ${text}\n`;
+      els.log.scrollTop = els.log.scrollHeight;
     }
+
+    const node = new LVSBrowserNode(NODE_ID, GATEWAY_URL, "lvsCanvas");
+
+    node.onStatus = (st) => {
+      els.status.textContent = st;
+      logLine(`status → ${st}`);
+    };
+
+    node.onCycle = (cycle, vu, tc) => {
+      els.cycle.textContent = cycle;
+      els.vu.textContent = vu.toFixed(2);
+      els.tc.textContent = tc.toFixed(2);
+    };
+
+    node.onPeers = (peers) => {
+      const list = peers.map(p => p.node_id || p.nodeId || p).join(", ");
+      els.peers.textContent = list || "none";
+      logLine(`peers → ${els.peers.textContent}`);
+    };
+
+    node.onHello = (fromId) => {
+      logLine(`hello from: ${fromId}`);
+    };
+
+    node.onSDM = (diff0) => {
+      // можно закомментировать, если слишком шумно
+      // logLine(`sdm diff[0]=${diff0.toFixed(4)}`);
+    };
+
+    node.start();
   </script>
 </body>
 </html>
