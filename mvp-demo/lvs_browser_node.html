@@ -2,168 +2,111 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>LVS – Browser Testnet Node</title>
+  <title>LVS – Browser Node</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
     body {
       margin: 0;
       background: #020617;
       color: #e5e7eb;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: system-ui, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      padding: 40px;
+    }
+
+    .panel {
+      width: 360px;
+      background: rgba(15,23,42,0.7);
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      box-shadow: 0 0 40px rgba(34,211,238,0.2);
       padding: 20px;
-      gap: 16px;
+      margin-bottom: 30px;
     }
-    h1 { font-size: 18px; margin: 0; }
-    .info { font-size: 12px; color: #9ca3af; max-width: 520px; text-align: center; }
 
-    .card {
-      background: #020617;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      box-shadow: 0 0 30px rgba(34,211,238,0.18);
-      padding: 14px 18px;
-      width: 360px;
+    .label { color: #64748b; font-size: 12px; }
+    .value { color: #e2e8f0; font-size: 14px; }
+
+    #peersList {
       font-size: 12px;
-    }
-    .card-title {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: #38bdf8;
-      margin-bottom: 6px;
-    }
-    .card-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 2px 0;
-    }
-    .label  { color: #9ca3af; }
-    .value  { color: #e5e7eb; }
-
-    canvas {
-      background: #020617;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      box-shadow: 0 0 30px rgba(34,211,238,0.22);
-      width: 360px;
-      height: 360px;
+      color: #94a3b8;
     }
 
-    .log {
-      background: #020617;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      box-shadow: 0 0 24px rgba(15,23,42,0.9);
-      padding: 10px 12px;
-      width: 360px;
+    #log {
       height: 120px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 11px;
       overflow-y: auto;
-      white-space: pre-wrap;
-      color: #e5e7eb;
+      background: rgba(10,20,30,0.6);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 11px;
+      color: #9ca3af;
+      border: 1px solid #1f2937;
     }
   </style>
 </head>
+
 <body>
-  <h1>LVS – Browser Node</h1>
-  <div class="info">
-    This browser is running as a live LVS node and connects to the Rust gateway.
-    Drift is visualized as a moving dot on the canvas.<br>
-    Fully compatible with LVS Rust Core (gateway + nodes).
+  <h1 style="margin-bottom:20px;">LVS – Browser Node</h1>
+
+  <div class="panel">
+    <div class="label">Status:</div>
+    <div class="value" id="st"></div>
+
+    <div class="label">Node ID:</div>
+    <div class="value" id="nid"></div>
+
+    <div class="label">Cycle:</div>
+    <div class="value" id="cy"></div>
+
+    <div class="label">VU:</div>
+    <div class="value" id="vu"></div>
+
+    <div class="label">TC:</div>
+    <div class="value" id="tc"></div>
+
+    <div class="label">Peers:</div>
+    <div class="value" id="peersList"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Node status</div>
-    <div class="card-row">
-      <span class="label">Status:</span>
-      <span class="value" id="status">–</span>
-    </div>
-    <div class="card-row">
-      <span class="label">Node ID:</span>
-      <span class="value" id="node-id">browser-node-1</span>
-    </div>
-    <div class="card-row">
-      <span class="label">Cycle:</span>
-      <span class="value" id="cycle">0</span>
-    </div>
-    <div class="card-row">
-      <span class="label">VU:</span>
-      <span class="value" id="vu">0.00</span>
-    </div>
-    <div class="card-row">
-      <span class="label">TC:</span>
-      <span class="value" id="tc">0.50</span>
-    </div>
-    <div class="card-row">
-      <span class="label">Peers:</span>
-      <span class="value" id="peers">–</span>
-    </div>
+  <canvas id="lvsCanvas" width="400" height="400"></canvas>
+
+  <div class="panel">
+    <div class="label">EVENT LOG</div>
+    <div id="log"></div>
   </div>
 
-  <canvas id="lvsCanvas" width="360" height="360"></canvas>
-
-  <div class="card">
-    <div class="card-title">Event log</div>
-    <div id="log" class="log"></div>
-  </div>
-
-  <!-- класс ноды -->
   <script src="../browser-node.js"></script>
 
   <script>
-    const GATEWAY_URL = "ws://127.0.0.1:9001/ws";
-    const NODE_ID     = "browser-node-1";
+    const node = new LVSBrowserNode("browser-node-1", "ws://127.0.0.1:9001/ws", "lvsCanvas");
 
-    const els = {
-      status: document.getElementById("status"),
-      nodeId: document.getElementById("node-id"),
-      cycle:  document.getElementById("cycle"),
-      vu:     document.getElementById("vu"),
-      tc:     document.getElementById("tc"),
-      peers:  document.getElementById("peers"),
-      log:    document.getElementById("log"),
+    const st = document.getElementById("st");
+    const nid = document.getElementById("nid");
+    const cy = document.getElementById("cy");
+    const vu = document.getElementById("vu");
+    const tc = document.getElementById("tc");
+    const peersList = document.getElementById("peersList");
+    const log = document.getElementById("log");
+
+    node.onStatus = (s) => st.innerText = s;
+    node.onCycle = (c, v, t) => {
+      cy.innerText = c;
+      vu.innerText = v.toFixed(2);
+      tc.innerText = t.toFixed(2);
     };
-
-    function logLine(text) {
-      const t = new Date().toLocaleTimeString();
-      els.log.textContent += `[${t}] ${text}\n`;
-      els.log.scrollTop = els.log.scrollHeight;
-    }
-
-    const node = new LVSBrowserNode(NODE_ID, GATEWAY_URL, "lvsCanvas");
-
-    node.onStatus = (st) => {
-      if (els.status) els.status.textContent = st;
-      logLine(`status → ${st}`);
-    };
-
-    node.onCycle = (cycle, vu, tc) => {
-      if (els.cycle) els.cycle.textContent = cycle;
-      if (els.vu)    els.vu.textContent    = vu.toFixed(2);
-      if (els.tc)    els.tc.textContent    = tc.toFixed(2);
-    };
-
     node.onPeers = (peers) => {
-      const list = (peers || []).map(p => p.node_id || p.nodeId || p).join(", ");
-      if (els.peers) els.peers.textContent = list || "none";
-      logLine(`peers → ${els.peers.textContent}`);
+      peersList.innerText = peers.join(", ") || "—";
+    };
+    node.onEvent = (txt) => {
+      const d = new Date().toLocaleTimeString();
+      log.innerHTML += `[${d}] ${txt}<br>`;
+      log.scrollTop = log.scrollHeight;
     };
 
-    node.onHello = (fromId) => {
-      logLine(`hello from: ${fromId}`);
-    };
-
-    node.onSDM = (diff0) => {
-      // можно раскомментить, если нужен спам по циклами
-      // logLine(`sdm diff[0]=${diff0.toFixed(4)}`);
-    };
-
-    logLine("browser node UI initialized");
+    nid.innerText = node.nodeId;
     node.start();
   </script>
 </body>
