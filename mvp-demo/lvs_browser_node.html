@@ -41,12 +41,8 @@
       justify-content: space-between;
       margin: 2px 0;
     }
-    .label {
-      color: #9ca3af;
-    }
-    .value {
-      color: #e5e7eb;
-    }
+    .label  { color: #9ca3af; }
+    .value  { color: #e5e7eb; }
 
     canvas {
       background: #020617;
@@ -69,6 +65,7 @@
       font-size: 11px;
       overflow-y: auto;
       white-space: pre-wrap;
+      color: #e5e7eb;
     }
   </style>
 </head>
@@ -80,7 +77,6 @@
     Fully compatible with LVS Rust Core (gateway + nodes).
   </div>
 
-  <!-- top status card -->
   <div class="card">
     <div class="card-title">Node status</div>
     <div class="card-row">
@@ -101,7 +97,7 @@
     </div>
     <div class="card-row">
       <span class="label">TC:</span>
-      <span class="value" id="tc">0.00</span>
+      <span class="value" id="tc">0.50</span>
     </div>
     <div class="card-row">
       <span class="label">Peers:</span>
@@ -109,10 +105,8 @@
     </div>
   </div>
 
-  <!-- main canvas -->
   <canvas id="lvsCanvas" width="360" height="360"></canvas>
 
-  <!-- bottom log -->
   <div class="card">
     <div class="card-title">Event log</div>
     <div id="log" class="log"></div>
@@ -123,16 +117,16 @@
 
   <script>
     const GATEWAY_URL = "ws://127.0.0.1:9001/ws";
-    const NODE_ID = "browser-node-1";
+    const NODE_ID     = "browser-node-1";
 
     const els = {
       status: document.getElementById("status"),
       nodeId: document.getElementById("node-id"),
-      cycle: document.getElementById("cycle"),
-      vu: document.getElementById("vu"),
-      tc: document.getElementById("tc"),
-      peers: document.getElementById("peers"),
-      log: document.getElementById("log"),
+      cycle:  document.getElementById("cycle"),
+      vu:     document.getElementById("vu"),
+      tc:     document.getElementById("tc"),
+      peers:  document.getElementById("peers"),
+      log:    document.getElementById("log"),
     };
 
     function logLine(text) {
@@ -144,19 +138,19 @@
     const node = new LVSBrowserNode(NODE_ID, GATEWAY_URL, "lvsCanvas");
 
     node.onStatus = (st) => {
-      els.status.textContent = st;
+      if (els.status) els.status.textContent = st;
       logLine(`status → ${st}`);
     };
 
     node.onCycle = (cycle, vu, tc) => {
-      els.cycle.textContent = cycle;
-      els.vu.textContent = vu.toFixed(2);
-      els.tc.textContent = tc.toFixed(2);
+      if (els.cycle) els.cycle.textContent = cycle;
+      if (els.vu)    els.vu.textContent    = vu.toFixed(2);
+      if (els.tc)    els.tc.textContent    = tc.toFixed(2);
     };
 
     node.onPeers = (peers) => {
-      const list = peers.map(p => p.node_id || p.nodeId || p).join(", ");
-      els.peers.textContent = list || "none";
+      const list = (peers || []).map(p => p.node_id || p.nodeId || p).join(", ");
+      if (els.peers) els.peers.textContent = list || "none";
       logLine(`peers → ${els.peers.textContent}`);
     };
 
@@ -165,10 +159,11 @@
     };
 
     node.onSDM = (diff0) => {
-      // можно закомментировать, если слишком шумно
+      // можно раскомментить, если нужен спам по циклами
       // logLine(`sdm diff[0]=${diff0.toFixed(4)}`);
     };
 
+    logLine("browser node UI initialized");
     node.start();
   </script>
 </body>
