@@ -15,37 +15,48 @@ class LVSBrowserNode {
         this.alpha = 0.05;
         this.beta = 0.10;
 
-        // canvas pos
+        // canvas pos (центр)
         this.x = this.canvas.width / 2;
         this.y = this.canvas.height / 2;
 
-        // callbacks (UI заполнит)
+        // внешние колбэки для UI
         this.onStatus = () => {};
-        this.onPeers = () => {};
-        this.onCycle = () => {};
-        this.onHello = () => {};
-        this.onSDM = () => {};
+        this.onPeers  = () => {};
+        this.onCycle  = () => {};
+        this.onHello  = () => {};
+        this.onSDM    = () => {};
+
+        this.lastPeerDiff = null;
+        this.lastPeerWeight = 0;
     }
 
+    // ---------------------------------------------------
+    // lifecycle
+    // ---------------------------------------------------
     start() {
-        this.onStatus("connecting...");
+        console.log("[LVS] connecting:", this.gatewayUrl);
+        this.onStatus("connecting");
+
         this.ws = new WebSocket(this.gatewayUrl);
 
         this.ws.onopen = () => {
+            console.log("[LVS] connected");
             this.onStatus("connected");
             this.sendHello();
             this.requestPeers();
-            this.loop();
+            this.startLoop();
         };
 
         this.ws.onclose = () => {
+            console.log("[LVS] disconnected");
             this.onStatus("disconnected");
+            // мягкий автопереподключ
             setTimeout(() => this.start(), 1500);
         };
 
         this.ws.onerror = (err) => {
+            console.log("[LVS] ws error:", err);
             this.onStatus("error");
-            console.log("WS error:", err);
         };
 
         this.ws.onmessage = (ev) => this.handleMessage(ev.data);
@@ -55,65 +66,92 @@ class LVSBrowserNode {
     // messaging
     // ---------------------------------------------------
     send(msg) {
-        if (this.ws.readyState === 1) {
-            this.ws.send(JSON.stringify(msg));
-        }
+        if (!this.ws) return;
+        if (this.ws.readyState !== WebSocket.OPEN) return;
+        this.ws.send(JSON.stringify(msg));
     }
 
     sendHello() {
-        this.send({
+        const msg = {
             type: "hello",
             node_id: this.nodeId,
             payload: {
                 kind: "browser",
                 version: "0.2.0"
             }
-        });
+        };
+        console.log("[LVS] → hello", msg);
+        this.send(msg);
+        this.onHello(this.nodeId);
     }
 
     requestPeers() {
-        this.send({
+        const msg = {
             type: "peers_request",
             node_id: this.nodeId
-        });
+        };
+        console.log("[LVS] → peers_request");
+        this.send(msg);
     }
 
     sendSDM(diff) {
-        this.send({
+        const payload = {
+            diff: diff,
+            weight: this.tc,
+            cycle_id: this.cycle
+        };
+        const msg = {
             type: "sdm",
             node_id: this.nodeId,
-            payload: {
-                diff: diff,
-                weight: this.tc,
-                cycle_id: this.cycle
-            }
-        });
+            payload
+        };
+        this.send(msg);
         this.onSDM(diff[0]);
     }
 
     // ---------------------------------------------------
-    // parsing incoming messages
+    // incoming messages
     // ---------------------------------------------------
     handleMessage(txt) {
         let msg;
-        try { msg = JSON.parse(txt); } catch { return; }
-
-        if (msg.type === "hello" && msg.node_id !== this.nodeId) {
-            this.onHello(msg.node_id);
+        try {
+            msg = JSON.parse(txt);
+        } catch {
+            return;
         }
 
-        if (msg.type === "peers") {
-            this.onPeers(msg.payload.peers);
-        }
+        // console.log("[LVS] ←", msg);
 
-        if (msg.type === "sdm" && msg.node_id !== this.nodeId) {
-            this.lastPeerDiff = msg.payload.diff;
-            this.lastPeerWeight = msg.payload.weight;
+        switch (msg.type) {
+            case "hello":
+                if (msg.node_id !== this.nodeId) {
+                    console.log("[LVS] hello from:", msg.node_id);
+                    this.onHello(msg.node_id);
+                }
+                break;
+
+            case "peers":
+                if (msg.payload && Array.isArray(msg.payload.peers)) {
+                    this.onPeers(msg.payload.peers);
+                    console.log("[LVS] peers:", msg.payload.peers);
+                }
+                break;
+
+            case "sdm":
+                if (msg.node_id !== this.nodeId && msg.payload) {
+                    this.lastPeerDiff = msg.payload.diff;
+                    this.lastPeerWeight = msg.payload.weight;
+                }
+                break;
+
+            default:
+                // игнорим остальное
+                break;
         }
     }
 
     // ---------------------------------------------------
-    // drift logic
+    // drift
     // ---------------------------------------------------
     generateEntropy() {
         return [Math.random() * 2 - 1, Math.random() * 2 - 1];
@@ -133,7 +171,9 @@ class LVSBrowserNode {
     }
 
     vaultGuard(drift) {
-        if (this.vu + drift[0] < 0) drift[0] = -this.vu;
+        if (this.vu + drift[0] < 0) {
+            drift[0] = -this.vu;
+        }
         return drift;
     }
 
@@ -142,10 +182,11 @@ class LVSBrowserNode {
         this.x += d[0] * 2;
         this.y += d[1] * 2;
 
-        // clamp
-        const r = this.canvas;
-        this.x = Math.max(0, Math.min(r.width, this.x));
-        this.y = Math.max(0, Math.min(r.height, this.y));
+        // clamp в пределах канвы
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        this.x = Math.max(10, Math.min(w - 10, this.x));
+        this.y = Math.max(10, Math.min(h - 10, this.y));
     }
 
     // ---------------------------------------------------
@@ -154,11 +195,12 @@ class LVSBrowserNode {
     draw() {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
         ctx.beginPath();
         ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
         ctx.fillStyle = "#00d4ff";
         ctx.shadowColor = "rgba(0,180,255,0.6)";
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 14;
         ctx.fill();
         ctx.shadowBlur = 0;
     }
@@ -166,15 +208,17 @@ class LVSBrowserNode {
     // ---------------------------------------------------
     // main loop
     // ---------------------------------------------------
-    loop() {
-        setInterval(() => {
+    startLoop() {
+        if (this._loopHandle) return; // не плодим интервалы
+
+        this._loopHandle = setInterval(() => {
             this.cycle++;
 
             const E = this.generateEntropy();
             const d1 = this.driftFromEntropy(E);
             const d2 = this.driftFromPeers();
-
             let drift = [d1[0] + d2[0], d1[1] + d2[1]];
+
             drift = this.vaultGuard(drift);
 
             this.applyDrift(drift);
