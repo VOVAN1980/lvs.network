@@ -2,53 +2,63 @@ class LVSBrowserNode {
     constructor(nodeId, gatewayUrl, canvasId) {
         this.nodeId = nodeId;
         this.gatewayUrl = gatewayUrl;
-        this.ws = null;
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext("2d");
 
-        // core state
+        // baseline state
+        this.ws = null;
         this.vu = 100.0;
         this.tc = 0.5;
         this.cycle = 0;
 
-        // drift coefficients (Rust-compatible)
-        this.alpha = 0.04;  // entropy influence
-        this.beta = 0.12;   // peer diff influence
+        // drift parameters
+        this.alpha = 0.05;
+        this.beta = 0.10;
 
-        // drift memory from peers
-        this.peerDiff = 0.0;
-        this.peerWeight = 0.0;
-
-        // canvas
-        this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext("2d");
-
-        // start position (center)
+        // canvas pos
         this.x = this.canvas.width / 2;
         this.y = this.canvas.height / 2;
+
+        // callbacks (UI заполнит)
+        this.onStatus = () => {};
+        this.onPeers = () => {};
+        this.onCycle = () => {};
+        this.onHello = () => {};
+        this.onSDM = () => {};
     }
 
-
     start() {
-        console.log("[LVS] connecting:", this.gatewayUrl);
+        this.onStatus("connecting...");
         this.ws = new WebSocket(this.gatewayUrl);
 
         this.ws.onopen = () => {
-            console.log("[LVS] connected");
+            this.onStatus("connected");
             this.sendHello();
             this.requestPeers();
             this.loop();
         };
 
+        this.ws.onclose = () => {
+            this.onStatus("disconnected");
+            setTimeout(() => this.start(), 1500);
+        };
+
+        this.ws.onerror = (err) => {
+            this.onStatus("error");
+            console.log("WS error:", err);
+        };
+
         this.ws.onmessage = (ev) => this.handleMessage(ev.data);
-        this.ws.onerror = (err) => console.error("WS error:", err);
-        this.ws.onclose = () => console.warn("[LVS] disconnected");
     }
 
-
+    // ---------------------------------------------------
+    // messaging
+    // ---------------------------------------------------
     send(msg) {
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-        this.ws.send(JSON.stringify(msg));
+        if (this.ws.readyState === 1) {
+            this.ws.send(JSON.stringify(msg));
+        }
     }
-
 
     sendHello() {
         this.send({
@@ -56,11 +66,10 @@ class LVSBrowserNode {
             node_id: this.nodeId,
             payload: {
                 kind: "browser",
-                version: "0.3.0"
+                version: "0.2.0"
             }
         });
     }
-
 
     requestPeers() {
         this.send({
@@ -69,114 +78,94 @@ class LVSBrowserNode {
         });
     }
 
-
-    // Rust-compatible entropy (1D)
-    generateEntropy() {
-        return (Math.random() * 2 - 1);
-    }
-
-
-    handleMessage(txt) {
-        let msg;
-        try {
-            msg = JSON.parse(txt);
-        } catch {
-            return;
-        }
-
-        if (msg.node_id === this.nodeId) return; // ignore self
-
-        switch (msg.type) {
-
-            case "sdm":
-                this.peerDiff = msg.payload.diff;
-                this.peerWeight = msg.payload.weight;
-                break;
-
-            case "peers":
-                console.log("[LVS] peers:", msg.payload.peers);
-                break;
-
-            case "hello":
-                console.log("[LVS] hello from:", msg.node_id);
-                break;
-
-            default:
-                break;
-        }
-    }
-
-
-    // Drift from entropy (Rust compatible)
-    driftFromEntropy(E) {
-        return E * this.alpha;
-    }
-
-    // Drift from peers (Rust compatible)
-    driftFromPeers() {
-        return this.peerDiff * this.beta;
-    }
-
-    // Vault Guard: can't go negative
-    vaultGuard(d) {
-        if (this.vu + d < 0) {
-            return -this.vu;
-        }
-        return d;
-    }
-
-    applyDrift(d) {
-        this.vu += d;
-
-        // convert 1D drift into 2D motion (main axis: x)
-        this.x += d * 4;
-        this.y += (Math.random() - 0.5) * 1.2;
-
-        // wrap boundaries horizontally
-        if (this.x < 0) this.x = this.canvas.width;
-        if (this.x > this.canvas.width) this.x = 0;
-    }
-
-
-    sendEP(E) {
-        this.send({
-            type: "ep",
-            node_id: this.nodeId,
-            payload: {
-                entropy: E,
-                cycle_id: this.cycle
-            }
-        });
-    }
-
-
-    sendSDM(d) {
+    sendSDM(diff) {
         this.send({
             type: "sdm",
             node_id: this.nodeId,
             payload: {
-                diff: d,
+                diff: diff,
                 weight: this.tc,
                 cycle_id: this.cycle
             }
         });
+        this.onSDM(diff[0]);
     }
 
+    // ---------------------------------------------------
+    // parsing incoming messages
+    // ---------------------------------------------------
+    handleMessage(txt) {
+        let msg;
+        try { msg = JSON.parse(txt); } catch { return; }
 
+        if (msg.type === "hello" && msg.node_id !== this.nodeId) {
+            this.onHello(msg.node_id);
+        }
+
+        if (msg.type === "peers") {
+            this.onPeers(msg.payload.peers);
+        }
+
+        if (msg.type === "sdm" && msg.node_id !== this.nodeId) {
+            this.lastPeerDiff = msg.payload.diff;
+            this.lastPeerWeight = msg.payload.weight;
+        }
+    }
+
+    // ---------------------------------------------------
+    // drift logic
+    // ---------------------------------------------------
+    generateEntropy() {
+        return [Math.random() * 2 - 1, Math.random() * 2 - 1];
+    }
+
+    driftFromEntropy(E) {
+        const m = Math.hypot(E[0], E[1]) || 1;
+        return [(E[0] / m) * this.alpha, (E[1] / m) * this.alpha];
+    }
+
+    driftFromPeers() {
+        if (!this.lastPeerDiff) return [0, 0];
+        return [
+            this.lastPeerDiff[0] * this.beta,
+            this.lastPeerDiff[1] * this.beta
+        ];
+    }
+
+    vaultGuard(drift) {
+        if (this.vu + drift[0] < 0) drift[0] = -this.vu;
+        return drift;
+    }
+
+    applyDrift(d) {
+        this.vu += d[0];
+        this.x += d[0] * 2;
+        this.y += d[1] * 2;
+
+        // clamp
+        const r = this.canvas;
+        this.x = Math.max(0, Math.min(r.width, this.x));
+        this.y = Math.max(0, Math.min(r.height, this.y));
+    }
+
+    // ---------------------------------------------------
+    // draw
+    // ---------------------------------------------------
     draw() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
-        this.ctx.fillStyle = "#00d4ff";
-        this.ctx.shadowBlur = 10;
-        this.ctx.shadowColor = "#00eaff";
-        this.ctx.fill();
-
-        this.ctx.shadowBlur = 0;
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = "#00d4ff";
+        ctx.shadowColor = "rgba(0,180,255,0.6)";
+        ctx.shadowBlur = 12;
+        ctx.fill();
+        ctx.shadowBlur = 0;
     }
 
-
+    // ---------------------------------------------------
+    // main loop
+    // ---------------------------------------------------
     loop() {
         setInterval(() => {
             this.cycle++;
@@ -185,19 +174,14 @@ class LVSBrowserNode {
             const d1 = this.driftFromEntropy(E);
             const d2 = this.driftFromPeers();
 
-            let D = d1 + d2;
-            D = this.vaultGuard(D);
+            let drift = [d1[0] + d2[0], d1[1] + d2[1]];
+            drift = this.vaultGuard(drift);
 
-            // send entropy to Rust nodes (THIS ACTIVATES THE WHOLE NETWORK)
-            this.sendEP(E);
-
-            // send SDM to Rust nodes
-            this.sendSDM(D);
-
-            // apply drift to browser model
-            this.applyDrift(D);
+            this.applyDrift(drift);
+            this.sendSDM(drift);
             this.draw();
 
+            this.onCycle(this.cycle, this.vu, this.tc);
         }, 120);
     }
 }
