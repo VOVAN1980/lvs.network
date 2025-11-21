@@ -2,29 +2,34 @@ class LVSBrowserNode {
   constructor(nodeId, gatewayUrl, canvasId) {
     this.nodeId = nodeId;
     this.gatewayUrl = gatewayUrl;
+
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext("2d");
 
-    // baseline state
+    // состояние
     this.ws = null;
     this.vu = 100.0;
     this.tc = 0.5;
     this.cycle = 0;
 
-    // drift parameters
+    // параметры дрейфа
     this.alpha = 0.05;
     this.beta = 0.10;
 
-    // canvas pos
+    // позиция точки
     this.x = this.canvas.width / 2;
     this.y = this.canvas.height / 2;
 
-    // callbacks — страница подставит свои функции
+    // последние данные от пиров
+    this.lastPeerDiff = null;
+    this.lastPeerWeight = null;
+
+    // колбэки — будут навешаны из HTML
     this.onStatus = () => {};
-    this.onPeers = () => {};
-    this.onCycle = () => {};
-    this.onHello = () => {};
-    this.onSDM = () => {};
+    this.onPeers  = () => {};
+    this.onCycle  = () => {};
+    this.onHello  = () => {};
+    this.onSDM    = () => {};
   }
 
   start() {
@@ -44,6 +49,7 @@ class LVSBrowserNode {
     this.ws.onclose = () => {
       this.onStatus("disconnected");
       console.log("[LVS] disconnected");
+      // авто-reconnect
       setTimeout(() => this.start(), 1500);
     };
 
@@ -55,10 +61,10 @@ class LVSBrowserNode {
     this.ws.onmessage = (ev) => this.handleMessage(ev.data);
   }
 
-  // ---------------- messaging ----------------
+  // ---------- отправка ----------
 
   send(msg) {
-    if (this.ws && this.ws.readyState === 1) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(msg));
     }
   }
@@ -90,7 +96,7 @@ class LVSBrowserNode {
       type: "sdm",
       node_id: this.nodeId,
       payload: {
-        diff: diff,
+        diff,
         weight: this.tc,
         cycle_id: this.cycle,
       },
@@ -99,7 +105,7 @@ class LVSBrowserNode {
     this.onSDM(diff[0]);
   }
 
-  // ---------------- incoming messages ----------------
+  // ---------- приём ----------
 
   handleMessage(txt) {
     let msg;
@@ -121,12 +127,12 @@ class LVSBrowserNode {
     }
 
     if (msg.type === "sdm" && msg.node_id !== this.nodeId) {
-      this.lastPeerDiff = msg.payload.diff;
+      this.lastPeerDiff   = msg.payload.diff;
       this.lastPeerWeight = msg.payload.weight;
     }
   }
 
-  // ---------------- drift logic ----------------
+  // ---------- дрейф ----------
 
   generateEntropy() {
     return [Math.random() * 2 - 1, Math.random() * 2 - 1];
@@ -156,11 +162,11 @@ class LVSBrowserNode {
     this.y += d[1] * 2;
 
     const r = this.canvas;
-    this.x = Math.max(0, Math.min(r.width, this.x));
+    this.x = Math.max(0, Math.min(r.width,  this.x));
     this.y = Math.max(0, Math.min(r.height, this.y));
   }
 
-  // ---------------- draw ----------------
+  // ---------- отрисовка ----------
 
   draw() {
     const ctx = this.ctx;
@@ -174,13 +180,13 @@ class LVSBrowserNode {
     ctx.shadowBlur = 0;
   }
 
-  // ---------------- main loop ----------------
+  // ---------- основной цикл ----------
 
   loop() {
     setInterval(() => {
       this.cycle++;
 
-      const E = this.generateEntropy();
+      const E  = this.generateEntropy();
       const d1 = this.driftFromEntropy(E);
       const d2 = this.driftFromPeers();
 
@@ -196,5 +202,5 @@ class LVSBrowserNode {
   }
 }
 
-// чтобы было видно из инлайнового скрипта
+// экспорт в глобал
 window.LVSBrowserNode = LVSBrowserNode;
