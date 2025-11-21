@@ -2,169 +2,456 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>LVS – Browser Node</title>
+  <title>LVS — Browser Testnet Node</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
+      min-height: 100vh;
       margin: 0;
-      background: radial-gradient(circle at top, #0a1122, #020617 60%);
+      background: radial-gradient(circle at top, #020617 0, #020617 40%, #000 100%);
       color: #e5e7eb;
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px;
+      padding: 24px 10px 32px;
     }
 
-    h1 {
-      margin-bottom: 10px;
-      font-size: 26px;
-      letter-spacing: 0.5px;
-      color: #cce6ff;
-      text-shadow: 0 0 12px rgba(0, 188, 255, 0.35);
-    }
-
-    .subtitle {
-      font-size: 13px;
-      margin-bottom: 30px;
-      color: #8ea2bf;
-      text-align: center;
-      max-width: 480px;
-    }
-
-    .wrap {
+    .shell {
+      width: 100%;
+      max-width: 1280px;
       display: flex;
-      gap: 40px;
-      margin-top: 20px;
-      align-items: flex-start;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* HEADER */
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .title-block h1 {
+      font-size: 22px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #facc15;
+    }
+
+    .title-block p {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-top: 6px;
+      max-width: 640px;
+    }
+
+    .status-pill {
+      align-self: flex-start;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #ef4444;
+      box-shadow: 0 0 8px rgba(220,38,38,0.6);
+    }
+
+    .dot.ok {
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34,197,94,0.9);
+    }
+
+    /* MAIN GRID */
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: minmax(0,1fr);
+      }
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
 
     .panel {
-      width: 340px;
-      background: rgba(15,23,42,0.8);
-      border: 1px solid #1e293b;
-      border-radius: 12px;
-      box-shadow: 0 0 40px rgba(34,211,238,0.14);
-      padding: 20px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top left, #020617 0, #020617 45%, #020617 100%);
+      border: 1px solid rgba(30,64,175,0.8);
+      box-shadow: 0 22px 60px rgba(15,23,42,0.9);
+      padding: 16px 18px;
     }
 
-    .label { color: #64748b; font-size: 12px; margin-top: 4px; }
-    .value { color: #e2e8f0; font-size: 14px; font-weight: 500; }
+    /* LEFT: CANVAS + BASIC INFO */
 
-    #peersList {
-      font-size: 12px;
-      color: #94a3b8;
-      line-height: 1.3;
+    .vis-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 12px;
     }
 
-    #log {
-      height: 170px;
-      overflow-y: auto;
-      background: rgba(8,12,20,0.5);
-      border-radius: 8px;
-      padding: 12px;
+    .vis-title {
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #93c5fd;
+    }
+
+    .vis-sub {
       font-size: 12px;
       color: #9ca3af;
-      border: 1px solid #1f2937;
-      font-family: "Consolas", monospace;
+    }
+
+    .canvas-wrap {
+      border-radius: 18px;
+      border: 1px solid rgba(15,23,42,1);
+      background: radial-gradient(circle at center, #020617 0, #020617 60%, #000 100%);
+      box-shadow: 0 0 40px rgba(56,189,248,0.28);
+      padding: 14px;
     }
 
     #lvsCanvas {
-      border: 1px solid #1f2937;
-      border-radius: 14px;
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 520px;
+      border-radius: 16px;
       background: #020617;
-      box-shadow: 0 0 40px rgba(0,180,255,0.28);
+    }
+
+    .metrics-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      flex: 1 1 120px;
+      min-width: 0;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, #0b1120, #020617 55%);
+      border: 1px solid rgba(148,163,184,0.35);
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .metric-label {
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 2px;
+    }
+
+    .metric-value {
+      font-size: 14px;
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .metric-note {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    /* RIGHT: PEERS + LOG */
+
+    .right-grid {
+      display: grid;
+      grid-template-rows: minmax(0, 0.6fr) minmax(0, 1fr);
+      gap: 12px;
+      height: 100%;
+    }
+
+    .block-title {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #a5b4fc;
+      margin-bottom: 6px;
+    }
+
+    .peers-box {
+      font-size: 12px;
+      color: #cbd5f5;
+      background: rgba(15,23,42,0.9);
+      border-radius: 10px;
+      border: 1px solid rgba(30,64,175,0.8);
+      padding: 10px;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+
+    .peer-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 2px;
+      border-bottom: 1px dashed rgba(30,64,175,0.3);
+      padding-bottom: 1px;
+    }
+
+    .peer-id {
+      color: #e5e7eb;
+      font-family: "Consolas", monospace;
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 190px;
+    }
+
+    .peer-role {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #38bdf8;
+      flex-shrink: 0;
+    }
+
+    .log-box {
+      background: rgba(15,23,42,0.95);
+      border-radius: 12px;
+      border: 1px solid rgba(30,64,175,0.85);
+      padding: 10px;
+      font-size: 11px;
+      font-family: "Consolas", monospace;
+      color: #9ca3af;
+      height: 100%;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .log-line span.t {
+      color: #6ee7b7;
+    }
+
+    .log-line span.k {
+      color: #e5e7eb;
+    }
+
+    .log-line span.v {
+      color: #93c5fd;
     }
   </style>
 </head>
-
 <body>
+  <div class="shell">
 
-  <h1>LVS – Browser Node</h1>
-  <div class="subtitle">
-    This browser is running as a live LVS node and connects to the Rust gateway.<br>
-    Drift is visualized as a moving dot on the canvas. Fully compatible with LVS Rust Core.
-  </div>
+    <!-- HEADER -->
+    <div class="header">
+      <div class="title-block">
+        <h1>LVS — Browser Node</h1>
+        <p>
+          This page runs your browser as a live LVS node, connected to the Rust gateway.
+          Drift is visualized on the canvas; peers and events are synced in real time from the LVS core.
+        </p>
+      </div>
 
-  <div class="wrap">
-
-    <!-- LEFT COLUMN -->
-    <div class="panel">
-      <div class="label">Status:</div>
-      <div class="value" id="st">—</div>
-
-      <div class="label">Node ID:</div>
-      <div class="value" id="nid"></div>
-
-      <div class="label">Cycle:</div>
-      <div class="value" id="cy">0</div>
-
-      <div class="label">VU:</div>
-      <div class="value" id="vu">0</div>
-
-      <div class="label">TC:</div>
-      <div class="value" id="tc">0</div>
-
-      <div class="label" style="margin-top:10px;">Peers:</div>
-      <div class="value" id="peersList">—</div>
+      <div class="status-pill">
+        <div id="status-dot" class="dot"></div>
+        <span id="status-text">INIT</span>
+      </div>
     </div>
 
-    <!-- CANVAS -->
-    <canvas id="lvsCanvas" width="420" height="420"></canvas>
+    <!-- MAIN GRID -->
+    <div class="grid">
 
-    <!-- RIGHT COLUMN -->
-    <div class="panel">
-      <div class="label" style="margin-bottom:8px;">EVENT LOG</div>
-      <div id="log"></div>
+      <!-- LEFT: VIS + METRICS -->
+      <div class="panel">
+        <div class="vis-header">
+          <div>
+            <div class="vis-title">Drift &amp; value dynamics</div>
+            <div class="vis-sub">
+              Browser node position inside the value space. Movement is driven by entropy + peer drift.
+            </div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:#9ca3af;">
+            Node ID:<br/>
+            <span id="node-id" style="font-family:Consolas,monospace;color:#e5e7eb;"></span>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="lvsCanvas" width="520" height="520"></canvas>
+        </div>
+
+        <div class="metrics-row">
+          <div class="metric">
+            <div class="metric-label">Cycle</div>
+            <div class="metric-value" id="m-cycle">0</div>
+            <div class="metric-note">Update ticks processed by this browser node.</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">VU</div>
+            <div class="metric-value" id="m-vu">0.00</div>
+            <div class="metric-note">Effective value units controlled by the node (after drift + vault guard).</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">TC</div>
+            <div class="metric-value" id="m-tc">0.50</div>
+            <div class="metric-note">Trust Credits used as weight for SDM broadcast.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: PEERS + LOG -->
+      <div class="panel">
+        <div class="right-grid">
+
+          <!-- PEERS -->
+          <div>
+            <div class="block-title">Connected peers</div>
+            <div id="peers-box" class="peers-box">
+              <div style="color:#6b7280;font-size:11px;">Waiting for peers list from gateway…</div>
+            </div>
+          </div>
+
+          <!-- LOG -->
+          <div>
+            <div class="block-title">Event log</div>
+            <div id="log-box" class="log-box"></div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
-
   </div>
 
+  <!-- logic -->
   <script src="../browser-node.js"></script>
-
   <script>
-    const node = new LVSBrowserNode("browser-node-1", "ws://127.0.0.1:9001/ws", "lvsCanvas");
+    // ====== CONFIG ======
+    // локальный гейтвей
+    const GATEWAY_URL = "ws://127.0.0.1:9001/ws";
+    const NODE_ID     = "browser-node-1";
 
-    const st = document.getElementById("st");
-    const nid = document.getElementById("nid");
-    const cy = document.getElementById("cy");
-    const vu = document.getElementById("vu");
-    const tc = document.getElementById("tc");
-    const peersList = document.getElementById("peersList");
-    const log = document.getElementById("log");
+    // ====== DOM ======
+    const statusDot   = document.getElementById("status-dot");
+    const statusText  = document.getElementById("status-text");
+    const nodeIdSpan  = document.getElementById("node-id");
+    const mCycle      = document.getElementById("m-cycle");
+    const mVu         = document.getElementById("m-vu");
+    const mTc         = document.getElementById("m-tc");
+    const peersBox    = document.getElementById("peers-box");
+    const logBox      = document.getElementById("log-box");
 
-    // status
-    node.onStatus = (s) => {
-      st.innerText = s;
-      addLog(`status → ${s}`);
-    };
+    nodeIdSpan.textContent = NODE_ID;
 
-    // cycles
-    node.onCycle = (c, v, t) => {
-      cy.innerText = c;
-      vu.innerText = v.toFixed(2);
-      tc.innerText = t.toFixed(2);
-    };
-
-    // peers
-    node.onPeers = (peers) => {
-      peersList.innerText = peers.length ? peers.join(", ") : "—";
-      addLog(`peers → ${peers.join(", ")}`);
-    };
-
-    // log helper
-    function addLog(text) {
-      const tm = new Date().toLocaleTimeString();
-      log.innerHTML += `[${tm}] ${text}<br>`;
-      log.scrollTop = log.scrollHeight;
+    function setStatus(state) {
+      statusText.textContent = state.toUpperCase();
+      if (state === "connected") {
+        statusDot.classList.add("ok");
+      } else {
+        statusDot.classList.remove("ok");
+      }
     }
 
-    nid.innerText = node.nodeId;
-    addLog("browser node UI initialized");
+    function addLog(kind, msg) {
+      const line = document.createElement("div");
+      line.className = "log-line";
+      const t = new Date().toLocaleTimeString();
+      line.innerHTML =
+        '<span class="t">[' + t + ']</span> ' +
+        '<span class="k">' + kind + "</span>" +
+        (msg ? ' <span class="v">' + msg + "</span>" : "");
+      logBox.appendChild(line);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
 
+    function renderPeers(peers) {
+      peersBox.innerHTML = "";
+      if (!peers || !peers.length) {
+        peersBox.innerHTML =
+          '<div style="color:#6b7280;font-size:11px;">No peers yet. Waiting for gateway updates…</div>';
+        return;
+      }
+      peers.forEach((p) => {
+        let id = "";
+        let role = "";
+        if (typeof p === "string") {
+          id = p;
+        } else if (p) {
+          id = p.id || p.node_id || JSON.stringify(p);
+          role = p.role || p.kind || "";
+        }
+
+        const row = document.createElement("div");
+        row.className = "peer-item";
+
+        const idSpan = document.createElement("div");
+        idSpan.className = "peer-id";
+        idSpan.textContent = id;
+
+        const roleSpan = document.createElement("div");
+        roleSpan.className = "peer-role";
+        roleSpan.textContent = role ? role : "NODE";
+
+        row.appendChild(idSpan);
+        row.appendChild(roleSpan);
+        peersBox.appendChild(row);
+      });
+    }
+
+    // ====== LVS BROWSER NODE ======
+
+    const node = new LVSBrowserNode(NODE_ID, GATEWAY_URL, "lvsCanvas");
+
+    node.onStatus = (s) => {
+      setStatus(s);
+      addLog("status", s);
+    };
+
+    node.onCycle = (cycle, vu, tc) => {
+      mCycle.textContent = cycle.toString();
+      mVu.textContent    = vu.toFixed(2);
+      mTc.textContent    = tc.toFixed(2);
+    };
+
+    node.onPeers = (peers) => {
+      renderPeers(peers);
+      // короткий лог, без огромных JSON
+      const count = peers ? peers.length : 0;
+      addLog("peers", "received " + count + " peer(s) from gateway");
+    };
+
+    node.onHello = (fromId) => {
+      addLog("hello", "from " + fromId);
+    };
+
+    node.onSDM = (dx) => {
+      // только отметим факт отправки; не спамим каждое значение
+      // addLog("sdm", "Δx=" + dx.toFixed(4));
+    };
+
+    addLog("init", "browser node UI attached to LVSBrowserNode");
     node.start();
   </script>
-
 </body>
 </html>
