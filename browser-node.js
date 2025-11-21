@@ -9,7 +9,7 @@ class LVSBrowserNode {
         this.tc = 0.5;
         this.cycle = 0;
 
-        // drift coefficients (Rust-like)
+        // drift coefficients (Rust-compatible)
         this.alpha = 0.04;  // entropy influence
         this.beta = 0.12;   // peer diff influence
 
@@ -117,7 +117,7 @@ class LVSBrowserNode {
         return this.peerDiff * this.beta;
     }
 
-    // Vault Guard (can't go below zero)
+    // Vault Guard: can't go negative
     vaultGuard(d) {
         if (this.vu + d < 0) {
             return -this.vu;
@@ -128,13 +128,25 @@ class LVSBrowserNode {
     applyDrift(d) {
         this.vu += d;
 
-        // map 1D drift to 2D smooth movement
-        this.x += d * 4;              // real axis
-        this.y += (Math.random() - 0.5) * 1.2;   // cosmetic noise
+        // convert 1D drift into 2D motion (main axis: x)
+        this.x += d * 4;
+        this.y += (Math.random() - 0.5) * 1.2;
 
-        // boundaries
+        // wrap boundaries horizontally
         if (this.x < 0) this.x = this.canvas.width;
         if (this.x > this.canvas.width) this.x = 0;
+    }
+
+
+    sendEP(E) {
+        this.send({
+            type: "ep",
+            node_id: this.nodeId,
+            payload: {
+                entropy: E,
+                cycle_id: this.cycle
+            }
+        });
     }
 
 
@@ -169,7 +181,6 @@ class LVSBrowserNode {
         setInterval(() => {
             this.cycle++;
 
-            // entropy
             const E = this.generateEntropy();
             const d1 = this.driftFromEntropy(E);
             const d2 = this.driftFromPeers();
@@ -177,8 +188,14 @@ class LVSBrowserNode {
             let D = d1 + d2;
             D = this.vaultGuard(D);
 
-            this.applyDrift(D);
+            // send entropy to Rust nodes (THIS ACTIVATES THE WHOLE NETWORK)
+            this.sendEP(E);
+
+            // send SDM to Rust nodes
             this.sendSDM(D);
+
+            // apply drift to browser model
+            this.applyDrift(D);
             this.draw();
 
         }, 120);
