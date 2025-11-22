@@ -173,7 +173,7 @@ this.cycle = 0;
   this.vu += d[0];
 
   // маленький, плавный шаг
-  const POS_SCALE = 8; // можешь делать 8–14
+  const POS_SCALE = 10; // можешь делать 8–14
   this.x += d[0] * POS_SCALE;
   this.y += d[1] * POS_SCALE;
 
