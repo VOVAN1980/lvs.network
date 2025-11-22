@@ -13,8 +13,8 @@ class LVSBrowserNode {
     this.cycle = 0;
 
     // параметры дрейфа
-    this.alpha = 0.05;
-    this.beta = 0.10;
+    this.alpha = 0.4;
+    this.beta = 0.6;
 
     // позиция точки
     this.x = this.canvas.width / 2;
