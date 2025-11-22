@@ -13,34 +13,34 @@ class LVSBrowserNode {
     this.centerY = this.height / 2;
     this.radius  = Math.min(this.width, this.height) / 2 - 40;
 
-    // ===== состояние браузер-ноды =====
+    // состояние браузер-ноды
     this.ws    = null;
     this.vu    = 100.0;
     this.tc    = 0.5;
     this.cycle = 0;
 
     // дрейф
-    this.alpha = 0.04;  // интенсивность энтропии
-    this.beta  = 0.06;  // чувствительность к пиру
+    this.alpha = 0.04;   // шум (энтропия)
+    this.beta  = 0.06;   // чувствительность к пиру
 
     this.lastPeerDiff   = null;
     this.lastPeerWeight = null;
 
     // peers на кольце
-    this.peers = [];                 // [{ id, angle, x, y, pulse, lastSdmTime }]
+    this.peers = []; // [{ id, angle, x, y, pulse, lastSdmTime }]
     this.peerRingRadius = this.radius * 0.86;
 
     // ядро сети
-    this.corePulse = 0;              // пульсация ядра от нагрузки
+    this.corePulse = 0;  // пульсация ядра от нагрузки
 
-    // Позиция нашей браузер-ноды внутри круга
+    // позиция самой browser-ноды (внутри круга)
     this.selfX = this.centerX;
     this.selfY = this.centerY;
     this.selfTrail = [];
     this.maxTrail  = 80;
     this.selfPulse = 0;
 
-    // пружина к центру (чтобы self не "падал вниз")
+    // пружина к центру — чтобы self не "падал"
     this.springK = 0.015;
 
     // таймер цикла
@@ -54,10 +54,9 @@ class LVSBrowserNode {
     this.onSDM    = () => {};
   }
 
-  /* ===========================
-   *   WebSocket lifecycle
-   * ===========================
-   */
+  // ===========================
+  //   WebSocket lifecycle
+  // ===========================
 
   start() {
     this.onStatus("connecting...");
@@ -102,7 +101,7 @@ class LVSBrowserNode {
       node_id: this.nodeId,
       payload: {
         kind: "browser",
-        version: "0.4.0",
+        version: "0.5.0",
       },
     };
     this.send(msg);
@@ -128,15 +127,14 @@ class LVSBrowserNode {
     };
     this.send(msg);
 
-    // вспышка self при отправке
+    // вспышка для собственной точки
     this.selfPulse = Math.min(1.3, this.selfPulse + 0.6);
     this.onSDM(diff[0]);
   }
 
-  /* ===========================
-   *   Handle incoming messages
-   * ===========================
-   */
+  // ===========================
+  //   Handle incoming messages
+  // ===========================
 
   handleMessage(txt) {
     let msg;
@@ -171,15 +169,15 @@ class LVSBrowserNode {
     }
   }
 
-  /* ===========================
-   *   Peers ring
-   * ===========================
-   */
+  // ===========================
+  //   Peers ring
+  // ===========================
 
   updatePeers(peersRaw) {
+    // забираем node_id, но отбрасываем self
     const ids = peersRaw
       .map((p) => (typeof p === "string" ? p : (p.node_id || p.id || "")))
-      .filter(Boolean);
+      .filter((id) => id && id !== this.nodeId);
 
     if (!ids.length) {
       this.peers = [];
@@ -205,7 +203,6 @@ class LVSBrowserNode {
           lastSdmTime: 0,
         };
       } else {
-        // выравниваем базовую позицию, но угол потом всё равно крутится
         peer.angle = baseAngle;
       }
 
@@ -218,14 +215,18 @@ class LVSBrowserNode {
   }
 
   registerSdmVisual(nodeId, diff, weight) {
+    // свои SDM визуально НЕ считаем в ядро/peers
+    if (!nodeId || nodeId === this.nodeId) {
+      return;
+    }
+
     const mag = Math.hypot(diff[0] || 0, diff[1] || 0);
     const baseBoost = 0.15 + mag * 3.0 + (weight || 0) * 0.2;
     const boost = Math.min(1.5, baseBoost);
 
-    // ядро чувствует любой SDM
+    // ядро чувствует внешнюю активность
     this.corePulse = Math.min(3.0, this.corePulse + boost * 0.7);
 
-    // если это один из пиров — он вспыхивает и тянет луч к центру
     const peer = this.peers.find((p) => p.id === nodeId);
     if (peer) {
       peer.pulse = Math.min(1.6, peer.pulse + boost);
@@ -233,10 +234,9 @@ class LVSBrowserNode {
     }
   }
 
-  /* ===========================
-   *   Value drift
-   * ===========================
-   */
+  // ===========================
+  //   Value drift
+  // ===========================
 
   generateEntropy() {
     return [Math.random() * 2 - 1, Math.random() * 2 - 1];
@@ -261,13 +261,13 @@ class LVSBrowserNode {
   }
 
   applyDrift(d) {
-    // пружина к центру: чем дальше self от центра, тем сильнее force обратно
+    // пружина к центру
     const dxCenter = this.centerX - this.selfX;
     const dyCenter = this.centerY - this.selfY;
     d[0] += dxCenter * this.springK;
     d[1] += dyCenter * this.springK;
 
-    // ограничиваем "скорость" дрейфа
+    // ограничиваем скорость
     const MAX = 0.4;
     if (d[0] >  MAX) d[0] =  MAX;
     if (d[0] < -MAX) d[0] = -MAX;
@@ -277,17 +277,17 @@ class LVSBrowserNode {
     // обновляем VU
     this.vu += d[0];
 
-    // смещение self внутри value-space
-    const POS_SCALE = 16; // чуть мягче, чтобы не прыгал
+    // сдвиг точки
+    const POS_SCALE = 16;
     this.selfX += d[0] * POS_SCALE;
     this.selfY += d[1] * POS_SCALE;
 
-    // жёсткий предел: self не выходит за 70% радиуса
+    // жёсткий предел: 70% радиуса
     const vx = this.selfX - this.centerX;
     const vy = this.selfY - this.centerY;
     const dist = Math.hypot(vx, vy) || 1;
-
     const maxR = this.radius * 0.7;
+
     if (dist > maxR) {
       const k = maxR / dist;
       this.selfX = this.centerX + vx * k;
@@ -298,15 +298,12 @@ class LVSBrowserNode {
     if (this.selfTrail.length > this.maxTrail) this.selfTrail.shift();
   }
 
-  /* ===========================
-   *   Rendering
-   * ===========================
-   */
+  // ===========================
+  //   Rendering
+  // ===========================
 
   drawBackground() {
     const ctx = this.ctx;
-    const w = this.width;
-    const h = this.height;
 
     const g = ctx.createRadialGradient(
       this.centerX,
@@ -320,7 +317,7 @@ class LVSBrowserNode {
     g.addColorStop(1, "#000000");
 
     ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
+    ctx.fillRect(0, 0, this.width, this.height);
 
     // кольцо value-space
     ctx.beginPath();
@@ -336,10 +333,8 @@ class LVSBrowserNode {
     const ctx = this.ctx;
     const t = performance.now() * 0.004;
 
-    // лёгкое дыхание
     const baseBreath = Math.sin(t) * 0.4 + 0.6;
 
-    // затухание пульса
     this.corePulse *= 0.92;
     const pulseLevel = this.corePulse;
 
@@ -348,7 +343,7 @@ class LVSBrowserNode {
       baseBreath * 3 +
       pulseLevel * 6 +
       Math.min(6, this.peers.length * 0.02) +
-      this.tc * 4; // немного масштаб по TC
+      this.tc * 4;
 
     ctx.beginPath();
     ctx.arc(this.centerX, this.centerY, size, 0, Math.PI * 2);
@@ -358,7 +353,6 @@ class LVSBrowserNode {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // маленький яркий блик в центре
     ctx.beginPath();
     ctx.arc(this.centerX - 2, this.centerY - 2, 3.2, 0, Math.PI * 2);
     ctx.fillStyle = "#e0f2fe";
@@ -378,12 +372,12 @@ class LVSBrowserNode {
     if (n > 800) baseSize = 1.4;
 
     for (const peer of this.peers) {
-      // медленный орбитальный поворот
+      // медленная орбита вокруг ядра
       peer.angle += 0.0006;
       peer.x = this.centerX + Math.cos(peer.angle) * this.peerRingRadius;
       peer.y = this.centerY + Math.sin(peer.angle) * this.peerRingRadius;
 
-      // лёгкая вибрация вокруг своей точки
+      // лёгкая вибрация
       const vibAmp = 1.0 + peer.pulse * 1.2;
       const offsetX = Math.sin(t * 3.1 + peer.angle * 4.3) * vibAmp;
       const offsetY = Math.cos(t * 2.6 + peer.angle * 3.7) * vibAmp;
@@ -401,7 +395,6 @@ class LVSBrowserNode {
         ctx.stroke();
       }
 
-      // сама нода
       peer.pulse *= 0.9;
       const size = baseSize + peer.pulse * 4.0;
 
@@ -415,7 +408,7 @@ class LVSBrowserNode {
   drawSelf() {
     const ctx = this.ctx;
 
-    // trail движения браузер-ноды
+    // хвост движения browser-ноды
     if (this.selfTrail.length > 1) {
       ctx.beginPath();
       for (let i = 0; i < this.selfTrail.length; i++) {
@@ -439,7 +432,6 @@ class LVSBrowserNode {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // маленький блик
     ctx.beginPath();
     ctx.arc(this.selfX - 1.5, this.selfY - 1.5, 2.2, 0, Math.PI * 2);
     ctx.fillStyle = "#e0f2fe";
@@ -453,10 +445,9 @@ class LVSBrowserNode {
     this.drawSelf();
   }
 
-  /* ===========================
-   *   Main loop
-   * ===========================
-   */
+  // ===========================
+  //   Main loop
+  // ===========================
 
   loop() {
     if (this.loopTimer) return;
@@ -475,9 +466,9 @@ class LVSBrowserNode {
       this.redraw();
 
       this.onCycle(this.cycle, this.vu, this.tc);
-    }, 90); // ~11 fps
+    }, 90); // ~11 FPS
   }
 }
 
-// экспорт
+// экспорт в window
 window.LVSBrowserNode = LVSBrowserNode;
