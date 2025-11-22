@@ -233,6 +233,25 @@ class LVSBrowserNode {
     this.y += (this.centerY - this.y) * 0.08;
     this.x += (this.centerX - this.x) * 0.01;
 
+    // --- мягкое отталкивание от центра, чтобы не дёргался ---
+const dx = this.x - this.centerX;
+const dy = this.y - this.centerY;
+const dist = Math.hypot(dx, dy) || 1;
+
+// зона, где шарик не должен залипать
+const deadZone = this.radius * 0.12; // 12% от радиуса
+
+if (dist < deadZone) {
+    // нормализуем
+    const nx = dx / dist;
+    const ny = dy / dist;
+
+    // мягкий толчок наружу (0.6–1.0 в зависимости от желаемой динамики)
+    const PUSH = 0.8;
+    this.x += nx * PUSH;
+    this.y += ny * PUSH;
+}
+
     this.trail.push({ x: this.x, y: this.y });
     if (this.trail.length > this.maxTrail) this.trail.shift();
   }
