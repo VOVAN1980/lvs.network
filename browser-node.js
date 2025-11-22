@@ -162,18 +162,22 @@ this.beta  = 0.03; // была 0.10
   }
 
   applyDrift(d) {
-  // 1) обновляем VU (как и раньше)
+  // ограничиваем максимальный дрейф
+  const MAX = 0.5;
+  if (d[0] >  MAX) d[0] =  MAX;
+  if (d[0] < -MAX) d[0] = -MAX;
+  if (d[1] >  MAX) d[1] =  MAX;
+  if (d[1] < -MAX) d[1] = -MAX;
+
   this.vu += d[0];
 
-  // 2) переносим дрейф в пиксели — маленький, но заметный шаг
-  const POS_SCALE = 18; // можно потом крутить 12–22
+  const POS_SCALE = 18;
   let dx = d[0] * POS_SCALE;
   let dy = d[1] * POS_SCALE;
 
   this.x += dx;
   this.y += dy;
 
-  // 3) удерживаем точку внутри "круга ценности"
   const vx = this.x - this.centerX;
   const vy = this.y - this.centerY;
   const dist = Math.hypot(vx, vy) || 1;
