@@ -157,13 +157,27 @@ class LVSBrowserNode {
   }
 
   applyDrift(d) {
+  // 1) обновляем VU (как и раньше)
   this.vu += d[0];
-  this.x += d[0] * 2;
-  this.y += d[1] * 2;
 
-  const r = this.canvas;
-  this.x = Math.max(0, Math.min(r.width,  this.x));
-  this.y = Math.max(0, Math.min(r.height, this.y));
+  // 2) переносим дрейф в пиксели — маленький, но заметный шаг
+  const POS_SCALE = 18; // можно потом крутить 12–22
+  let dx = d[0] * POS_SCALE;
+  let dy = d[1] * POS_SCALE;
+
+  this.x += dx;
+  this.y += dy;
+
+  // 3) удерживаем точку внутри "круга ценности"
+  const vx = this.x - this.centerX;
+  const vy = this.y - this.centerY;
+  const dist = Math.hypot(vx, vy) || 1;
+
+  if (dist > this.radius) {
+    const k = this.radius / dist;
+    this.x = this.centerX + vx * k;
+    this.y = this.centerY + vy * k;
+  }
 }
 
   // ---------- отрисовка ----------
