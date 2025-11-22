@@ -162,13 +162,31 @@ this.cycle = 0;
   }
 
   applyDrift(d) {
-  this.vu += d[0];
-  this.x += d[0] * 2;
-  this.y += d[1] * 2;
+  // ограничиваем максимальный дрейф
+  const MAX = 0.5;
+  if (d[0] >  MAX) d[0] =  MAX;
+  if (d[0] < -MAX) d[0] = -MAX;
+  if (d[1] >  MAX) d[1] =  MAX;
+  if (d[1] < -MAX) d[1] = -MAX;
 
-  const r = this.canvas;
-  this.x = Math.max(0, Math.min(r.width,  this.x));
-  this.y = Math.max(0, Math.min(r.height, this.y));
+  // обновляем VU
+  this.vu += d[0];
+
+  // маленький, плавный шаг
+  const POS_SCALE = 8; // можешь делать 8–14
+  this.x += d[0] * POS_SCALE;
+  this.y += d[1] * POS_SCALE;
+
+  // держим точку внутри круга
+  const vx = this.x - this.centerX;
+  const vy = this.y - this.centerY;
+  const dist = Math.hypot(vx, vy) || 1;
+
+  if (dist > this.radius) {
+    const k = this.radius / dist;
+    this.x = this.centerX + vx * k;
+    this.y = this.centerY + vy * k;
+  }
 }
 
   // ---------- отрисовка ----------
