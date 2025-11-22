@@ -22,8 +22,8 @@ this.tc = 0.5;
 this.cycle = 0;
 
 // параметры дрейфа (делаем спокойнее)
-this.alpha = 0.02; // была 0.05
-this.beta  = 0.03; // была 0.10
+   this.alpha = 0.01;
+   this.beta  = 0.005;
 
     // последние данные от пиров
     this.lastPeerDiff = null;
