@@ -6,19 +6,24 @@ class LVSBrowserNode {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext("2d");
 
-    // состояние
-    this.ws = null;
-    this.vu = 100.0;
-    this.tc = 0.5;
-    this.cycle = 0;
+    // геометрия области
+this.centerX = this.canvas.width / 2;
+this.centerY = this.canvas.height / 2;
+this.radius  = Math.min(this.canvas.width, this.canvas.height) / 2 - 30;
 
-    // параметры дрейфа
-    this.alpha = 0.4;
-    this.beta = 0.6;
+// стартовая позиция точки — в центре
+this.x = this.centerX;
+this.y = this.centerY;
 
-    // позиция точки
-    this.x = this.canvas.width / 2;
-    this.y = this.canvas.height / 2;
+// состояние
+this.ws = null;
+this.vu = 100.0;
+this.tc = 0.5;
+this.cycle = 0;
+
+// параметры дрейфа (делаем спокойнее)
+this.alpha = 0.02; // была 0.05
+this.beta  = 0.03; // была 0.10
 
     // последние данные от пиров
     this.lastPeerDiff = null;
