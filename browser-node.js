@@ -37,8 +37,7 @@ class LVSBrowserNode {
     // таймер цикла
     this.loopTimer = null;
 
-    // карта пиров, которых реально видим по hello/sdm
-    // [{id, kind, role, last_seen}]
+    // карта пиров [{id, kind, role, last_seen}]
     this.peers = new Map();
 
     // колбэки — навешиваются из HTML
@@ -113,7 +112,7 @@ class LVSBrowserNode {
       node_id: this.nodeId,
       payload: {
         kind: "browser",
-        version: "0.2.3",
+        version: "0.2.4",
       },
     };
     console.log("[LVS] → hello", msg);
@@ -219,44 +218,78 @@ class LVSBrowserNode {
     this.x += d[0] * POS_SCALE;
     this.y += d[1] * POS_SCALE;
 
-    const vx = this.x - this.centerX;
-    const vy = this.y - this.centerY;
-    const dist = Math.hypot(vx, vy) || 1;
+    // держим точку внутри круга
+    let vx = this.x - this.centerX;
+    let vy = this.y - this.centerY;
+    let dist = Math.hypot(vx, vy) || 1;
 
     if (dist > this.radius) {
       const k = this.radius / dist;
       this.x = this.centerX + vx * k;
       this.y = this.centerY + vy * k;
+      vx = this.x - this.centerX;
+      vy = this.y - this.centerY;
+      dist = Math.hypot(vx, vy) || 1;
     }
 
-    // агрессивная центровка по Y, лёгкая по X
-    this.y += (this.centerY - this.y) * 0.08;
-    this.x += (this.centerX - this.x) * 0.01;
+    // базовая центровка: мягкая по X/Y
+    this.y += (this.centerY - this.y) * 0.06;
+    this.x += (this.centerX - this.x) * 0.015;
 
-    // --- мягкое отталкивание от центра, чтобы не дёргался ---
-const dx = this.x - this.centerX;
-const dy = this.y - this.centerY;
-const dist = Math.hypot(dx, dy) || 1;
+    // --- анти-залипание в центре ---
+    const dx = this.x - this.centerX;
+    const dy = this.y - this.centerY;
+    const dist2 = Math.hypot(dx, dy) || 1;
+    const deadZone = this.radius * 0.12; // 12% от радиуса
 
-// зона, где шарик не должен залипать
-const deadZone = this.radius * 0.12; // 12% от радиуса
+    if (dist2 < deadZone) {
+      const nx = dx / dist2;
+      const ny = dy / dist2;
+      const PUSH = 0.9;
+      this.x += nx * PUSH;
+      this.y += ny * PUSH;
+    }
 
-if (dist < deadZone) {
-    // нормализуем
-    const nx = dx / dist;
-    const ny = dy / dist;
+    // --- орбитальный эффект вокруг центра ---
+    const rx = this.x - this.centerX;
+    const ry = this.y - this.centerY;
+    const rDist = Math.hypot(rx, ry);
 
-    // мягкий толчок наружу (0.6–1.0 в зависимости от желаемой динамики)
-    const PUSH = 0.8;
-    this.x += nx * PUSH;
-    this.y += ny * PUSH;
-}
+    if (rDist > deadZone * 0.8) {
+      const ORBIT_SPEED = 0.012; // ~0.7° за тик
+      const cos = Math.cos(ORBIT_SPEED);
+      const sin = Math.sin(ORBIT_SPEED);
+      const ox = rx * cos - ry * sin;
+      const oy = rx * sin + ry * cos;
+      this.x = this.centerX + ox;
+      this.y = this.centerY + oy;
+    }
+
+    // снова контролируем границы (после орбиты + толчков)
+    const vx2 = this.x - this.centerX;
+    const vy2 = this.y - this.centerY;
+    const dist3 = Math.hypot(vx2, vy2) || 1;
+    if (dist3 > this.radius) {
+      const k = this.radius / dist3;
+      this.x = this.centerX + vx2 * k;
+      this.y = this.centerY + vy2 * k;
+    }
 
     this.trail.push({ x: this.x, y: this.y });
     if (this.trail.length > this.maxTrail) this.trail.shift();
   }
 
   // ---------- отрисовка ----------
+
+  _hashAngle(id) {
+    // примитивный детерминированный "хеш" → угол [0..2π)
+    let h = 0;
+    for (let i = 0; i < id.length; i++) {
+      h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    }
+    const angle = (h % 360) * Math.PI / 180;
+    return angle;
+  }
 
   draw() {
     const ctx = this.ctx;
@@ -265,34 +298,65 @@ if (dist < deadZone) {
 
     ctx.clearRect(0, 0, w, h);
 
+    // пульсация ядра
+    const pulse = 1 + 0.05 * Math.sin(this.cycle * 0.12);
+    const visRadius = this.radius * (0.96 + 0.04 * pulse);
+
+    // фон
     const g = ctx.createRadialGradient(
       this.centerX,
       this.centerY,
-      this.radius * 0.1,
+      visRadius * 0.1,
       this.centerX,
       this.centerY,
-      this.radius
+      visRadius
     );
     g.addColorStop(0, "#020617");
     g.addColorStop(1, "#000000");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
+    // внешний круг (value space)
     ctx.beginPath();
-    ctx.arc(this.centerX, this.centerY, this.radius, 0, Math.PI * 2);
+    ctx.arc(this.centerX, this.centerY, visRadius, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(148,163,184,0.45)";
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 6]);
     ctx.stroke();
     ctx.setLineDash([]);
 
+    // маркеры rust-нод по окружности
+    const peersArr = Array.from(this.peers.values());
+    peersArr.forEach((p) => {
+      const kind = (p.kind || "").toLowerCase();
+      if (kind === "browser") return; // браузерные — не рисуем тут
+
+      const angle = this._hashAngle(p.id);
+      const r = visRadius - 10;
+
+      const px = this.centerX + Math.cos(angle) * r;
+      const py = this.centerY + Math.sin(angle) * r;
+
+      ctx.beginPath();
+      ctx.arc(px, py, 4, 0, Math.PI * 2);
+      ctx.fillStyle = kind === "rust"
+        ? "rgba(74, 222, 128, 0.95)"   // зелёный для rust-ноды
+        : "rgba(56, 189, 248, 0.9)";   // голубой для прочих
+      ctx.shadowColor = "rgba(56,189,248,0.6)";
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    // луч от центра к нашей точке
     ctx.beginPath();
     ctx.moveTo(this.centerX, this.centerY);
     ctx.lineTo(this.x, this.y);
-    ctx.strokeStyle = "rgba(56,189,248,0.25)";
+    ctx.strokeStyle = "rgba(56,189,248,0.29)";
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
+    // хвост
     if (this.trail.length > 1) {
       ctx.beginPath();
       for (let i = 0; i < this.trail.length; i++) {
@@ -302,12 +366,13 @@ if (dist < deadZone) {
       }
       const tailGrad = ctx.createLinearGradient(0, 0, w, h);
       tailGrad.addColorStop(0, "rgba(56,189,248,0.05)");
-      tailGrad.addColorStop(1, "rgba(56,189,248,0.35)");
+      tailGrad.addColorStop(1, "rgba(56,189,248,0.4)");
       ctx.strokeStyle = tailGrad;
       ctx.lineWidth = 2;
       ctx.stroke();
     }
 
+    // сам шарик
     ctx.beginPath();
     ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
     ctx.fillStyle = "#00d4ff";
