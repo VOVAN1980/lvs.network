@@ -22,8 +22,8 @@ class LVSBrowserNode {
     this.cycle = 0;
 
     // плавность дрейфа
-    this.alpha = 0.04;
-    this.beta  = 0.06;
+    this.alpha = 0.04; // локальный шум
+    this.beta  = 0.06; // влияние пиров по ΔVU
 
     // последние данные от пиров
     this.lastPeerDeltaVu = null; // СКАЛЯР ΔVU
@@ -32,10 +32,14 @@ class LVSBrowserNode {
 
     // трек движения (для "кривой")
     this.trail = [];
-    this.maxTrail = 120;
+    this.maxTrail = 140;
 
     // таймер цикла
     this.loopTimer = null;
+
+    // карта пиров, которых реально видим по hello/sdm
+    // { id, kind, role, last_seen }
+    this.peers = new Map();
 
     // колбэки — навешиваются из HTML
     this.onStatus = () => {};
@@ -45,7 +49,28 @@ class LVSBrowserNode {
     this.onSDM    = () => {};
   }
 
-  // ---------- запуск / reconnect ----------
+  // ========= вспомогательное =========
+
+  _registerPeer(id, meta = {}) {
+    if (!id || id === this.nodeId) return;
+
+    const prev = this.peers.get(id) || {};
+    const next = {
+      id,
+      kind: meta.kind || prev.kind || "node",
+      role: meta.role || prev.role || "",
+      last_seen: Date.now(),
+    };
+    this.peers.set(id, next);
+
+    // всегда отдаём наружу свой snapshot,
+    // а не сырое payload от гейтвея
+    this.onPeers(Array.from(this.peers.values()));
+  }
+
+  // ===================================
+  //           запуск / reconnect
+  // ===================================
 
   start() {
     this.onStatus("connecting...");
@@ -78,7 +103,9 @@ class LVSBrowserNode {
     this.ws.onmessage = (ev) => this.handleMessage(ev.data);
   }
 
-  // ---------- отправка ----------
+  // ===================================
+  //                отправка
+  // ===================================
 
   send(msg) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -92,7 +119,7 @@ class LVSBrowserNode {
       node_id: this.nodeId,
       payload: {
         kind: "browser",
-        version: "0.2.2",
+        version: "0.2.3",
       },
     };
     console.log("[LVS] → hello", msg);
@@ -128,7 +155,9 @@ class LVSBrowserNode {
     this.onSDM(deltaVu);
   }
 
-  // ---------- приём ----------
+  // ===================================
+  //                 приём
+  // ===================================
 
   handleMessage(txt) {
     let msg;
@@ -138,33 +167,53 @@ class LVSBrowserNode {
       return;
     }
 
+    // hello от других нод
     if (msg.type === "hello" && msg.node_id !== this.nodeId) {
-      console.log("[LVS] hello from:", msg.node_id);
+      this._registerPeer(msg.node_id, {
+        kind: msg.payload?.kind || "node",
+        role: msg.payload?.role || "",
+      });
       this.onHello(msg.node_id);
     }
 
+    // список пиров от гейтвея — используем как подсказку,
+    // но всё равно регистрируем в своей peers-Map
     if (msg.type === "peers" || msg.type === "peers_response") {
       const peers = msg.payload?.peers || [];
-      this.onPeers(peers);
+      peers.forEach((p) => {
+        if (typeof p === "string") {
+          this._registerPeer(p, { kind: "node" });
+        } else if (p) {
+          const id   = p.id || p.node_id;
+          const kind = p.kind || p.role || "node";
+          this._registerPeer(id, { kind });
+        }
+      });
       return;
     }
 
+    // входящие SDM от других нод
     if (msg.type === "sdm" && msg.node_id !== this.nodeId) {
       const diff = msg.payload?.diff;
-      // diff ожидаем вида [ΔVU, TC, VU]
       if (Array.isArray(diff) && diff.length >= 1) {
-        this.lastPeerDeltaVu = diff[0];
+        this.lastPeerDeltaVu = diff[0]; // только ΔVU
       } else {
         this.lastPeerDeltaVu = null;
       }
       this.lastPeerWeight = msg.payload.weight;
       this.lastPeerId     = msg.node_id;
+
+      // считаем этого отправителя peer'ом
+      this._registerPeer(msg.node_id, { kind: "core" });
     }
   }
 
-  // ---------- дрейф ----------
+  // ===================================
+  //                дрейф
+  // ===================================
 
   generateEntropy() {
+    // чисто локальный 2D-шум
     return [Math.random() * 2 - 1, Math.random() * 2 - 1];
   }
 
@@ -174,8 +223,8 @@ class LVSBrowserNode {
   }
 
   /**
-   * Теперь peer-дрейф — только по X (ΔVU),
-   * по Y не тащим TC, иначе шар уползает вниз.
+   * peer-дрейф — только по X (ΔVU),
+   * Y от пиров не берём, иначе всё плывёт.
    */
   driftFromPeers() {
     if (this.lastPeerDeltaVu == null) return [0, 0];
@@ -215,15 +264,18 @@ class LVSBrowserNode {
       this.y = this.centerY + vy * k;
     }
 
-    // небольшой "демпфер" к центру, чтобы не залипало у края
+    // агрессивная центровка по Y, чтобы не залипало снизу/сверху
+    this.y += (this.centerY - this.y) * 0.08;
+    // лёгкая центровка по X, чтобы VU не висел на краю вечно
     this.x += (this.centerX - this.x) * 0.01;
-    this.y += (this.centerY - this.y) * 0.01;
 
     this.trail.push({ x: this.x, y: this.y });
     if (this.trail.length > this.maxTrail) this.trail.shift();
   }
 
-  // ---------- отрисовка ----------
+  // ===================================
+  //              отрисовка
+  // ===================================
 
   draw() {
     const ctx = this.ctx;
@@ -289,7 +341,9 @@ class LVSBrowserNode {
     ctx.fill();
   }
 
-  // ---------- основной цикл ----------
+  // ===================================
+  //             основной цикл
+  // ===================================
 
   loop() {
     if (this.loopTimer) return;
