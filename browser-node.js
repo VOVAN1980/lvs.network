@@ -26,15 +26,15 @@ class LVSBrowserNode {
     this.beta  = 0.06;
 
     // последние данные от пиров
-    this.lastPeerDiff   = null;
-    this.lastPeerWeight = null;
-    this.lastPeerId     = null;
+    this.lastPeerDeltaVu = null; // СКАЛЯР ΔVU
+    this.lastPeerWeight  = null;
+    this.lastPeerId      = null;
 
-    // трек движения (для красивой “кривой”)
+    // трек движения (для "кривой")
     this.trail = [];
     this.maxTrail = 120;
 
-    // таймер цикла (чтобы не плодить setInterval при реконнектах)
+    // таймер цикла
     this.loopTimer = null;
 
     // колбэки — навешиваются из HTML
@@ -59,7 +59,6 @@ class LVSBrowserNode {
       this.sendHello();
       this.requestPeers();
 
-      // цикл запускаем только один раз
       if (!this.loopTimer) {
         this.loop();
       }
@@ -68,7 +67,6 @@ class LVSBrowserNode {
     this.ws.onclose = () => {
       this.onStatus("disconnected");
       console.log("[LVS] disconnected");
-      // авто-reconnect
       setTimeout(() => this.start(), 1500);
     };
 
@@ -94,7 +92,7 @@ class LVSBrowserNode {
       node_id: this.nodeId,
       payload: {
         kind: "browser",
-        version: "0.2.1",
+        version: "0.2.2",
       },
     };
     console.log("[LVS] → hello", msg);
@@ -110,18 +108,24 @@ class LVSBrowserNode {
     this.send(msg);
   }
 
-  sendSDM(diff) {
+  /**
+   * diffLocal — наш локальный ΔVU (первый компонент 2D-дрейфа)
+   */
+  sendSDM(diffLocal) {
+    const deltaVu = diffLocal[0];
+
     const msg = {
       type: "sdm",
       node_id: this.nodeId,
       payload: {
-        diff,
+        // протокольный формат: [ΔVU, TC, VU]
+        diff: [deltaVu, this.tc, this.vu],
         weight: this.tc,
         cycle_id: this.cycle,
       },
     };
     this.send(msg);
-    this.onSDM(diff[0]);
+    this.onSDM(deltaVu);
   }
 
   // ---------- приём ----------
@@ -134,22 +138,25 @@ class LVSBrowserNode {
       return;
     }
 
-    // приветствия от других нод
     if (msg.type === "hello" && msg.node_id !== this.nodeId) {
       console.log("[LVS] hello from:", msg.node_id);
       this.onHello(msg.node_id);
     }
 
-    // список пиров от гейтвея
     if (msg.type === "peers" || msg.type === "peers_response") {
       const peers = msg.payload?.peers || [];
       this.onPeers(peers);
       return;
     }
 
-    // входящие SDM от других нод
     if (msg.type === "sdm" && msg.node_id !== this.nodeId) {
-      this.lastPeerDiff   = msg.payload.diff;
+      const diff = msg.payload?.diff;
+      // diff ожидаем вида [ΔVU, TC, VU]
+      if (Array.isArray(diff) && diff.length >= 1) {
+        this.lastPeerDeltaVu = diff[0];
+      } else {
+        this.lastPeerDeltaVu = null;
+      }
       this.lastPeerWeight = msg.payload.weight;
       this.lastPeerId     = msg.node_id;
     }
@@ -166,11 +173,15 @@ class LVSBrowserNode {
     return [(E[0] / m) * this.alpha, (E[1] / m) * this.alpha];
   }
 
+  /**
+   * Теперь peer-дрейф — только по X (ΔVU),
+   * по Y не тащим TC, иначе шар уползает вниз.
+   */
   driftFromPeers() {
-    if (!this.lastPeerDiff) return [0, 0];
+    if (this.lastPeerDeltaVu == null) return [0, 0];
     return [
-      this.lastPeerDiff[0] * this.beta,
-      this.lastPeerDiff[1] * this.beta,
+      this.lastPeerDeltaVu * this.beta,
+      0,
     ];
   }
 
@@ -180,17 +191,15 @@ class LVSBrowserNode {
   }
 
   applyDrift(d) {
-    // ограничиваем максимальный дрейф
     const MAX = 0.5;
     if (d[0] >  MAX) d[0] =  MAX;
     if (d[0] < -MAX) d[0] = -MAX;
     if (d[1] >  MAX) d[1] =  MAX;
     if (d[1] < -MAX) d[1] = -MAX;
 
-    // обновляем VU
+    // VU меняется только по X-компоненте
     this.vu += d[0];
 
-    // шаг в value-space
     const POS_SCALE = 22;
     this.x += d[0] * POS_SCALE;
     this.y += d[1] * POS_SCALE;
@@ -206,7 +215,10 @@ class LVSBrowserNode {
       this.y = this.centerY + vy * k;
     }
 
-    // добавляем позицию в трек
+    // небольшой "демпфер" к центру, чтобы не залипало у края
+    this.x += (this.centerX - this.x) * 0.01;
+    this.y += (this.centerY - this.y) * 0.01;
+
     this.trail.push({ x: this.x, y: this.y });
     if (this.trail.length > this.maxTrail) this.trail.shift();
   }
@@ -220,7 +232,6 @@ class LVSBrowserNode {
 
     ctx.clearRect(0, 0, w, h);
 
-    // фон (мягкий градиент)
     const g = ctx.createRadialGradient(
       this.centerX,
       this.centerY,
@@ -234,7 +245,6 @@ class LVSBrowserNode {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
-    // граница value-space (круг)
     ctx.beginPath();
     ctx.arc(this.centerX, this.centerY, this.radius, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(148,163,184,0.45)";
@@ -243,7 +253,6 @@ class LVSBrowserNode {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // линия от центра к точке — показывает вектор
     ctx.beginPath();
     ctx.moveTo(this.centerX, this.centerY);
     ctx.lineTo(this.x, this.y);
@@ -251,7 +260,6 @@ class LVSBrowserNode {
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    // трек движения
     if (this.trail.length > 1) {
       ctx.beginPath();
       for (let i = 0; i < this.trail.length; i++) {
@@ -267,7 +275,6 @@ class LVSBrowserNode {
       ctx.stroke();
     }
 
-    // сама нода
     ctx.beginPath();
     ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
     ctx.fillStyle = "#00d4ff";
@@ -276,7 +283,6 @@ class LVSBrowserNode {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // маленький “блик”
     ctx.beginPath();
     ctx.arc(this.x - 2, this.y - 2, 2.5, 0, Math.PI * 2);
     ctx.fillStyle = "#e0f2fe";
@@ -286,7 +292,7 @@ class LVSBrowserNode {
   // ---------- основной цикл ----------
 
   loop() {
-    if (this.loopTimer) return; // уже крутится
+    if (this.loopTimer) return;
 
     this.loopTimer = setInterval(() => {
       this.cycle++;
@@ -307,5 +313,4 @@ class LVSBrowserNode {
   }
 }
 
-// экспорт в глобал
 window.LVSBrowserNode = LVSBrowserNode;
