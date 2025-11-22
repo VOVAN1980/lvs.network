@@ -11,7 +11,7 @@ class LVSBrowserNode {
     this.centerY = this.canvas.height / 2;
     this.radius  = Math.min(this.canvas.width, this.canvas.height) / 2 - 30;
 
-    // позиция частицы
+    // экранная позиция частицы
     this.x = this.centerX;
     this.y = this.centerY;
 
@@ -29,18 +29,24 @@ class LVSBrowserNode {
     this.lastPeerId      = null;
     this.lastPeerDeltaVu = 0.0;
 
-    // энергия / импульсы от сети
-    this.impulseX   = 0;
-    this.impulseY   = 0;
-    this.pulseEnergy = 0.2;
-    this.pulsePhase  = 0;
-    this.jitterPhase = Math.random() * Math.PI * 2;
+    // --- физика центра в value-space ---
+    // центр сидит около (0,0) и вибрирует на пружине
+    this.centerPos = { x: 0, y: 0 };
+    this.centerVel = { x: 0, y: 0 };
+
+    // энергия "сердцебиения" и счётчик SDM за кадр
+    this.centerBeat        = 0;    // 0..~0.8
+    this.centerSdmCounter  = 0;    // сколько SDM пришло с прошлого тика
+
+    // общая фаза пульса (делим её с нодами по окружности)
+    this.pulsePhase = 0;
 
     // след
     this.trail = [];
     this.maxTrail = 90;
 
     this.loopTimer = null;
+    this.lastFrameTime = performance.now() / 1000;
 
     // peers: Map<id, { id, kind, role, last_seen }>
     this.peers = new Map();
@@ -197,18 +203,19 @@ class LVSBrowserNode {
       this.lastPeerId      = fromId;
       this.lastPeerDeltaVu = deltaVu;
 
-      // импульс: направляем от центра к ноде на круге
-      const angle = this._peerAngle(fromId);
-      const dirX  = Math.cos(angle);
-      const dirY  = Math.sin(angle);
+      // считаем сетевую активность
+      this.centerSdmCounter += 1;
 
-      const strength = deltaVu * weight * 0.5; // коэффициент можно подкрутить
-      this.impulseX += dirX * strength;
-      this.impulseY += dirY * strength;
+      // небольшой "пинок" центра в сторону этой ноды
+      const angle        = this._peerAngle(fromId);
+      const baseStrength = Math.abs(deltaVu) * weight;
+      const kick         = baseStrength * 0.4;
 
-      // энергия сети подпитывается от модуля импульса
-      const mag = Math.abs(strength);
-      this.pulseEnergy = Math.min(1, this.pulseEnergy + mag * 4);
+      this.centerVel.x += Math.cos(angle) * kick;
+      this.centerVel.y += Math.sin(angle) * kick;
+
+      // энергия сердцебиения растёт от активности
+      this.centerBeat = Math.min(0.8, this.centerBeat + baseStrength * 2.5);
     }
   }
 
@@ -235,45 +242,69 @@ class LVSBrowserNode {
   }
 
   applyDrift(d) {
-    // обновляем VU, но позицию не двигаем этим напрямую
+    // обновляем VU
     this.vu += d[0];
 
-    // энергия потихоньку затухает
-    this.pulseEnergy *= 0.93;
+    // чуть подмешиваем энергии сердцебиения от собственного дрейфа
+    const add = Math.abs(d[0]) * 0.5;
+    this.centerBeat = Math.min(0.8, this.centerBeat + add);
   }
 
-  updateMotion() {
-    // фаза пульса
-    this.pulsePhase += 0.18;
-    if (this.pulsePhase > Math.PI * 2) this.pulsePhase -= Math.PI * 2;
+  // dt — в секундах
+  updateMotion(dt) {
+    if (!Number.isFinite(dt) || dt <= 0) dt = 0.1;
 
-    const beat = 0.5 + 0.5 * Math.sin(this.pulsePhase);
+    // 0) SDM → энергия
+    const BEAT_PER_SDM = 0.03;
+    this.centerBeat += this.centerSdmCounter * BEAT_PER_SDM;
+    this.centerSdmCounter = 0;
 
-    // затухание импульса (без этого всё разлетится)
-    this.impulseX *= 0.9;
-    this.impulseY *= 0.9;
+    // 1) физика пружины вокруг (0,0)
+    const targetX = 0;
+    const targetY = 0;
 
-    // длина импульса
-    const len = Math.hypot(this.impulseX, this.impulseY);
-    const maxOffset = this.radius * 0.33;
+    const STIFFNESS = 4.0; // жёсткость пружины
+    const DAMPING   = 3.0; // демпфирование
 
-    // нормализуем, чтобы не вылетало за край
-    let offX = 0;
-    let offY = 0;
-    if (len > 0) {
-      const scale = Math.tanh(len) * maxOffset; // сглаживаем рост
-      offX = (this.impulseX / len) * scale;
-      offY = (this.impulseY / len) * scale;
+    const ax = (targetX - this.centerPos.x) * STIFFNESS;
+    const ay = (targetY - this.centerPos.y) * STIFFNESS;
+
+    this.centerVel.x += ax * dt;
+    this.centerVel.y += ay * dt;
+
+    const dampingFactor = Math.exp(-DAMPING * dt);
+    this.centerVel.x *= dampingFactor;
+    this.centerVel.y *= dampingFactor;
+
+    this.centerPos.x += this.centerVel.x * dt;
+    this.centerPos.y += this.centerVel.y * dt;
+
+    // ограничим разброс центра (на всякий)
+    const maxRad = 1.5;
+    const r = Math.hypot(this.centerPos.x, this.centerPos.y);
+    if (r > maxRad) {
+      this.centerPos.x = (this.centerPos.x / r) * maxRad;
+      this.centerPos.y = (this.centerPos.y / r) * maxRad;
     }
 
-    // небольшой шум вокруг текущего положения
-    this.jitterPhase += 0.21;
-    const jitterAmp = 6 + 8 * (this.pulseEnergy * 0.6 + beat * 0.4);
-    const jx = Math.cos(this.jitterPhase * 1.7) * jitterAmp;
-    const jy = Math.sin(this.jitterPhase * 1.1) * jitterAmp;
+    // 2) затухание энергии сердцебиения
+    const BEAT_DECAY = 2.0;
+    this.centerBeat *= Math.exp(-BEAT_DECAY * dt);
+    if (this.centerBeat < 0) this.centerBeat = 0;
+    if (this.centerBeat > 0.8) this.centerBeat = 0.8;
 
-    this.x = this.centerX + offX + jx * 0.25;
-    this.y = this.centerY + offY + jy * 0.25;
+    // 3) общая фаза пульса (делим её с нодами на кольце)
+    const BASE_PULSE_FREQ = 4.0; // Гц
+    this.pulsePhase += BASE_PULSE_FREQ * dt;
+    if (this.pulsePhase > Math.PI * 2) this.pulsePhase -= Math.PI * 2;
+
+    // 4) переход в экранные координаты
+    const wobbleScale = 0.02 * this.radius; // 2% радиуса по каждой оси
+    const visualX = this.centerX + this.centerPos.x * wobbleScale;
+    const visualY = this.centerY + this.centerPos.y * wobbleScale;
+
+    this.x = visualX;
+    this.y = visualY;
 
     this.trail.push({ x: this.x, y: this.y });
     if (this.trail.length > this.maxTrail) this.trail.shift();
@@ -288,9 +319,13 @@ class LVSBrowserNode {
 
     ctx.clearRect(0, 0, w, h);
 
-    const beat = 0.5 + 0.5 * Math.sin(this.pulsePhase);
-    const globalGlow = this.pulseEnergy * 0.7 + beat * 0.3;
-    const visRadius  = this.radius * (0.96 + 0.04 * globalGlow);
+    // общая "яркость" от синуса + энергии сети
+    const sinBeat = 0.5 + 0.5 * Math.sin(this.pulsePhase);
+    let globalGlow = sinBeat * 0.6 + this.centerBeat * 1.0;
+    if (globalGlow < 0) globalGlow = 0;
+    if (globalGlow > 1.2) globalGlow = 1.2;
+
+    const visRadius  = this.radius * (0.96 + 0.05 * globalGlow);
 
     // фон
     const g = ctx.createRadialGradient(
@@ -353,7 +388,7 @@ class LVSBrowserNode {
       });
     }
 
-    // луч
+    // луч от геометрического центра к частице
     ctx.beginPath();
     ctx.moveTo(this.centerX, this.centerY);
     ctx.lineTo(this.x, this.y);
@@ -377,8 +412,8 @@ class LVSBrowserNode {
       ctx.stroke();
     }
 
-    // центральная частица
-    const coreR = 6 + globalGlow * 2.2;
+    // центральная частица (сердце)
+    const coreR = 6 + globalGlow * 3.0;
 
     ctx.beginPath();
     ctx.arc(this.x, this.y, coreR, 0, Math.PI * 2);
@@ -388,6 +423,7 @@ class LVSBrowserNode {
     ctx.fill();
     ctx.shadowBlur = 0;
 
+    // яркое ядро внутри
     ctx.beginPath();
     ctx.arc(this.x - 2, this.y - 2, 2.6, 0, Math.PI * 2);
     ctx.fillStyle = "#e0f2fe";
@@ -400,6 +436,11 @@ class LVSBrowserNode {
     if (this.loopTimer) return;
 
     this.loopTimer = setInterval(() => {
+      const now = performance.now() / 1000;
+      let dt = now - this.lastFrameTime;
+      if (!Number.isFinite(dt) || dt <= 0 || dt > 0.5) dt = 0.12;
+      this.lastFrameTime = now;
+
       this.cycle++;
 
       const E  = this.generateEntropy();
@@ -410,7 +451,7 @@ class LVSBrowserNode {
       drift = this.vaultGuard(drift);
 
       this.applyDrift(drift);
-      this.updateMotion();
+      this.updateMotion(dt);
       this.draw();
 
       this.onCycle(this.cycle, this.vu, this.tc);
