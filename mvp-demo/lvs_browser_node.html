@@ -275,7 +275,7 @@
 
       <div class="status-pill">
         <div id="status-dot" class="dot"></div>
-        <span id="status-text">INIT</span>
+        <span id="status-text">DISCONNECTED</span>
       </div>
     </div>
 
@@ -328,7 +328,9 @@
           <div>
             <div class="block-title">Connected peers</div>
             <div id="peers-box" class="peers-box">
-              <div style="color:#6b7280;font-size:11px;">Waiting for peers list from gateway…</div>
+              <div style="color:#6b7280;font-size:11px;">
+                Waiting for peers list from gateway (core nodes + other browser nodes)…
+              </div>
             </div>
           </div>
 
@@ -348,7 +350,6 @@
   <script src="../browser-node.js"></script>
   <script>
     // ====== CONFIG ======
-    // локальный гейтвей
     const GATEWAY_URL = "ws://127.0.0.1:9001/ws";
     const NODE_ID     = "browser-node-1";
 
@@ -389,9 +390,12 @@
       peersBox.innerHTML = "";
       if (!peers || !peers.length) {
         peersBox.innerHTML =
-          '<div style="color:#6b7280;font-size:11px;">No peers yet. Waiting for gateway updates…</div>';
+          '<div style="color:#6b7280;font-size:11px;">' +
+          'No peers yet. Waiting for gateway (core nodes + other browser nodes)…' +
+          '</div>';
         return;
       }
+
       peers.forEach((p) => {
         let id = "";
         let role = "";
@@ -411,7 +415,7 @@
 
         const roleSpan = document.createElement("div");
         roleSpan.className = "peer-role";
-        roleSpan.textContent = role ? role : "NODE";
+        roleSpan.textContent = role ? role.toUpperCase() : "NODE";
 
         row.appendChild(idSpan);
         row.appendChild(roleSpan);
@@ -436,7 +440,6 @@
 
     node.onPeers = (peers) => {
       renderPeers(peers);
-      // короткий лог, без огромных JSON
       const count = peers ? peers.length : 0;
       addLog("peers", "received " + count + " peer(s) from gateway");
     };
@@ -446,7 +449,7 @@
     };
 
     node.onSDM = (dx) => {
-      // только отметим факт отправки; не спамим каждое значение
+      // можно раскомментировать, если хочешь видеть шум
       // addLog("sdm", "Δx=" + dx.toFixed(4));
     };
 
