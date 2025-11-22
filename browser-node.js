@@ -11,11 +11,10 @@ class LVSBrowserNode {
     this.centerY = this.canvas.height / 2;
     this.radius  = Math.min(this.canvas.width, this.canvas.height) / 2 - 30;
 
-    // Позиция и скорость браузер-ноды
-    this.x  = this.centerX;
-    this.y  = this.centerY;
-    this.vx = 0;
-    this.vy = 0;
+    // Положение браузер-ноды в полярных координатах
+    this.angle = -Math.PI / 2; // старт — вверх
+    this.r     = 0;            // почти центр
+    this.vr    = 0;            // радиальная скорость
 
     // Состояние
     this.ws    = null;
@@ -23,25 +22,33 @@ class LVSBrowserNode {
     this.tc    = 0.5;
     this.cycle = 0;
 
-    // Параметры дрейфа
-    this.alpha = 0.03;  // сила локального шума
-    this.beta  = 0.045; // влияние пиров (масштаб peer-сил)
+    // Параметры "ценности"
+    this.noiseScale   = 0.03;   // шум ΔVU
+    this.peerVuScale  = 0.12;   // вклад ΔVU от rust-нод
+    this.maxDeltaVu   = 0.6;    // ограничение ΔVU за тик
 
-    // Последние данные от пиров
-    this.lastPeerDeltaVu = null; // ΔVU от последней rust-ноды
-    this.lastPeerWeight  = null;
+    // Параметры движения (визуал)
+    this.springK      = 0.02;   // возврат к центру
+    this.friction     = 0.86;   // трение
+    this.spikeScale   = 12.0;   // насколько ΔVU превращается в "выплеск"
+    this.maxR         = this.radius * 0.78; // максимальный вылет луча
+    this.angleJitter  = 0.04;   // шум угла, когда нет пиров
+    this.alignFactor  = 0.25;   // скорость поворота к активной ноде
+
+    // Последние данные от SDM rust-нод
+    this.lastPeerDeltaVu = null;
     this.lastPeerId      = null;
 
-    // Трек движения ("хвост")
+    // След
     this.trail    = [];
-    this.maxTrail = 180;
+    this.maxTrail = 220;
 
     this.loopTimer = null;
 
     // peers: Map<node_id, {id, kind, role, last_seen}>
     this.peers = new Map();
 
-    // Колбэки навешиваются снаружи
+    // Колбэки из HTML
     this.onStatus = () => {};
     this.onPeers  = () => {};
     this.onCycle  = () => {};
@@ -49,7 +56,7 @@ class LVSBrowserNode {
     this.onSDM    = () => {};
   }
 
-  // ---------- helpers для peers ----------
+  // ---------- peers helpers ----------
 
   _registerPeer(id, meta = {}) {
     if (!id || id === this.nodeId) return;
@@ -66,7 +73,7 @@ class LVSBrowserNode {
     this.onPeers(Array.from(this.peers.values()));
   }
 
-  // ---------- старт / reconnect ----------
+  // ---------- запуск / reconnect ----------
 
   start() {
     this.onStatus("connecting...");
@@ -101,9 +108,9 @@ class LVSBrowserNode {
 
   // ---------- отправка ----------
 
-  send(msg) {
+  send(obj) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(msg));
+      this.ws.send(JSON.stringify(obj));
     }
   }
 
@@ -113,7 +120,7 @@ class LVSBrowserNode {
       node_id: this.nodeId,
       payload: {
         kind: "browser",
-        version: "0.4.0",
+        version: "0.5.0",
       },
     };
     console.log("[LVS] → hello", msg);
@@ -134,7 +141,6 @@ class LVSBrowserNode {
       type: "sdm",
       node_id: this.nodeId,
       payload: {
-        // наш локальный SDM в том же формате, что и у Rust-нод
         diff: [localDeltaVu, this.tc, this.vu],
         weight: this.tc,
         cycle_id: this.cycle,
@@ -154,166 +160,125 @@ class LVSBrowserNode {
       return;
     }
 
-    // HELLO от других нод
     if (msg.type === "hello" && msg.node_id !== this.nodeId) {
       const kind = msg.payload?.kind || "node";
       this._registerPeer(msg.node_id, { kind });
       this.onHello(msg.node_id);
     }
 
-    // Список пиров от gateway
     if (msg.type === "peers") {
-      const peersPayload = msg.payload?.peers || [];
-      peersPayload.forEach((p) => {
+      const list = msg.payload?.peers || [];
+      list.forEach((p) => {
         const id = p.node_id;
         this._registerPeer(id, { kind: "node" });
       });
       return;
     }
 
-    // SDM от Rust-нод
     if (msg.type === "sdm" && msg.node_id !== this.nodeId) {
       const diff = msg.payload?.diff;
       if (Array.isArray(diff) && diff.length >= 1) {
-        this.lastPeerDeltaVu = diff[0]; // ΔVU rust-ноды
+        this.lastPeerDeltaVu = diff[0];
       } else {
         this.lastPeerDeltaVu = null;
       }
-      this.lastPeerWeight = msg.payload?.weight ?? null;
-      this.lastPeerId     = msg.node_id;
+      this.lastPeerId = msg.node_id;
     }
   }
 
-  // ---------- дрейф / физика ----------
-
-  generateEntropy() {
-    const ex = Math.random() * 2 - 1;
-    const ey = Math.random() * 2 - 1;
-    const m = Math.hypot(ex, ey) || 1;
-    return [ex / m, ey / m];
-  }
-
-  driftFromEntropy(E) {
-    return [E[0] * this.alpha, E[1] * this.alpha];
-  }
-
-  driftFromPeers() {
-    if (!this.lastPeerId || this.lastPeerDeltaVu == null) return [0, 0];
-
-    // позиция rust-ноды на окружности
-    const angle = this._hashAngle(this.lastPeerId) - Math.PI / 2;
-    const r     = this.radius * 0.75;
-
-    const px = this.centerX + Math.cos(angle) * r;
-    const py = this.centerY + Math.sin(angle) * r;
-
-    const dx = px - this.x;
-    const dy = py - this.y;
-    const dist = Math.hypot(dx, dy) || 1;
-
-    const dirX = dx / dist;
-    const dirY = dy / dist;
-
-    // масштаб по модулю ΔVU rust-ноды
-    const amp = Math.min(1.5, Math.abs(this.lastPeerDeltaVu) * 0.5);
-    const mag = this.beta * (0.4 + 0.6 * amp); // от 0.4*beta до ~beta
-
-    return [dirX * mag, dirY * mag];
-  }
-
-  vaultGuard(drift) {
-    // VU не уходим ниже нуля
-    if (this.vu + drift[0] < 0) drift[0] = -this.vu;
-    return drift;
-  }
-
-  applyStep(drift) {
-    // ограничиваем дрейф
-    const MAX_D = 0.5;
-    drift[0] = Math.max(-MAX_D, Math.min(MAX_D, drift[0]));
-    drift[1] = Math.max(-MAX_D, Math.min(MAX_D, drift[1]));
-
-    // Обновляем VU по ΔX компонента
-    const localDeltaVu = drift[0];
-    this.vu += localDeltaVu;
-
-    // дрейф → ускорение
-    const ACCEL = 0.9;
-    this.vx += drift[0] * ACCEL;
-    this.vy += drift[1] * ACCEL;
-
-    // мягкая сила к центру (чтобы не улетал)
-    const cx = this.centerX - this.x;
-    const cy = this.centerY - this.y;
-    this.vx += cx * 0.0006;
-    this.vy += cy * 0.0006;
-
-    // лёгкое трение
-    const FRICTION = 0.94;
-    this.vx *= FRICTION;
-    this.vy *= FRICTION;
-
-    // нормализация скорости — чтобы не превращалось в прямую
-    const MAX_SPEED = 0.9;
-    const speed = Math.hypot(this.vx, this.vy);
-    if (speed > MAX_SPEED) {
-      this.vx = (this.vx / speed) * MAX_SPEED;
-      this.vy = (this.vy / speed) * MAX_SPEED;
-    }
-
-    // переносим позицию
-    const POS = 18;
-    this.x += this.vx * POS;
-    this.y += this.vy * POS;
-
-    // отражение от границы value-space
-    const dx = this.x - this.centerX;
-    const dy = this.y - this.centerY;
-    const dist = Math.hypot(dx, dy) || 1;
-
-    if (dist > this.radius) {
-      const nx = dx / dist;
-      const ny = dy / dist;
-
-      this.x = this.centerX + nx * this.radius;
-      this.y = this.centerY + ny * this.radius;
-
-      const dot = this.vx * nx + this.vy * ny;
-      this.vx = this.vx - 2 * dot * nx;
-      this.vy = this.vy - 2 * dot * ny;
-
-      this.vx *= 0.7;
-      this.vy *= 0.7;
-    }
-
-    // хвост
-    this.trail.push({ x: this.x, y: this.y });
-    if (this.trail.length > this.maxTrail) this.trail.shift();
-
-    return localDeltaVu;
-  }
-
-  // ---------- детерминированный угол по node_id ----------
+  // ---------- хелпер для угла по node_id ----------
 
   _hashAngle(id) {
     let h = 0;
     for (let i = 0; i < id.length; i++) {
       h = (h * 31 + id.charCodeAt(i)) >>> 0;
     }
-    const angle = (h % 360) * Math.PI / 180;
-    return angle;
+    // 0..2π
+    return (h % 360) * Math.PI / 180;
+  }
+
+  _angleLerp(from, to, t) {
+    let diff = ((to - from + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    return from + diff * t;
+  }
+
+  // ---------- обновление "ценности" и геометрии ----------
+
+  step() {
+    // 1) считаем ΔVU
+    const noise = (Math.random() * 2 - 1) * this.noiseScale;
+
+    let peerComponent = 0;
+    if (this.lastPeerDeltaVu != null) {
+      peerComponent = this.lastPeerDeltaVu * this.peerVuScale;
+    }
+
+    let deltaVu = noise + peerComponent;
+    if (deltaVu >  this.maxDeltaVu) deltaVu =  this.maxDeltaVu;
+    if (deltaVu < -this.maxDeltaVu) deltaVu = -this.maxDeltaVu;
+
+    this.vu += deltaVu;
+    if (this.vu < 0) this.vu = 0;
+
+    // 2) геометрия — "нейронный" выстрел по лучу
+
+    // угол
+    if (this.lastPeerId) {
+      const targetAngle = this._hashAngle(this.lastPeerId) - Math.PI / 2;
+      this.angle = this._angleLerp(this.angle, targetAngle, this.alignFactor);
+    } else {
+      // лёгкое дрожание угла вокруг текущего направления
+      this.angle += (Math.random() - 0.5) * this.angleJitter;
+    }
+
+    // радиальный "спайк"
+    let spike = 0;
+    if (this.lastPeerId) {
+      const base = Math.abs(deltaVu) * this.spikeScale;
+      spike = Math.min(0.55, base);  // ограничение силы
+    }
+
+    this.vr += spike;
+    // пружина к центру
+    this.vr -= this.r * this.springK;
+    // трение
+    this.vr *= this.friction;
+
+    this.r += this.vr;
+    if (this.r < 0) {
+      this.r = 0;
+      this.vr = 0;
+    }
+    if (this.r > this.maxR) {
+      this.r = this.maxR;
+      this.vr *= 0.4;
+    }
+
+    // чуть-чуть шума по радиусу, чтобы не было идеально ровных линий
+    this.r += (Math.random() - 0.5) * 0.3;
+    if (this.r < 0) this.r = 0;
+    if (this.r > this.maxR) this.r = this.maxR;
+
+    const x = this.centerX + Math.cos(this.angle) * this.r;
+    const y = this.centerY + Math.sin(this.angle) * this.r;
+
+    // обновляем след
+    this.trail.push({ x, y });
+    if (this.trail.length > this.maxTrail) this.trail.shift();
+
+    return { deltaVu, x, y };
   }
 
   // ---------- отрисовка ----------
 
-  draw() {
+  draw(x, y) {
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
 
     ctx.clearRect(0, 0, w, h);
 
-    const pulse = 1 + 0.04 * Math.sin(this.cycle * 0.08);
+    const pulse = 1 + 0.05 * Math.sin(this.cycle * 0.08);
     const visRadius = this.radius * pulse;
 
     // фон
@@ -330,7 +295,7 @@ class LVSBrowserNode {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
-    // внешний круг
+    // окружность value-space
     ctx.beginPath();
     ctx.arc(this.centerX, this.centerY, visRadius, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(148,163,184,0.45)";
@@ -339,7 +304,7 @@ class LVSBrowserNode {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // ноды по окружности (фиксированные позиции)
+    // rust-ноды по кругу
     const peersArr = Array.from(this.peers.values());
     if (peersArr.length > 0) {
       const r = visRadius - 10;
@@ -355,11 +320,10 @@ class LVSBrowserNode {
         ctx.arc(px, py, isActive ? 5 : 4, 0, Math.PI * 2);
         ctx.fillStyle =
           kind === "rust" || kind === "rust-node"
-            ? "rgba(74, 222, 128, 0.95)"
-            : "rgba(56, 189, 248, 0.9)";
-
+            ? "rgba(74,222,128,0.95)"
+            : "rgba(56,189,248,0.9)";
         ctx.shadowColor = isActive
-          ? "rgba(74, 222, 128, 0.9)"
+          ? "rgba(74,222,128,0.9)"
           : "rgba(56,189,248,0.6)";
         ctx.shadowBlur = isActive ? 14 : 8;
         ctx.fill();
@@ -367,15 +331,15 @@ class LVSBrowserNode {
       });
     }
 
-    // луч от центра
+    // луч от центра (текущий)
     ctx.beginPath();
     ctx.moveTo(this.centerX, this.centerY);
-    ctx.lineTo(this.x, this.y);
-    ctx.strokeStyle = "rgba(56,189,248,0.25)";
-    ctx.lineWidth = 1.1;
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = "rgba(56,189,248,0.35)";
+    ctx.lineWidth = 1.15;
     ctx.stroke();
 
-    // хвост
+    // след как "нейронные вспышки"
     if (this.trail.length > 1) {
       ctx.beginPath();
       for (let i = 0; i < this.trail.length; i++) {
@@ -385,23 +349,24 @@ class LVSBrowserNode {
       }
       const tailGrad = ctx.createLinearGradient(0, 0, w, h);
       tailGrad.addColorStop(0, "rgba(56,189,248,0.05)");
-      tailGrad.addColorStop(1, "rgba(56,189,248,0.35)");
+      tailGrad.addColorStop(1, "rgba(56,189,248,0.4)");
       ctx.strokeStyle = tailGrad;
       ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    // сам шарик
+    // точка в текущей позиции
     ctx.beginPath();
-    ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
     ctx.fillStyle = "#00d4ff";
     ctx.shadowColor = "rgba(0,180,255,0.85)";
     ctx.shadowBlur = 14;
     ctx.fill();
     ctx.shadowBlur = 0;
 
+    // лёгкий бликовый центр
     ctx.beginPath();
-    ctx.arc(this.x - 2, this.y - 2, 2.5, 0, Math.PI * 2);
+    ctx.arc(x - 1.5, y - 1.5, 2.4, 0, Math.PI * 2);
     ctx.fillStyle = "#e0f2fe";
     ctx.fill();
   }
@@ -414,21 +379,14 @@ class LVSBrowserNode {
     this.loopTimer = setInterval(() => {
       this.cycle++;
 
-      const E  = this.generateEntropy();
-      const d1 = this.driftFromEntropy(E);
-      const d2 = this.driftFromPeers();
-
-      let drift = [d1[0] + d2[0], d1[1] + d2[1]];
-      drift = this.vaultGuard(drift);
-
-      const localDeltaVu = this.applyStep(drift);
-      this.sendSDM(localDeltaVu);
-      this.draw();
+      const { deltaVu, x, y } = this.step();
+      this.sendSDM(deltaVu);
+      this.draw(x, y);
 
       this.onCycle(this.cycle, this.vu, this.tc);
     }, 120);
   }
 }
 
-// экспорт в глобал
+// экспортируем в глобал
 window.LVSBrowserNode = LVSBrowserNode;
