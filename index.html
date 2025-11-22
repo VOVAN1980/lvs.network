@@ -778,20 +778,43 @@
   </main>
 
   <!-- FOOTER -->
-  <footer>
-    <div class="footer-inner">
-      <div>
-        © 2025 LVS – Living Value System. All rights reserved.<br />
-        Built by the founder with the assistance of AI tools.
-      </div>
-      <div class="footer-right">
-        <a href="#top" onclick="scrollToId('top')">Back to top</a>
-        <a href="#docs">Docs</a>
-        <a href="#mvp">MVP</a>
-      </div>
-    </div>
-  </footer>
+<div class="footer">
+  <div class="footer-left">
+    <div>LVS — Living Value System</div>
+    <div>© 2025 LVS. All rights reserved.</div>
 
+    <div class="footer-links">
+      <!-- основной сайт -->
+      <a href="https://lvs.network/" target="_blank">Main site</a>
+      <!-- секция Docs на лендинге -->
+      <a href="https://lvs.network/#docs" target="_blank">Docs</a>
+      <!-- секция MVP / Live demo -->
+      <a href="https://lvs.network/#mvp" target="_blank">Live MVP</a>
+
+      <!-- юрка -->
+      <a href="https://lvs.network/privacy.html" target="_blank">Privacy Policy</a>
+      <a href="https://lvs.network/terms.html"   target="_blank">Terms of Use</a>
+
+      <!-- техничка -->
+      <a href="https://github.com/VOVAN1980" target="_blank">GitHub</a>
+      <a href="https://github.com/VOVAN1980/lvs.network/blob/main/docs/Lvs%20Whitepaper%20En.pdf"
+         target="_blank">Whitepaper</a>
+    </div>
+  </div>
+
+  <div class="footer-right">
+    <div class="footer-links">
+      <!-- сюда потом прикрутишь реальные соцсети -->
+      <span style="opacity:.6;">✕</span>
+      <a href="#" onclick="return false;" style="pointer-events:none;opacity:.6;">Telegram</a>
+      <a href="#" onclick="return false;" style="pointer-events:none;opacity:.6;">LinkedIn</a>
+
+      <!-- заглушка “Share” -->
+      <button type="button" class="share-btn">
+        Share
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -821,6 +844,7 @@ function adjustMvpHeight() {
 </script>
 </body>
 </html>
+
 
 
 
