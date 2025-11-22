@@ -6,42 +6,42 @@ class LVSBrowserNode {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext("2d");
 
-    // геометрия
+    // Геометрия "value space"
     this.centerX = this.canvas.width / 2;
     this.centerY = this.canvas.height / 2;
     this.radius  = Math.min(this.canvas.width, this.canvas.height) / 2 - 30;
 
-    // позиция и скорость
+    // Позиция и скорость браузер-ноды
     this.x  = this.centerX;
     this.y  = this.centerY;
     this.vx = 0;
     this.vy = 0;
 
-    // состояние
-    this.ws = null;
-    this.vu = 100.0;
-    this.tc = 0.5;
+    // Состояние
+    this.ws    = null;
+    this.vu    = 100.0;
+    this.tc    = 0.5;
     this.cycle = 0;
 
-    // параметры дрейфа
-    this.alpha = 0.05; // сила локального шума
-    this.beta  = 0.06; // влияние пиров по ΔVU
+    // Параметры дрейфа
+    this.alpha = 0.035; // сила локального шума
+    this.beta  = 0.055; // влияние ΔVU пиров
 
-    // последние данные от пиров
+    // Последние данные от пиров
     this.lastPeerDeltaVu = null;
     this.lastPeerWeight  = null;
     this.lastPeerId      = null;
 
-    // трек движения
-    this.trail = [];
+    // Трек движения для "хвоста"
+    this.trail    = [];
     this.maxTrail = 160;
 
     this.loopTimer = null;
 
-    // peers: [{id, kind, role, last_seen}]
+    // peers: Map<node_id, {id, kind, role, last_seen}>
     this.peers = new Map();
 
-    // колбэки
+    // Колбэки навешиваются из HTML
     this.onStatus = () => {};
     this.onPeers  = () => {};
     this.onCycle  = () => {};
@@ -49,7 +49,7 @@ class LVSBrowserNode {
     this.onSDM    = () => {};
   }
 
-  // ---------- peers helper ----------
+  // ---------- helpers для peers ----------
 
   _registerPeer(id, meta = {}) {
     if (!id || id === this.nodeId) return;
@@ -66,7 +66,7 @@ class LVSBrowserNode {
     this.onPeers(Array.from(this.peers.values()));
   }
 
-  // ---------- запуск / reconnect ----------
+  // ---------- старт / reconnect ----------
 
   start() {
     this.onStatus("connecting...");
@@ -113,7 +113,7 @@ class LVSBrowserNode {
       node_id: this.nodeId,
       payload: {
         kind: "browser",
-        version: "0.2.5",
+        version: "0.3.0",
       },
     };
     console.log("[LVS] → hello", msg);
@@ -129,13 +129,14 @@ class LVSBrowserNode {
     this.send(msg);
   }
 
-  sendSDM(diffLocal) {
-    const deltaVu = diffLocal[0];
+  sendSDM(localDrift) {
+    const deltaVu = localDrift[0];
 
     const msg = {
       type: "sdm",
       node_id: this.nodeId,
       payload: {
+        // формат как у Rust-нод: [ΔVU, TC, VU]
         diff: [deltaVu, this.tc, this.vu],
         weight: this.tc,
         cycle_id: this.cycle,
@@ -155,12 +156,14 @@ class LVSBrowserNode {
       return;
     }
 
+    // HELLO от других нод
     if (msg.type === "hello" && msg.node_id !== this.nodeId) {
       const kind = msg.payload?.kind || "node";
       this._registerPeer(msg.node_id, { kind });
       this.onHello(msg.node_id);
     }
 
+    // Список пиров от gateway
     if (msg.type === "peers") {
       const peersPayload = msg.payload?.peers || [];
       peersPayload.forEach((p) => {
@@ -170,21 +173,23 @@ class LVSBrowserNode {
       return;
     }
 
+    // SDM от Rust-нод
     if (msg.type === "sdm" && msg.node_id !== this.nodeId) {
       const diff = msg.payload?.diff;
       if (Array.isArray(diff) && diff.length >= 1) {
-        this.lastPeerDeltaVu = diff[0];
+        this.lastPeerDeltaVu = diff[0]; // ΔVU
       } else {
         this.lastPeerDeltaVu = null;
       }
-      this.lastPeerWeight = msg.payload?.weight;
+      this.lastPeerWeight = msg.payload?.weight ?? null;
       this.lastPeerId     = msg.node_id;
     }
   }
 
-  // ---------- дрейф ----------
+  // ---------- дрейф / физика ----------
 
   generateEntropy() {
+    // случайный вектор в [-1;1]
     return [Math.random() * 2 - 1, Math.random() * 2 - 1];
   }
 
@@ -195,10 +200,8 @@ class LVSBrowserNode {
 
   driftFromPeers() {
     if (this.lastPeerDeltaVu == null) return [0, 0];
-
-    // знак ΔVU влияет на направление по X:
     const k = this.lastPeerDeltaVu * this.beta;
-    return [k, 0];
+    return [k, 0]; // влияние по X
   }
 
   vaultGuard(drift) {
@@ -206,62 +209,88 @@ class LVSBrowserNode {
     return drift;
   }
 
-  applyDrift(d) {
+  applyStep(drift) {
     // ограничиваем сам drift
     const MAX = 0.4;
-    if (d[0] >  MAX) d[0] =  MAX;
-    if (d[0] < -MAX) d[0] = -MAX;
-    if (d[1] >  MAX) d[1] =  MAX;
-    if (d[1] < -MAX) d[1] = -MAX;
+    if (drift[0] >  MAX) drift[0] =  MAX;
+    if (drift[0] < -MAX) drift[0] = -MAX;
+    if (drift[1] >  MAX) drift[1] =  MAX;
+    if (drift[1] < -MAX) drift[1] = -MAX;
 
-    // VU идёт по X-компоненте
-    this.vu += d[0];
+    // VU идёт по ΔX
+    this.vu += drift[0];
 
-    // добавляем drift к скорости
-    this.vx += d[0];
-    this.vy += d[1];
+    // добавляем drift как ускорение
+    const ACCEL_SCALE = 0.5;
+    this.vx += drift[0] * ACCEL_SCALE;
+    this.vy += drift[1] * ACCEL_SCALE;
 
-    // трение — чтобы движения не разлетались
-    const FRICTION = 0.90;
+    // гравитация к последней активной ноде (по её углу на окружности)
+    if (this.lastPeerId) {
+      const angle = this._hashAngle(this.lastPeerId) - Math.PI / 2;
+      const rTarget = this.radius * 0.7;
+
+      const targetX = this.centerX + Math.cos(angle) * rTarget;
+      const targetY = this.centerY + Math.sin(angle) * rTarget;
+
+      const GRAVITY = 0.0028;
+      this.vx += (targetX - this.x) * GRAVITY;
+      this.vy += (targetY - this.y) * GRAVITY;
+    }
+
+    // лёгкая нормализация к центру (чтобы не улетал навсегда)
+    const toCenterX = this.centerX - this.x;
+    const toCenterY = this.centerY - this.y;
+    this.vx += toCenterX * 0.0008;
+    this.vy += toCenterY * 0.0008;
+
+    // трение
+    const FRICTION = 0.93;
     this.vx *= FRICTION;
     this.vy *= FRICTION;
 
-    // масштаб скорости в пиксели
+    // переносим позицию
     const POS_SCALE = 20;
     this.x += this.vx * POS_SCALE;
     this.y += this.vy * POS_SCALE;
 
-    // лёгкая нормализация к центру, чтобы шарик не залипал в одной точке,
-    // но без жёсткой пружины
-    const toCenterX = this.centerX - this.x;
-    const toCenterY = this.centerY - this.y;
-    this.x += toCenterX * 0.01;
-    this.y += toCenterY * 0.01;
-
-    // держим внутри круга: если вышли за радиус — отражаем от "стенки"
+    // держим внутри круга, с отражением от "границы"
     const dx = this.x - this.centerX;
     const dy = this.y - this.centerY;
     const dist = Math.hypot(dx, dy) || 1;
+
     if (dist > this.radius) {
       const nx = dx / dist;
       const ny = dy / dist;
 
-      // проецируем позицию на границу
+      // позиция на границе
       this.x = this.centerX + nx * this.radius;
       this.y = this.centerY + ny * this.radius;
 
-      // отражаем скорость от нормали
+      // отражаем скорость
       const dot = this.vx * nx + this.vy * ny;
       this.vx = this.vx - 2 * dot * nx;
       this.vy = this.vy - 2 * dot * ny;
 
-      // дополнительное трение при ударе
+      // доп. затухание при ударе
       this.vx *= 0.7;
       this.vy *= 0.7;
     }
 
+    // трек
     this.trail.push({ x: this.x, y: this.y });
     if (this.trail.length > this.maxTrail) this.trail.shift();
+  }
+
+  // ---------- утилита: детерминированный угол по node_id ----------
+
+  _hashAngle(id) {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) {
+      h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    }
+    const angle = (h % 360) * Math.PI / 180;
+    return angle;
   }
 
   // ---------- отрисовка ----------
@@ -273,7 +302,7 @@ class LVSBrowserNode {
 
     ctx.clearRect(0, 0, w, h);
 
-    // лёгкая пульсация круга
+    // небольшая пульсация радиуса
     const pulse = 1 + 0.04 * Math.sin(this.cycle * 0.08);
     const visRadius = this.radius * pulse;
 
@@ -300,31 +329,35 @@ class LVSBrowserNode {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // ноды по окружности РАВНОМЕРНО
+    // ноды по окружности, угол фиксирован по node_id
     const peersArr = Array.from(this.peers.values());
-    const n = peersArr.length;
-    if (n > 0) {
+    if (peersArr.length > 0) {
       const r = visRadius - 10;
-      peersArr.forEach((p, idx) => {
+      peersArr.forEach((p) => {
         const kind = (p.kind || "").toLowerCase();
-        const angle = (idx / n) * Math.PI * 2 - Math.PI / 2; // равномерно по кругу
+        const angle = this._hashAngle(p.id) - Math.PI / 2;
         const px = this.centerX + Math.cos(angle) * r;
         const py = this.centerY + Math.sin(angle) * r;
 
+        const isActive = this.lastPeerId === p.id;
+
         ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.arc(px, py, isActive ? 5 : 4, 0, Math.PI * 2);
         ctx.fillStyle =
-          kind === "rust"
-            ? "rgba(74, 222, 128, 0.95)"
-            : "rgba(56, 189, 248, 0.9)";
-        ctx.shadowColor = "rgba(56,189,248,0.6)";
-        ctx.shadowBlur = 8;
+          kind === "rust-node"
+            ? "rgba(74, 222, 128, 0.95)"   // rust-ноды зелёные
+            : "rgba(56, 189, 248, 0.9)";   // прочие голубые
+
+        ctx.shadowColor = isActive
+          ? "rgba(74, 222, 128, 0.9)"
+          : "rgba(56,189,248,0.6)";
+        ctx.shadowBlur = isActive ? 14 : 8;
         ctx.fill();
         ctx.shadowBlur = 0;
       });
     }
 
-    // луч от центра
+    // луч от центра к браузер-ноде
     ctx.beginPath();
     ctx.moveTo(this.centerX, this.centerY);
     ctx.lineTo(this.x, this.y);
@@ -348,11 +381,11 @@ class LVSBrowserNode {
       ctx.stroke();
     }
 
-    // шарик
+    // сам шарик
     ctx.beginPath();
     ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
     ctx.fillStyle = "#00d4ff";
-    ctx.shadowColor = "rgba(0,180,255,0.8)";
+    ctx.shadowColor = "rgba(0,180,255,0.85)";
     ctx.shadowBlur = 14;
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -378,7 +411,7 @@ class LVSBrowserNode {
       let drift = [d1[0] + d2[0], d1[1] + d2[1]];
       drift = this.vaultGuard(drift);
 
-      this.applyDrift(drift);
+      this.applyStep(drift);
       this.sendSDM(drift);
       this.draw();
 
@@ -387,4 +420,5 @@ class LVSBrowserNode {
   }
 }
 
+// экспорт в глобальный scope
 window.LVSBrowserNode = LVSBrowserNode;
