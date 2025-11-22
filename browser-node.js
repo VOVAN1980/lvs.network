@@ -162,31 +162,13 @@ this.cycle = 0;
   }
 
   applyDrift(d) {
-  // ограничиваем максимальный дрейф
-  const MAX = 0.5;
-  if (d[0] >  MAX) d[0] =  MAX;
-  if (d[0] < -MAX) d[0] = -MAX;
-  if (d[1] >  MAX) d[1] =  MAX;
-  if (d[1] < -MAX) d[1] = -MAX;
-
   this.vu += d[0];
+  this.x += d[0] * 2;
+  this.y += d[1] * 2;
 
-  const POS_SCALE = 18;
-  let dx = d[0] * POS_SCALE;
-  let dy = d[1] * POS_SCALE;
-
-  this.x += dx;
-  this.y += dy;
-
-  const vx = this.x - this.centerX;
-  const vy = this.y - this.centerY;
-  const dist = Math.hypot(vx, vy) || 1;
-
-  if (dist > this.radius) {
-    const k = this.radius / dist;
-    this.x = this.centerX + vx * k;
-    this.y = this.centerY + vy * k;
-  }
+  const r = this.canvas;
+  this.x = Math.max(0, Math.min(r.width,  this.x));
+  this.y = Math.max(0, Math.min(r.height, this.y));
 }
 
   // ---------- отрисовка ----------
