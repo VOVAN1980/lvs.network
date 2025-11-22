@@ -1,229 +1,118 @@
-class LVSBrowserNode {
-  constructor(nodeId, gatewayUrl, canvasId) {
-    this.nodeId = nodeId;
-    this.gatewayUrl = gatewayUrl;
+use std::env;
+use std::time::Duration;
 
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext("2d");
+use tokio::time::sleep;
+use futures::{SinkExt, StreamExt};
+use tokio_tungstenite::{connect_async, tungstenite::Message as WsMsg};
 
-    // геометрия области
-this.centerX = this.canvas.width / 2;
-this.centerY = this.canvas.height / 2;
-this.radius  = Math.min(this.canvas.width, this.canvas.height) / 2 - 30;
+use lvs_core::types::{SdmPayload, Message};
+use lvs_core::shared_state::SharedState;
+use serde_json::json;
 
-// стартовая позиция точки — в центре
-this.x = this.centerX;
-this.y = this.centerY;
+#[tokio::main]
+async fn main() {
+    let node_id = env::var("LVS_NODE_ID").unwrap_or("node1".to_string());
+    let gateway_url = env::var("LVS_GATEWAY")
+        .unwrap_or("ws://127.0.0.1:9001/ws".to_string());
 
-// состояние
-this.ws = null;
-this.vu = 100.0;
-this.tc = 0.5;
-this.cycle = 0;
+    println!("Starting LVS Rust node: {}", node_id);
+    println!("Gateway: {}", gateway_url);
 
-// параметры дрейфа (делаем спокойнее)
-   this.alpha = 0.04;
-   this.beta  = 0.06;
+    let (ws_stream, _) = connect_async(&gateway_url)
+        .await
+        .expect("Cannot connect to LVS gateway");
 
-    // последние данные от пиров
-    this.lastPeerDiff = null;
-    this.lastPeerWeight = null;
+    println!("[node] connected to gateway");
 
-    // колбэки — будут навешаны из HTML
-    this.onStatus = () => {};
-    this.onPeers  = () => {};
-    this.onCycle  = () => {};
-    this.onHello  = () => {};
-    this.onSDM    = () => {};
-  }
+    let (mut ws_tx, mut ws_rx) = ws_stream.split();
 
-  start() {
-    this.onStatus("connecting...");
-    console.log("[LVS] connecting:", this.gatewayUrl);
+    let mut state = SharedState::new();
 
-    this.ws = new WebSocket(this.gatewayUrl);
+    // ---------- HELLO (через сырой JSON, чтобы не гадать структуру enum) ----------
+    let hello_json = json!({
+        "type": "hello",
+        "node_id": node_id,
+        "payload": {
+            "kind": "rust-node",
+            "version": "0.2.0"
+        }
+    })
+    .to_string();
 
-    this.ws.onopen = () => {
-      this.onStatus("connected");
-      console.log("[LVS] connected");
-      this.sendHello();
-      this.requestPeers();
-      this.loop();
+    ws_tx
+        .send(WsMsg::Text(hello_json))
+        .await
+        .expect("failed to send hello");
+    println!("[node] hello sent");
+
+    // ---------- запрос списка пиров (уже через типизированный enum) ----------
+    let ask = Message::PeersRequest {
+        node_id: node_id.clone(),
     };
+    let ask_str = serde_json::to_string(&ask).unwrap();
+    ws_tx
+        .send(WsMsg::Text(ask_str))
+        .await
+        .expect("failed to send peers_request");
+    println!("[node] peers_request sent");
 
-    this.ws.onclose = () => {
-      this.onStatus("disconnected");
-      console.log("[LVS] disconnected");
-      // авто-reconnect
-      setTimeout(() => this.start(), 1500);
-    };
+    loop {
+        tokio::select! {
 
-    this.ws.onerror = (err) => {
-      this.onStatus("error");
-      console.log("[LVS] ws error:", err);
-    };
+            // ---------- входящие сообщения от gateway ----------
+            msg = ws_rx.next() => {
+                if msg.is_none() { continue; }
+                let msg = msg.unwrap();
 
-    this.ws.onmessage = (ev) => this.handleMessage(ev.data);
-  }
+                if let Ok(WsMsg::Text(text)) = msg {
+                    if let Ok(parsed) = serde_json::from_str::<Message>(&text) {
 
-  // ---------- отправка ----------
+                        match parsed {
 
-  send(msg) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(msg));
+                            // список пиров от gateway / браузера
+                            Message::Peers { node_id: from, payload } => {
+                                let ids: Vec<String> =
+                                    payload.peers.into_iter().map(|p| p.node_id).collect();
+                                println!("[node] peers from {} :: {:?}", from, ids);
+                            }
+
+                            // SDM от других нод
+                            Message::Sdm { node_id: other, payload } => {
+                                state.apply_sdm(other.clone(), payload.clone());
+                                println!("[SDM] from {} :: diff={:?}, weight={:.3}, cycle={}",
+                                    other, payload.diff, payload.weight, payload.cycle_id);
+                            }
+
+                            _ => {
+                                // остальное пока игнорим
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ---------- периодический SDM broadcast ----------
+            _ = sleep(Duration::from_millis(70)) => {
+                state.tick();
+
+                let payload = SdmPayload {
+                    diff: vec![
+                        rand::random::<f64>() * 0.03,           // "локальная" энтропия
+                        0.5,                                   // TC (пока фикс)
+                        100.0 + rand::random::<f64>() * 2.0,   // VU вокруг 100
+                    ],
+                    weight: 0.5,
+                    cycle_id: state.global_cycle,
+                };
+
+                let msg = Message::Sdm {
+                    node_id: node_id.clone(),
+                    payload,
+                };
+
+                let json = serde_json::to_string(&msg).unwrap();
+                let _ = ws_tx.send(WsMsg::Text(json)).await;
+            }
+        }
     }
-  }
-
-  sendHello() {
-    const msg = {
-      type: "hello",
-      node_id: this.nodeId,
-      payload: {
-        kind: "browser",
-        version: "0.2.0",
-      },
-    };
-    console.log("[LVS] → hello", msg);
-    this.send(msg);
-  }
-
-  requestPeers() {
-    const msg = {
-      type: "peers_request",
-      node_id: this.nodeId,
-    };
-    console.log("[LVS] → peers_request");
-    this.send(msg);
-  }
-
-  sendSDM(diff) {
-    const msg = {
-      type: "sdm",
-      node_id: this.nodeId,
-      payload: {
-        diff,
-        weight: this.tc,
-        cycle_id: this.cycle,
-      },
-    };
-    this.send(msg);
-    this.onSDM(diff[0]);
-  }
-
-  // ---------- приём ----------
-
-  handleMessage(txt) {
-    let msg;
-    try {
-      msg = JSON.parse(txt);
-    } catch {
-      return;
-    }
-
-    if (msg.type === "hello" && msg.node_id !== this.nodeId) {
-      console.log("[LVS] hello from:", msg.node_id);
-      this.onHello(msg.node_id);
-    }
-
-    if (msg.type === "peers") {
-      const peers = msg.payload?.peers || [];
-      this.onPeers(peers);
-      return;
-    }
-
-    if (msg.type === "sdm" && msg.node_id !== this.nodeId) {
-      this.lastPeerDiff   = msg.payload.diff;
-      this.lastPeerWeight = msg.payload.weight;
-    }
-  }
-
-  // ---------- дрейф ----------
-
-  generateEntropy() {
-    return [Math.random() * 2 - 1, Math.random() * 2 - 1];
-  }
-
-  driftFromEntropy(E) {
-    const m = Math.hypot(E[0], E[1]) || 1;
-    return [(E[0] / m) * this.alpha, (E[1] / m) * this.alpha];
-  }
-
-  driftFromPeers() {
-    if (!this.lastPeerDiff) return [0, 0];
-    return [
-      this.lastPeerDiff[0] * this.beta,
-      this.lastPeerDiff[1] * this.beta,
-    ];
-  }
-
-  vaultGuard(drift) {
-    if (this.vu + drift[0] < 0) drift[0] = -this.vu;
-    return drift;
-  }
-
-  applyDrift(d) {
-  // ограничиваем максимальный дрейф
-  const MAX = 0.5;
-  if (d[0] >  MAX) d[0] =  MAX;
-  if (d[0] < -MAX) d[0] = -MAX;
-  if (d[1] >  MAX) d[1] =  MAX;
-  if (d[1] < -MAX) d[1] = -MAX;
-
-  // обновляем VU
-  this.vu += d[0];
-
-  // маленький, плавный шаг
-  const POS_SCALE = 22; // можешь делать 8–14
-  this.x += d[0] * POS_SCALE;
-  this.y += d[1] * POS_SCALE;
-
-  // держим точку внутри круга
-  const vx = this.x - this.centerX;
-  const vy = this.y - this.centerY;
-  const dist = Math.hypot(vx, vy) || 1;
-
-  if (dist > this.radius) {
-    const k = this.radius / dist;
-    this.x = this.centerX + vx * k;
-    this.y = this.centerY + vy * k;
-  }
 }
-
-  // ---------- отрисовка ----------
-
-  draw() {
-    const ctx = this.ctx;
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = "#00d4ff";
-    ctx.shadowColor = "rgba(0,180,255,0.6)";
-    ctx.shadowBlur = 12;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-  }
-
-  // ---------- основной цикл ----------
-
-  loop() {
-    setInterval(() => {
-      this.cycle++;
-
-      const E  = this.generateEntropy();
-      const d1 = this.driftFromEntropy(E);
-      const d2 = this.driftFromPeers();
-
-      let drift = [d1[0] + d2[0], d1[1] + d2[1]];
-      drift = this.vaultGuard(drift);
-
-      this.applyDrift(drift);
-      this.sendSDM(drift);
-      this.draw();
-
-      this.onCycle(this.cycle, this.vu, this.tc);
-    }, 120);
-  }
-}
-
-// экспорт в глобал
-window.LVSBrowserNode = LVSBrowserNode;
