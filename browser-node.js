@@ -7,35 +7,45 @@ class LVSBrowserNode {
     this.ctx = this.canvas.getContext("2d");
 
     // геометрия области
-this.centerX = this.canvas.width / 2;
-this.centerY = this.canvas.height / 2;
-this.radius  = Math.min(this.canvas.width, this.canvas.height) / 2 - 30;
+    this.centerX = this.canvas.width / 2;
+    this.centerY = this.canvas.height / 2;
+    this.radius  = Math.min(this.canvas.width, this.canvas.height) / 2 - 30;
 
-// стартовая позиция точки — в центре
-this.x = this.centerX;
-this.y = this.centerY;
+    // стартовая позиция точки — в центре
+    this.x = this.centerX;
+    this.y = this.centerY;
 
-// состояние
-this.ws = null;
-this.vu = 100.0;
-this.tc = 0.5;
-this.cycle = 0;
+    // состояние
+    this.ws = null;
+    this.vu = 100.0;
+    this.tc = 0.5;
+    this.cycle = 0;
 
-// параметры дрейфа (делаем спокойнее)
-   this.alpha = 0.04;
-   this.beta  = 0.06;
+    // плавность дрейфа
+    this.alpha = 0.04;
+    this.beta  = 0.06;
 
     // последние данные от пиров
-    this.lastPeerDiff = null;
+    this.lastPeerDiff   = null;
     this.lastPeerWeight = null;
+    this.lastPeerId     = null;
 
-    // колбэки — будут навешаны из HTML
+    // трек движения (для красивой “кривой”)
+    this.trail = [];
+    this.maxTrail = 120;
+
+    // таймер цикла (чтобы не плодить setInterval при реконнектах)
+    this.loopTimer = null;
+
+    // колбэки — навешиваются из HTML
     this.onStatus = () => {};
     this.onPeers  = () => {};
     this.onCycle  = () => {};
     this.onHello  = () => {};
     this.onSDM    = () => {};
   }
+
+  // ---------- запуск / reconnect ----------
 
   start() {
     this.onStatus("connecting...");
@@ -48,7 +58,11 @@ this.cycle = 0;
       console.log("[LVS] connected");
       this.sendHello();
       this.requestPeers();
-      this.loop();
+
+      // цикл запускаем только один раз
+      if (!this.loopTimer) {
+        this.loop();
+      }
     };
 
     this.ws.onclose = () => {
@@ -80,7 +94,7 @@ this.cycle = 0;
       node_id: this.nodeId,
       payload: {
         kind: "browser",
-        version: "0.2.0",
+        version: "0.2.1",
       },
     };
     console.log("[LVS] → hello", msg);
@@ -120,20 +134,24 @@ this.cycle = 0;
       return;
     }
 
+    // приветствия от других нод
     if (msg.type === "hello" && msg.node_id !== this.nodeId) {
       console.log("[LVS] hello from:", msg.node_id);
       this.onHello(msg.node_id);
     }
 
-    if (msg.type === "peers") {
+    // список пиров от гейтвея
+    if (msg.type === "peers" || msg.type === "peers_response") {
       const peers = msg.payload?.peers || [];
       this.onPeers(peers);
       return;
     }
 
+    // входящие SDM от других нод
     if (msg.type === "sdm" && msg.node_id !== this.nodeId) {
       this.lastPeerDiff   = msg.payload.diff;
       this.lastPeerWeight = msg.payload.weight;
+      this.lastPeerId     = msg.node_id;
     }
   }
 
@@ -162,51 +180,115 @@ this.cycle = 0;
   }
 
   applyDrift(d) {
-  // ограничиваем максимальный дрейф
-  const MAX = 0.5;
-  if (d[0] >  MAX) d[0] =  MAX;
-  if (d[0] < -MAX) d[0] = -MAX;
-  if (d[1] >  MAX) d[1] =  MAX;
-  if (d[1] < -MAX) d[1] = -MAX;
+    // ограничиваем максимальный дрейф
+    const MAX = 0.5;
+    if (d[0] >  MAX) d[0] =  MAX;
+    if (d[0] < -MAX) d[0] = -MAX;
+    if (d[1] >  MAX) d[1] =  MAX;
+    if (d[1] < -MAX) d[1] = -MAX;
 
-  // обновляем VU
-  this.vu += d[0];
+    // обновляем VU
+    this.vu += d[0];
 
-  // маленький, плавный шаг
-  const POS_SCALE = 22; // можешь делать 8–14
-  this.x += d[0] * POS_SCALE;
-  this.y += d[1] * POS_SCALE;
+    // шаг в value-space
+    const POS_SCALE = 22;
+    this.x += d[0] * POS_SCALE;
+    this.y += d[1] * POS_SCALE;
 
-  // держим точку внутри круга
-  const vx = this.x - this.centerX;
-  const vy = this.y - this.centerY;
-  const dist = Math.hypot(vx, vy) || 1;
+    // держим точку внутри круга
+    const vx = this.x - this.centerX;
+    const vy = this.y - this.centerY;
+    const dist = Math.hypot(vx, vy) || 1;
 
-  if (dist > this.radius) {
-    const k = this.radius / dist;
-    this.x = this.centerX + vx * k;
-    this.y = this.centerY + vy * k;
+    if (dist > this.radius) {
+      const k = this.radius / dist;
+      this.x = this.centerX + vx * k;
+      this.y = this.centerY + vy * k;
+    }
+
+    // добавляем позицию в трек
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > this.maxTrail) this.trail.shift();
   }
-}
 
   // ---------- отрисовка ----------
 
   draw() {
     const ctx = this.ctx;
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // фон (мягкий градиент)
+    const g = ctx.createRadialGradient(
+      this.centerX,
+      this.centerY,
+      this.radius * 0.1,
+      this.centerX,
+      this.centerY,
+      this.radius
+    );
+    g.addColorStop(0, "#020617");
+    g.addColorStop(1, "#000000");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+
+    // граница value-space (круг)
+    ctx.beginPath();
+    ctx.arc(this.centerX, this.centerY, this.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(148,163,184,0.45)";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 6]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // линия от центра к точке — показывает вектор
+    ctx.beginPath();
+    ctx.moveTo(this.centerX, this.centerY);
+    ctx.lineTo(this.x, this.y);
+    ctx.strokeStyle = "rgba(56,189,248,0.25)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // трек движения
+    if (this.trail.length > 1) {
+      ctx.beginPath();
+      for (let i = 0; i < this.trail.length; i++) {
+        const p = this.trail[i];
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      }
+      const tailGrad = ctx.createLinearGradient(0, 0, w, h);
+      tailGrad.addColorStop(0, "rgba(56,189,248,0.05)");
+      tailGrad.addColorStop(1, "rgba(56,189,248,0.35)");
+      ctx.strokeStyle = tailGrad;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // сама нода
     ctx.beginPath();
     ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
     ctx.fillStyle = "#00d4ff";
-    ctx.shadowColor = "rgba(0,180,255,0.6)";
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = "rgba(0,180,255,0.8)";
+    ctx.shadowBlur = 14;
     ctx.fill();
     ctx.shadowBlur = 0;
+
+    // маленький “блик”
+    ctx.beginPath();
+    ctx.arc(this.x - 2, this.y - 2, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = "#e0f2fe";
+    ctx.fill();
   }
 
   // ---------- основной цикл ----------
 
   loop() {
-    setInterval(() => {
+    if (this.loopTimer) return; // уже крутится
+
+    this.loopTimer = setInterval(() => {
       this.cycle++;
 
       const E  = this.generateEntropy();
