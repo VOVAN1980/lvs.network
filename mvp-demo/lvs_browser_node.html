@@ -17,7 +17,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 10px 32px;
+      padding: 32px 10px 40px; /* чуть ниже всё посадили */
     }
 
     .shell {
@@ -84,6 +84,7 @@
       display: grid;
       grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
       gap: 16px;
+      margin-top: 6px; /* грид слегка опущен относительно хедера */
     }
 
     @media (max-width: 900px) {
@@ -135,13 +136,13 @@
     }
 
     #lvsCanvas {
-    display: block;
-    width: 100%;
-    height: auto;
-    max-height: 520px;
-    border-radius: 16px;
-    background: #020617;
-   }
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 520px;
+      border-radius: 16px;
+      background: #020617;
+    }
 
     .metrics-row {
       display: flex;
@@ -258,6 +259,69 @@
     .log-line span.v {
       color: #93c5fd;
     }
+
+    /* FOOTER */
+
+    .footer {
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(30,64,175,0.8);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .footer-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .footer-links,
+    .footer-social {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .footer a {
+      color: #cbd5f5;
+      text-decoration: none;
+      font-size: 11px;
+    }
+
+    .footer a:hover {
+      color: #facc15;
+    }
+
+    .share-btn {
+      border-radius: 999px;
+      padding: 5px 10px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: radial-gradient(circle at top left, #020617, #020617);
+      color: #e5e7eb;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .share-btn span {
+      font-size: 13px;
+    }
+
+    @media (max-width: 720px) {
+      .footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
   </style>
 </head>
 <body>
@@ -344,6 +408,34 @@
       </div>
 
     </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-left">
+        <div>LVS — Living Value System</div>
+        <div>© 2025 LVS. All rights reserved.</div>
+      </div>
+
+      <div class="footer-links">
+        <a href="https://lvs.network" target="_blank" rel="noreferrer">Main site</a>
+        <a href="https://lvs.network/#docs" target="_blank" rel="noreferrer">Docs</a>
+        <a href="https://lvs.network/#mvp" target="_blank" rel="noreferrer">Live MVP</a>
+        <a href="/privacy.html" target="_blank" rel="noreferrer">Privacy Policy</a>
+        <a href="/terms.html" target="_blank" rel="noreferrer">Terms of Use</a>
+      </div>
+
+      <div class="footer-social">
+        <!-- пока заглушки, потом подставите реальные ссылки -->
+        <a href="#" title="Twitter / X (soon)">X</a>
+        <a href="#" title="Telegram (soon)">Telegram</a>
+        <a href="#" title="LinkedIn (soon)">LinkedIn</a>
+
+        <button id="share-btn" class="share-btn" type="button">
+          <span>⤴</span> Share
+        </button>
+      </div>
+    </footer>
+
   </div>
 
   <!-- logic -->
@@ -362,6 +454,7 @@
     const mTc         = document.getElementById("m-tc");
     const peersBox    = document.getElementById("peers-box");
     const logBox      = document.getElementById("log-box");
+    const shareBtn    = document.getElementById("share-btn");
 
     nodeIdSpan.textContent = NODE_ID;
 
@@ -449,12 +542,38 @@
     };
 
     node.onSDM = (dx) => {
-      // можно раскомментировать, если хочешь видеть шум
+      // шум по желанию
       // addLog("sdm", "Δx=" + dx.toFixed(4));
     };
 
     addLog("init", "browser node UI attached to LVSBrowserNode");
     node.start();
+
+    // ====== SHARE BUTTON ======
+    if (shareBtn) {
+      shareBtn.addEventListener("click", async () => {
+        const shareData = {
+          title: "LVS — Browser Testnet Node",
+          text: "Live LVS browser node connected to the Rust testnet gateway.",
+          url: window.location.href
+        };
+
+        try {
+          if (navigator.share) {
+            await navigator.share(shareData);
+          } else {
+            // fallback: mailto
+            const mailSubject = encodeURIComponent("LVS — Browser Testnet Node");
+            const mailBody = encodeURIComponent(
+              "Check out the LVS Browser Node testnet page:\n" + window.location.href
+            );
+            window.location.href = `mailto:?subject=${mailSubject}&body=${mailBody}`;
+          }
+        } catch (e) {
+          console.log("share cancelled", e);
+        }
+      });
+    }
   </script>
 </body>
 </html>
