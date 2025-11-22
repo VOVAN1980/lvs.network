@@ -157,18 +157,13 @@ class LVSBrowserNode {
   }
 
   applyDrift(d) {
-  // логика VU оставляем простой
   this.vu += d[0];
-
-  // усиливаем визуальное движение
-  const SCALE = 80; // можешь потом поиграть 40–120
-
-  this.x += d[0] * SCALE;
-  this.y += d[1] * SCALE;
+  this.x += d[0] * 2;
+  this.y += d[1] * 2;
 
   const r = this.canvas;
-  this.x = Math.max(20, Math.min(r.width  - 20, this.x));
-  this.y = Math.max(20, Math.min(r.height - 20, this.y));
+  this.x = Math.max(0, Math.min(r.width,  this.x));
+  this.y = Math.max(0, Math.min(r.height, this.y));
 }
 
   // ---------- отрисовка ----------
