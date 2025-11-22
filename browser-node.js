@@ -6,14 +6,16 @@ class LVSBrowserNode {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext("2d");
 
-    // геометрия области
+    // геометрия
     this.centerX = this.canvas.width / 2;
     this.centerY = this.canvas.height / 2;
     this.radius  = Math.min(this.canvas.width, this.canvas.height) / 2 - 30;
 
-    // стартовая позиция точки — в центре
-    this.x = this.centerX;
-    this.y = this.centerY;
+    // позиция и скорость
+    this.x  = this.centerX;
+    this.y  = this.centerY;
+    this.vx = 0;
+    this.vy = 0;
 
     // состояние
     this.ws = null;
@@ -21,26 +23,25 @@ class LVSBrowserNode {
     this.tc = 0.5;
     this.cycle = 0;
 
-    // плавность дрейфа
-    this.alpha = 0.04; // локальный шум
+    // параметры дрейфа
+    this.alpha = 0.05; // сила локального шума
     this.beta  = 0.06; // влияние пиров по ΔVU
 
     // последние данные от пиров
-    this.lastPeerDeltaVu = null; // СКАЛЯР ΔVU
+    this.lastPeerDeltaVu = null;
     this.lastPeerWeight  = null;
     this.lastPeerId      = null;
 
-    // трек движения (для "кривой")
+    // трек движения
     this.trail = [];
-    this.maxTrail = 140;
+    this.maxTrail = 160;
 
-    // таймер цикла
     this.loopTimer = null;
 
-    // карта пиров [{id, kind, role, last_seen}]
+    // peers: [{id, kind, role, last_seen}]
     this.peers = new Map();
 
-    // колбэки — навешиваются из HTML
+    // колбэки
     this.onStatus = () => {};
     this.onPeers  = () => {};
     this.onCycle  = () => {};
@@ -112,7 +113,7 @@ class LVSBrowserNode {
       node_id: this.nodeId,
       payload: {
         kind: "browser",
-        version: "0.2.4",
+        version: "0.2.5",
       },
     };
     console.log("[LVS] → hello", msg);
@@ -194,10 +195,10 @@ class LVSBrowserNode {
 
   driftFromPeers() {
     if (this.lastPeerDeltaVu == null) return [0, 0];
-    return [
-      this.lastPeerDeltaVu * this.beta,
-      0,
-    ];
+
+    // знак ΔVU влияет на направление по X:
+    const k = this.lastPeerDeltaVu * this.beta;
+    return [k, 0];
   }
 
   vaultGuard(drift) {
@@ -206,73 +207,57 @@ class LVSBrowserNode {
   }
 
   applyDrift(d) {
-    const MAX = 0.5;
+    // ограничиваем сам drift
+    const MAX = 0.4;
     if (d[0] >  MAX) d[0] =  MAX;
     if (d[0] < -MAX) d[0] = -MAX;
     if (d[1] >  MAX) d[1] =  MAX;
     if (d[1] < -MAX) d[1] = -MAX;
 
+    // VU идёт по X-компоненте
     this.vu += d[0];
 
-    const POS_SCALE = 22;
-    this.x += d[0] * POS_SCALE;
-    this.y += d[1] * POS_SCALE;
+    // добавляем drift к скорости
+    this.vx += d[0];
+    this.vy += d[1];
 
-    // держим точку внутри круга
-    let vx = this.x - this.centerX;
-    let vy = this.y - this.centerY;
-    let dist = Math.hypot(vx, vy) || 1;
+    // трение — чтобы движения не разлетались
+    const FRICTION = 0.90;
+    this.vx *= FRICTION;
+    this.vy *= FRICTION;
 
-    if (dist > this.radius) {
-      const k = this.radius / dist;
-      this.x = this.centerX + vx * k;
-      this.y = this.centerY + vy * k;
-      vx = this.x - this.centerX;
-      vy = this.y - this.centerY;
-      dist = Math.hypot(vx, vy) || 1;
-    }
+    // масштаб скорости в пиксели
+    const POS_SCALE = 20;
+    this.x += this.vx * POS_SCALE;
+    this.y += this.vy * POS_SCALE;
 
-    // базовая центровка: мягкая по X/Y
-    this.y += (this.centerY - this.y) * 0.06;
-    this.x += (this.centerX - this.x) * 0.015;
+    // лёгкая нормализация к центру, чтобы шарик не залипал в одной точке,
+    // но без жёсткой пружины
+    const toCenterX = this.centerX - this.x;
+    const toCenterY = this.centerY - this.y;
+    this.x += toCenterX * 0.01;
+    this.y += toCenterY * 0.01;
 
-    // --- анти-залипание в центре ---
+    // держим внутри круга: если вышли за радиус — отражаем от "стенки"
     const dx = this.x - this.centerX;
     const dy = this.y - this.centerY;
-    const dist2 = Math.hypot(dx, dy) || 1;
-    const deadZone = this.radius * 0.12; // 12% от радиуса
+    const dist = Math.hypot(dx, dy) || 1;
+    if (dist > this.radius) {
+      const nx = dx / dist;
+      const ny = dy / dist;
 
-    if (dist2 < deadZone) {
-      const nx = dx / dist2;
-      const ny = dy / dist2;
-      const PUSH = 0.9;
-      this.x += nx * PUSH;
-      this.y += ny * PUSH;
-    }
+      // проецируем позицию на границу
+      this.x = this.centerX + nx * this.radius;
+      this.y = this.centerY + ny * this.radius;
 
-    // --- орбитальный эффект вокруг центра ---
-    const rx = this.x - this.centerX;
-    const ry = this.y - this.centerY;
-    const rDist = Math.hypot(rx, ry);
+      // отражаем скорость от нормали
+      const dot = this.vx * nx + this.vy * ny;
+      this.vx = this.vx - 2 * dot * nx;
+      this.vy = this.vy - 2 * dot * ny;
 
-    if (rDist > deadZone * 0.8) {
-      const ORBIT_SPEED = 0.012; // ~0.7° за тик
-      const cos = Math.cos(ORBIT_SPEED);
-      const sin = Math.sin(ORBIT_SPEED);
-      const ox = rx * cos - ry * sin;
-      const oy = rx * sin + ry * cos;
-      this.x = this.centerX + ox;
-      this.y = this.centerY + oy;
-    }
-
-    // снова контролируем границы (после орбиты + толчков)
-    const vx2 = this.x - this.centerX;
-    const vy2 = this.y - this.centerY;
-    const dist3 = Math.hypot(vx2, vy2) || 1;
-    if (dist3 > this.radius) {
-      const k = this.radius / dist3;
-      this.x = this.centerX + vx2 * k;
-      this.y = this.centerY + vy2 * k;
+      // дополнительное трение при ударе
+      this.vx *= 0.7;
+      this.vy *= 0.7;
     }
 
     this.trail.push({ x: this.x, y: this.y });
@@ -281,16 +266,6 @@ class LVSBrowserNode {
 
   // ---------- отрисовка ----------
 
-  _hashAngle(id) {
-    // примитивный детерминированный "хеш" → угол [0..2π)
-    let h = 0;
-    for (let i = 0; i < id.length; i++) {
-      h = (h * 31 + id.charCodeAt(i)) >>> 0;
-    }
-    const angle = (h % 360) * Math.PI / 180;
-    return angle;
-  }
-
   draw() {
     const ctx = this.ctx;
     const w = this.canvas.width;
@@ -298,9 +273,9 @@ class LVSBrowserNode {
 
     ctx.clearRect(0, 0, w, h);
 
-    // пульсация ядра
-    const pulse = 1 + 0.05 * Math.sin(this.cycle * 0.12);
-    const visRadius = this.radius * (0.96 + 0.04 * pulse);
+    // лёгкая пульсация круга
+    const pulse = 1 + 0.04 * Math.sin(this.cycle * 0.08);
+    const visRadius = this.radius * pulse;
 
     // фон
     const g = ctx.createRadialGradient(
@@ -316,44 +291,45 @@ class LVSBrowserNode {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
-    // внешний круг (value space)
+    // внешний круг
     ctx.beginPath();
     ctx.arc(this.centerX, this.centerY, visRadius, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(148,163,184,0.45)";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.3;
     ctx.setLineDash([4, 6]);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // маркеры rust-нод по окружности
+    // ноды по окружности РАВНОМЕРНО
     const peersArr = Array.from(this.peers.values());
-    peersArr.forEach((p) => {
-      const kind = (p.kind || "").toLowerCase();
-      if (kind === "browser") return; // браузерные — не рисуем тут
-
-      const angle = this._hashAngle(p.id);
+    const n = peersArr.length;
+    if (n > 0) {
       const r = visRadius - 10;
+      peersArr.forEach((p, idx) => {
+        const kind = (p.kind || "").toLowerCase();
+        const angle = (idx / n) * Math.PI * 2 - Math.PI / 2; // равномерно по кругу
+        const px = this.centerX + Math.cos(angle) * r;
+        const py = this.centerY + Math.sin(angle) * r;
 
-      const px = this.centerX + Math.cos(angle) * r;
-      const py = this.centerY + Math.sin(angle) * r;
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle =
+          kind === "rust"
+            ? "rgba(74, 222, 128, 0.95)"
+            : "rgba(56, 189, 248, 0.9)";
+        ctx.shadowColor = "rgba(56,189,248,0.6)";
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+    }
 
-      ctx.beginPath();
-      ctx.arc(px, py, 4, 0, Math.PI * 2);
-      ctx.fillStyle = kind === "rust"
-        ? "rgba(74, 222, 128, 0.95)"   // зелёный для rust-ноды
-        : "rgba(56, 189, 248, 0.9)";   // голубой для прочих
-      ctx.shadowColor = "rgba(56,189,248,0.6)";
-      ctx.shadowBlur = 8;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    });
-
-    // луч от центра к нашей точке
+    // луч от центра
     ctx.beginPath();
     ctx.moveTo(this.centerX, this.centerY);
     ctx.lineTo(this.x, this.y);
-    ctx.strokeStyle = "rgba(56,189,248,0.29)";
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "rgba(56,189,248,0.25)";
+    ctx.lineWidth = 1.1;
     ctx.stroke();
 
     // хвост
@@ -366,13 +342,13 @@ class LVSBrowserNode {
       }
       const tailGrad = ctx.createLinearGradient(0, 0, w, h);
       tailGrad.addColorStop(0, "rgba(56,189,248,0.05)");
-      tailGrad.addColorStop(1, "rgba(56,189,248,0.4)");
+      tailGrad.addColorStop(1, "rgba(56,189,248,0.35)");
       ctx.strokeStyle = tailGrad;
       ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    // сам шарик
+    // шарик
     ctx.beginPath();
     ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
     ctx.fillStyle = "#00d4ff";
