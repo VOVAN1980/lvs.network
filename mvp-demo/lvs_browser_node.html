@@ -17,7 +17,15 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 10px 32px;
+      padding: 24px 10px 40px;
+    }
+
+    a {
+      color: #93c5fd;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
     }
 
     .shell {
@@ -32,8 +40,9 @@
 
     .header {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       gap: 16px;
     }
 
@@ -51,8 +60,16 @@
       max-width: 640px;
     }
 
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      min-width: 220px;
+    }
+
     .status-pill {
-      align-self: flex-start;
+      align-self: flex-end;
       padding: 6px 12px;
       border-radius: 999px;
       font-size: 11px;
@@ -78,6 +95,44 @@
       box-shadow: 0 0 10px rgba(34,197,94,0.9);
     }
 
+    .net-status {
+      font-size: 11px;
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: radial-gradient(circle at top left, #020617 0, #020617 60%, #020617 100%);
+      border: 1px solid rgba(30,64,175,0.8);
+      color: #9ca3af;
+      min-width: 230px;
+    }
+
+    .net-status-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .net-status-label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #64748b;
+    }
+
+    .net-status-value {
+      font-family: "Consolas", monospace;
+      color: #e5e7eb;
+    }
+
+    @media (max-width: 900px) {
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .header-right {
+        align-items: flex-start;
+      }
+    }
+
     /* MAIN GRID */
 
     .grid {
@@ -89,10 +144,6 @@
     @media (max-width: 900px) {
       .grid {
         grid-template-columns: minmax(0,1fr);
-      }
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
       }
     }
 
@@ -126,6 +177,17 @@
       color: #9ca3af;
     }
 
+    .vis-nodeid {
+      text-align:right;
+      font-size:11px;
+      color:#9ca3af;
+    }
+
+    .vis-nodeid span {
+      font-family:Consolas,monospace;
+      color:#e5e7eb;
+    }
+
     .canvas-wrap {
       border-radius: 18px;
       border: 1px solid rgba(15,23,42,1);
@@ -134,14 +196,28 @@
       padding: 14px;
     }
 
+    /* Square wrapper so the circle is never "яйцо" */
+
+    .canvas-inner {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .canvas-inner::before {
+      content: "";
+      display: block;
+      padding-top: 100%; /* perfect square */
+    }
     #lvsCanvas {
-    display: block;
-    width: 100%;
-    height: auto;
-    max-height: 520px;
-    border-radius: 16px;
-    background: #020617;
-   }
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      background: #020617;
+      display: block;
+    }
 
     .metrics-row {
       display: flex;
@@ -158,6 +234,7 @@
       border: 1px solid rgba(148,163,184,0.35);
       padding: 8px 10px;
       font-size: 12px;
+      position: relative;
     }
 
     .metric-label {
@@ -165,6 +242,22 @@
       text-transform: uppercase;
       letter-spacing: 0.12em;
       margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .metric-label span.info {
+      display:inline-flex;
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      font-size:10px;
+      align-items:center;
+      justify-content:center;
+      color:#9ca3af;
+      cursor:default;
     }
 
     .metric-value {
@@ -177,6 +270,17 @@
       font-size: 11px;
       color: #9ca3af;
       margin-top: 2px;
+    }
+
+    .explainer {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #9ca3af;
+      max-width: 640px;
+    }
+
+    .explainer a {
+      font-size: 12px;
     }
 
     /* RIGHT: PEERS + LOG */
@@ -258,6 +362,138 @@
     .log-line span.v {
       color: #93c5fd;
     }
+
+    /* DEV PANEL */
+
+    .dev-panel {
+      margin-top: 10px;
+      font-size: 11px;
+      border-radius: 14px;
+      background: rgba(15,23,42,0.95);
+      border: 1px dashed rgba(55,65,81,0.9);
+      padding: 8px 10px;
+    }
+
+    .dev-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .dev-header span.label {
+      text-transform:uppercase;
+      letter-spacing:0.14em;
+      color:#6b7280;
+    }
+
+    .dev-header span.toggle {
+      color:#9ca3af;
+      font-size:11px;
+    }
+
+    .dev-body {
+      margin-top:6px;
+      display:none;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .dev-field {
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:180px;
+      flex:1 1 200px;
+    }
+
+    .dev-field label {
+      color:#9ca3af;
+    }
+
+    .dev-field input {
+      font-size:11px;
+      border-radius:6px;
+      border:1px solid rgba(75,85,99,0.9);
+      background:#020617;
+      color:#e5e7eb;
+      padding:4px 6px;
+      font-family:Consolas,monospace;
+    }
+
+    .dev-actions {
+      display:flex;
+      align-items:flex-end;
+      gap:8px;
+      margin-top:4px;
+    }
+
+    .btn {
+      border-radius:999px;
+      border:1px solid rgba(96,165,250,0.9);
+      background:linear-gradient(to right,#1d4ed8,#0ea5e9);
+      color:#e5e7eb;
+      font-size:11px;
+      padding:5px 10px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+    }
+    .btn.secondary {
+      background:transparent;
+      border-color:rgba(148,163,184,0.8);
+    }
+    .btn:disabled {
+      opacity:0.6;
+      cursor:default;
+    }
+
+    /* FOOTER */
+
+    .footer {
+      margin-top:20px;
+      font-size:11px;
+      color:#6b7280;
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+
+    .footer-left {
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .footer-links {
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+
+    .footer-links a {
+      color:#9ca3af;
+    }
+
+    .footer-right {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .social-links {
+      display:flex;
+      gap:8px;
+    }
+
+    .share-btns {
+      display:flex;
+      gap:6px;
+    }
   </style>
 </head>
 <body>
@@ -273,9 +509,30 @@
         </p>
       </div>
 
-      <div class="status-pill">
-        <div id="status-dot" class="dot"></div>
-        <span id="status-text">DISCONNECTED</span>
+      <div class="header-right">
+        <div class="status-pill">
+          <div id="status-dot" class="dot"></div>
+          <span id="status-text">DISCONNECTED</span>
+        </div>
+
+        <div class="net-status">
+          <div class="net-status-row">
+            <div class="net-status-label">Gateway</div>
+            <div id="net-gateway" class="net-status-value">ws://127.0.0.1:9001/ws</div>
+          </div>
+          <div class="net-status-row">
+            <div class="net-status-label">Peers</div>
+            <div id="net-peers" class="net-status-value">0</div>
+          </div>
+          <div class="net-status-row">
+            <div class="net-status-label">SDM rate</div>
+            <div id="net-sdm-rate" class="net-status-value">0.0 msg/s</div>
+          </div>
+          <div class="net-status-row">
+            <div class="net-status-label">Last SDM</div>
+            <div id="net-last-sdm" class="net-status-value">—</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -291,31 +548,77 @@
               Browser node position inside the value space. Movement is driven by entropy + peer drift.
             </div>
           </div>
-          <div style="text-align:right;font-size:11px;color:#9ca3af;">
+          <div class="vis-nodeid">
             Node ID:<br/>
-            <span id="node-id" style="font-family:Consolas,monospace;color:#e5e7eb;"></span>
+            <span id="node-id"></span>
           </div>
         </div>
 
         <div class="canvas-wrap">
-          <canvas id="lvsCanvas" width="520" height="520"></canvas>
+          <div class="canvas-inner">
+            <canvas id="lvsCanvas" width="520" height="520"></canvas>
+          </div>
         </div>
 
         <div class="metrics-row">
           <div class="metric">
-            <div class="metric-label">Cycle</div>
+            <div class="metric-label">
+              Cycle
+              <span class="info" title="Update ticks processed by this browser node.">i</span>
+            </div>
             <div class="metric-value" id="m-cycle">0</div>
-            <div class="metric-note">Update ticks processed by this browser node.</div>
+            <div class="metric-note">
+              Each cycle this node sends its SDM and updates its position in the value space.
+            </div>
           </div>
           <div class="metric">
-            <div class="metric-label">VU</div>
+            <div class="metric-label">
+              VU
+              <span class="info" title="Effective value units controlled by the node after Drift + Vault Guard.">i</span>
+            </div>
             <div class="metric-value" id="m-vu">0.00</div>
-            <div class="metric-note">Effective value units controlled by the node (after drift + vault guard).</div>
+            <div class="metric-note">
+              Value Units capture how much economic weight this node currently controls.
+            </div>
           </div>
           <div class="metric">
-            <div class="metric-label">TC</div>
+            <div class="metric-label">
+              TC
+              <span class="info" title="Trust Credits — weight used when this node broadcasts SDM to the network.">i</span>
+            </div>
             <div class="metric-value" id="m-tc">0.50</div>
-            <div class="metric-note">Trust Credits used as weight for SDM broadcast.</div>
+            <div class="metric-note">
+              Higher TC makes this node’s SDM more influential when the core aggregates signals.
+            </div>
+          </div>
+        </div>
+
+        <div class="explainer">
+          This browser node acts as a lightweight LVS participant. It receives SDM from Rust nodes,
+          broadcasts its own drift every cycle and shows how the core “feels” each peer in real time.
+          <br/>
+          <a href="/#docs-consensus" target="_blank">Read more in Docs → Consensus &amp; SDM</a>
+        </div>
+
+        <!-- DEV PANEL -->
+        <div class="dev-panel">
+          <div class="dev-header" id="dev-toggle">
+            <span class="label">Developer panel</span>
+            <span class="toggle" id="dev-toggle-text">show</span>
+          </div>
+          <div class="dev-body" id="dev-body">
+            <div class="dev-field">
+              <label for="dev-gateway">Gateway URL</label>
+              <input id="dev-gateway" type="text" spellcheck="false" />
+            </div>
+            <div class="dev-field">
+              <label for="dev-nodeid">Node ID</label>
+              <input id="dev-nodeid" type="text" spellcheck="false" />
+            </div>
+            <div class="dev-actions">
+              <button class="btn" id="dev-apply">Reconnect</button>
+              <button class="btn secondary" id="dev-reset">Reset</button>
+            </div>
           </div>
         </div>
       </div>
@@ -344,14 +647,55 @@
       </div>
 
     </div>
+
+    <div class="footer">
+  <div class="footer-left">
+    <div>LVS — Living Value System</div>
+    <div>© 2025 LVS. All rights reserved.</div>
+
+    <div class="footer-links">
+      <a href="https://lvs.network" target="_blank">Main site</a>
+      <a href="https://lvs.network/#docs" target="_blank">Docs</a>
+      <a href="https://lvs.network/#mvp" target="_blank">Live MVP</a>
+
+      <a href="https://lvs.network/privacy.html" target="_blank" rel="noreferrer">Privacy Policy</a>
+      <a href="https://lvs.network/terms.html" target="_blank" rel="noreferrer">Terms of Use</a>
+
+      <a href="https://github.com/VOVAN1980" target="_blank">GitHub</a>
+      <a href="https://github.com/VOVAN1980/lvs.network/blob/main/docs/Lvs%20Whitepaper%20En.pdf" target="_blank">Whitepaper</a>
+    </div>
+  </div>
+</div>
+
+      <div class="footer-right">
+        <div class="social-links">
+          <a href="https://t.me/your_lvs_channel" target="_blank">Telegram</a>
+          <a href="https://www.linkedin.com/company/your-lvs" target="_blank">LinkedIn</a>
+          <a href="https://x.com/your_lvs" target="_blank">X</a>
+        </div>
+        <div class="share-btns">
+          <button class="btn secondary" id="btn-capture">Capture frame</button>
+          <button class="btn secondary" id="btn-share">Share</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- logic -->
   <script src="../browser-node.js"></script>
   <script>
-    // ====== CONFIG ======
-    const GATEWAY_URL = "ws://127.0.0.1:9001/ws";
-    const NODE_ID     = "browser-node-1";
+    // ====== query params (for dev panel reconnect) ======
+    function getQueryParam(name, fallback) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name) || fallback;
+    }
+
+    const DEFAULT_GATEWAY = "ws://127.0.0.1:9001/ws";
+    const DEFAULT_NODE_ID = "browser-node-1";
+
+    const GATEWAY_URL = getQueryParam("gateway", DEFAULT_GATEWAY);
+    const NODE_ID     = getQueryParam("node", DEFAULT_NODE_ID);
 
     // ====== DOM ======
     const statusDot   = document.getElementById("status-dot");
@@ -363,7 +707,26 @@
     const peersBox    = document.getElementById("peers-box");
     const logBox      = document.getElementById("log-box");
 
+    const netGateway  = document.getElementById("net-gateway");
+    const netPeers    = document.getElementById("net-peers");
+    const netSdmRate  = document.getElementById("net-sdm-rate");
+    const netLastSdm  = document.getElementById("net-last-sdm");
+
+    const devToggle      = document.getElementById("dev-toggle");
+    const devToggleText  = document.getElementById("dev-toggle-text");
+    const devBody        = document.getElementById("dev-body");
+    const devGateway     = document.getElementById("dev-gateway");
+    const devNodeId      = document.getElementById("dev-nodeid");
+    const devApply       = document.getElementById("dev-apply");
+    const devReset       = document.getElementById("dev-reset");
+
+    const btnCapture = document.getElementById("btn-capture");
+    const btnShare   = document.getElementById("btn-share");
+
     nodeIdSpan.textContent = NODE_ID;
+    netGateway.textContent = GATEWAY_URL;
+    devGateway.value = GATEWAY_URL;
+    devNodeId.value  = NODE_ID;
 
     function setStatus(state) {
       statusText.textContent = state.toUpperCase();
@@ -388,10 +751,13 @@
 
     function renderPeers(peers) {
       peersBox.innerHTML = "";
-      if (!peers || !peers.length) {
+      const count = peers ? peers.length : 0;
+      netPeers.textContent = count.toString();
+
+      if (!count) {
         peersBox.innerHTML =
           '<div style="color:#6b7280;font-size:11px;">' +
-          'No peers yet. Waiting for gateway (core nodes + other browser nodes)…' +
+          'No peers yet. Start at least one Rust node via gateway…' +
           '</div>';
         return;
       }
@@ -423,8 +789,32 @@
       });
     }
 
-    // ====== LVS BROWSER NODE ======
+    // ====== SDM rate calc ======
+    const sdmTimes = [];
+    function registerSdmTimestamp() {
+      const now = Date.now();
+      sdmTimes.push(now);
+      const windowMs = 5000;
+      while (sdmTimes.length && sdmTimes[0] < now - windowMs) {
+        sdmTimes.shift();
+      }
+      const rate = sdmTimes.length / (windowMs / 1000);
+      netSdmRate.textContent = rate.toFixed(2) + " msg/s";
+      netLastSdm.textContent = new Date().toLocaleTimeString();
+    }
 
+    // ====== Canvas perfect square internal size ======
+    (function ensureCanvasSquare() {
+      const canvas = document.getElementById("lvsCanvas");
+      const rect = canvas.getBoundingClientRect();
+      const size = Math.floor(rect.width);
+      if (size > 0) {
+        canvas.width = size;
+        canvas.height = size;
+      }
+    })();
+
+    // ====== LVS BROWSER NODE ======
     const node = new LVSBrowserNode(NODE_ID, GATEWAY_URL, "lvsCanvas");
 
     node.onStatus = (s) => {
@@ -448,13 +838,75 @@
       addLog("hello", "from " + fromId);
     };
 
-    node.onSDM = (dx) => {
-      // можно раскомментировать, если хочешь видеть шум
+    node.onSDM = () => {
+      registerSdmTimestamp();
+      // шум можно логировать при необходимости
       // addLog("sdm", "Δx=" + dx.toFixed(4));
     };
 
     addLog("init", "browser node UI attached to LVSBrowserNode");
     node.start();
+
+    // ====== Dev panel behaviour ======
+    devToggle.addEventListener("click", () => {
+      const visible = devBody.style.display === "flex";
+      devBody.style.display = visible ? "none" : "flex";
+      devToggleText.textContent = visible ? "show" : "hide";
+    });
+
+    devApply.addEventListener("click", () => {
+      const gw  = devGateway.value.trim() || DEFAULT_GATEWAY;
+      const nid = devNodeId.value.trim()  || DEFAULT_NODE_ID;
+
+      const url = new URL(window.location.href);
+      const params = url.searchParams;
+      params.set("gateway", gw);
+      params.set("node", nid);
+      url.search = params.toString();
+      window.location.href = url.toString();
+    });
+
+    devReset.addEventListener("click", () => {
+      const url = new URL(window.location.href);
+      url.search = "";
+      window.location.href = url.toString();
+    });
+
+    // ====== Capture frame ======
+    btnCapture.addEventListener("click", () => {
+      const canvas = document.getElementById("lvsCanvas");
+      try {
+        const dataUrl = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = "lvs-browser-node-frame.png";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (e) {
+        alert("Canvas capture is not available in this browser.");
+      }
+    });
+
+    // ====== Share button ======
+    btnShare.addEventListener("click", async () => {
+      const shareUrl = window.location.href.split("#")[0];
+      const text = "LVS Browser Testnet Node — live drift & peers view.";
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: document.title, text, url: shareUrl });
+        } else {
+          const mailto =
+            "mailto:?subject=" +
+            encodeURIComponent("LVS Browser Testnet Node") +
+            "&body=" +
+            encodeURIComponent(text + "\n\n" + shareUrl);
+          window.location.href = mailto;
+        }
+      } catch (e) {
+        // юзер просто закрыл share — молча игнорируем
+      }
+    });
   </script>
 </body>
 </html>
