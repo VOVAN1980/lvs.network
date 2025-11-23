@@ -55,6 +55,8 @@
       flex-direction: column;
     }
 
+    /* HEADER */
+
     header {
       position: sticky;
       top: 0;
@@ -97,7 +99,6 @@
       overflow: hidden;
     }
 
-    /* сюда ты вставишь реальное круглое лого */
     .nav-logo-circle img {
       width: 100%;
       height: 100%;
@@ -208,7 +209,7 @@
       transform: translateY(-1px);
     }
 
-    /* main layout */
+    /* MAIN LAYOUT */
 
     main {
       flex: 1;
@@ -226,7 +227,7 @@
       }
     }
 
-    /* Hero */
+    /* HERO */
 
     .hero {
       display: grid;
@@ -302,20 +303,20 @@
     }
 
     .hero-logo-wrap {
-  width: min(400px, 75vw);      /* Увеличили по кругу */
-  aspect-ratio: 1 / 1;
-  border-radius: 999px;
-  padding: 0;                   /* УБРАЛИ пустое пространство сверху/снизу */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+      width: min(400px, 75vw);
+      aspect-ratio: 1 / 1;
+      border-radius: 999px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.hero-logo-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;          /* Чтобы логотип не обрезался */
-}
+    .hero-logo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
 
     .hero-logo-caption {
       text-align: center;
@@ -327,7 +328,7 @@
       color: var(--gold-soft);
     }
 
-    /* Features */
+    /* FEATURES */
 
     .section-heading {
       font-size: 22px;
@@ -387,14 +388,14 @@
       color: var(--text-muted);
     }
 
-    /* MVP section */
+    /* MVP SECTION */
 
     .mvp-layout {
-  display: grid;
-  grid-template-columns: 1fr 1.3fr; /* текст / демо */
-  gap: 22px;
-  align-items: stretch;
-}
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: 22px;
+      align-items: stretch;
+    }
 
     @media (max-width: 959px) {
       .mvp-layout {
@@ -459,17 +460,24 @@
     }
 
     .mvp-frame {
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid rgba(30,64,175,0.8);
-  background: radial-gradient(circle at 0 0, #1e293b 0, #020617 60%, #000 100%);
-  min-height: 260px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  box-shadow: 0 0 40px rgba(34, 211, 238, 0.18);
-}
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(30,64,175,0.8);
+      background: radial-gradient(circle at 0 0, #1e293b 0, #020617 60%, #000 100%);
+      min-height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 40px rgba(34,211,238,0.18);
+    }
+
+    .mvp-frame iframe {
+      border: none;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
 
     .mvp-placeholder {
       text-align: center;
@@ -488,18 +496,9 @@
       color: var(--text-muted);
     }
 
-    .mvp-frame iframe {
-  border: none;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
+    /* FOOTER */
 
-    /* footer */
-
-        /* footer — единый стиль для сайта */
-
-    footer {
+    .footer {
       border-top: 1px solid rgba(30,64,175,0.5);
       margin-top: 40px;
       padding: 18px 16px 26px;
@@ -558,6 +557,28 @@
       border-color: rgba(250,204,21,0.9);
       color: #facc15;
     }
+
+    /* MOBILE TWEAKS */
+
+    @media (max-width: 640px) {
+      .nav {
+        flex-wrap: wrap;
+      }
+      .nav-links {
+        display: none;
+      }
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn {
+        justify-content: center;
+        width: 100%;
+      }
+      .hero-logo-card {
+        margin-top: -6px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -569,7 +590,7 @@
       <div class="nav-left">
         <div class="nav-logo-circle">
           <img src="/img/lvs-logo-circle.png" alt="LVS logo" />
-       </div>
+        </div>
         <div>
           <div class="nav-title-main">LVS</div>
           <div class="nav-title-sub">Living Value System</div>
@@ -627,7 +648,7 @@
           <div class="hero-logo-wrap">
             <img src="/img/lvs-logo-circle.png" alt="LVS – Living Value System" />
           </div>
-             <div class="hero-logo-caption">
+          <div class="hero-logo-caption">
             <span>LVS</span> turns
             <strong>trust</strong> and a protected minimum balance into the core
             of a new financial network.
@@ -724,13 +745,13 @@
               View docs &amp; papers
             </button>
             <button class="btn btn-ghost"
-               onclick="window.open('/mvp-demo/lvs_browser_node.html', '_blank')">
-                Connect as browser node
-              </button>
+              onclick="window.open('/mvp-demo/lvs_browser_node.html', '_blank')">
+              Connect as browser node
+            </button>
           </div>
         </div>
 
-      <div class="mvp-frame">
+        <div class="mvp-frame">
           <iframe
             src="/mvp-demo/lvs_demo_full.html"
             loading="lazy"
@@ -770,7 +791,7 @@
         </article>
       </div>
 
-      <div style="margin-top:18px; font-size:13px; color:var(--text-muted);">
+      <div style="margin-top:18px; font-size:13px; color:#8a92a6;">
         You can link your PDF files directly from here once they are hosted, for example:
         <br />
         <code>&lt;a href="/whitepaper/LVS_WhitePaper_v1.pdf" target="_blank"&gt;Open White Paper&lt;/a&gt;</code>
@@ -779,73 +800,63 @@
   </main>
 
   <!-- FOOTER -->
-<div class="footer">
-  <div class="footer-left">
-    <div>LVS — Living Value System</div>
-    <div>© 2025 LVS. All rights reserved.</div>
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div>LVS — Living Value System</div>
+        <div>© 2025 LVS. All rights reserved.</div>
 
-    <div class="footer-links">
-      <!-- основной сайт -->
-      <a href="https://lvs.network/" target="_blank">Main site</a>
-      <!-- секция Docs на лендинге -->
-      <a href="https://lvs.network/#docs" target="_blank">Docs</a>
-      <!-- секция MVP / Live demo -->
-      <a href="https://lvs.network/#mvp" target="_blank">Live MVP</a>
+        <div class="footer-links">
+          <a href="https://lvs.network/" target="_blank">Main site</a>
+          <a href="https://lvs.network/#docs" target="_blank">Docs</a>
+          <a href="https://lvs.network/#mvp" target="_blank">Live MVP</a>
 
-      <!-- юрка -->
-      <a href="https://lvs.network/privacy.html" target="_blank">Privacy Policy</a>
-      <a href="https://lvs.network/terms.html"   target="_blank">Terms of Use</a>
+          <a href="https://lvs.network/privacy.html" target="_blank">Privacy Policy</a>
+          <a href="https://lvs.network/terms.html"   target="_blank">Terms of Use</a>
 
-      <!-- техничка -->
-      <a href="https://github.com/VOVAN1980" target="_blank">GitHub</a>
-      <a href="https://github.com/VOVAN1980/lvs.network/blob/main/docs/Lvs%20Whitepaper%20En.pdf"
-         target="_blank">Whitepaper</a>
+          <a href="https://github.com/VOVAN1980" target="_blank">GitHub</a>
+          <a href="https://github.com/VOVAN1980/lvs.network/blob/main/docs/Lvs%20Whitepaper%20En.pdf"
+             target="_blank">Whitepaper</a>
+        </div>
+      </div>
+
+      <div class="footer-right">
+        <div class="footer-links">
+          <span style="opacity:.6;">✕</span>
+          <a href="#" onclick="return false;" style="pointer-events:none;opacity:.6;">Telegram</a>
+          <a href="#" onclick="return false;" style="pointer-events:none;opacity:.6;">LinkedIn</a>
+          <button type="button" class="share-btn">
+            Share
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
+  </footer>
 
-  <div class="footer-right">
-    <div class="footer-links">
-      <!-- сюда потом прикрутишь реальные соцсети -->
-      <span style="opacity:.6;">✕</span>
-      <a href="#" onclick="return false;" style="pointer-events:none;opacity:.6;">Telegram</a>
-      <a href="#" onclick="return false;" style="pointer-events:none;opacity:.6;">LinkedIn</a>
-
-      <!-- заглушка “Share” -->
-      <button type="button" class="share-btn">
-        Share
-      </button>
-    </div>
-  </div>
 </div>
 
 <script>
   function scrollToId(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  }
 
-  setTimeout(() => {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, 80); // лёгкая задержка — работает мягче
-}
-
-  // dummy hook — когда будет реальный URL, просто поменяешь внутри
   function openMvp() {
-  window.open('/mvp-demo/lvs_demo_full.html', '_blank');
-}
+    window.open('/mvp-demo/lvs_demo_full.html', '_blank');
+  }
 
-  // --- Adaptive iframe height ---
-window.addEventListener('load', adjustMvpHeight);
-window.addEventListener('resize', adjustMvpHeight);
+  // Adaptive iframe height
+  window.addEventListener('load', adjustMvpHeight);
+  window.addEventListener('resize', adjustMvpHeight);
 
-function adjustMvpHeight() {
-  const frame = document.querySelector('.mvp-frame iframe');
-  if (!frame) return;
-  frame.style.height = Math.max(600, window.innerHeight * 0.85) + 'px';
-}
+  function adjustMvpHeight() {
+    const frame = document.querySelector('.mvp-frame iframe');
+    if (!frame) return;
+    frame.style.height = Math.max(600, window.innerHeight * 0.85) + 'px';
+  }
 </script>
 </body>
 </html>
-
-
-
-
