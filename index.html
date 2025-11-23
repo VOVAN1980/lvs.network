@@ -497,12 +497,14 @@
 
     /* footer */
 
+        /* footer — единый стиль для сайта */
+
     footer {
       border-top: 1px solid rgba(30,64,175,0.5);
       margin-top: 40px;
       padding: 18px 16px 26px;
       font-size: 12px;
-      color: var(--text-muted);
+      color: #9ca3af;
       background: radial-gradient(circle at top, #020617 0, #000 60%);
     }
 
@@ -522,80 +524,41 @@
       }
     }
 
-    .footer-right {
+    .footer-left > div:first-child {
+      color: #e5e7eb;
+    }
+
+    .footer-links {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 10px;
+      margin-top: 4px;
     }
 
-    .footer-right a {
-      color: var(--text-muted);
+    .footer-links a {
+      color: #9ca3af;
+      text-decoration: none;
     }
 
-    .footer-right a:hover {
-      color: var(--gold-soft);
+    .footer-links a:hover {
+      color: #facc15;
     }
 
-    .lvs-footer {
-  border-top: 1px solid rgba(30,64,175,0.5);
-  margin-top: 40px;
-  padding: 18px 16px 26px;
-  font-size: 12px;
-  color: #9ca3af;
-  background: radial-gradient(circle at top, #020617 0, #000 60%);
-}
+    .share-btn {
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 12px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: rgba(15,23,42,0.95);
+      color: #e5e7eb;
+      cursor: pointer;
+    }
 
-.lvs-footer-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-@media (min-width: 768px) {
-  .lvs-footer-inner {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    .share-btn:hover {
+      border-color: rgba(250,204,21,0.9);
+      color: #facc15;
+    }
   }
-}
-
-.lvs-footer-left > div:first-child {
-  color: #e5e7eb;
-}
-
-.lvs-footer-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.lvs-footer-links a {
-  color: #9ca3af;
-  text-decoration: none;
-}
-
-.lvs-footer-links a:hover {
-  color: #facc15;
-}
-
-.lvs-share-btn {
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 12px;
-  border: 1px solid rgba(148,163,184,0.7);
-  background: rgba(15,23,42,0.95);
-  color: #e5e7eb;
-  cursor: pointer;
-}
-
-.lvs-share-btn:hover {
-  border-color: rgba(250,204,21,0.9);
-  color: #facc15;
-  }
- }
   </style>
 </head>
 <body>
@@ -883,5 +846,6 @@ function adjustMvpHeight() {
 </script>
 </body>
 </html>
+
 
 
