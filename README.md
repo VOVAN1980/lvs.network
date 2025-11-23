@@ -1,11 +1,10 @@
-<p align="center">
-  <img src="assets/logo/lvs-logo-full.png" width="150" alt="LVS Logo"/>
-</p>
+<p align="center"> <img src="assets/logo/lvs-logo-full.png" width="150"/> </p> <h1 align="center"><b>LVS Core — Living Value System (Protocol Research)</b></h1> <p align="center"> Reference research engine and technical foundation of the LVS value network. </p> 
 
-<h1 align="center"><b>LVS — Living Value System</b></h1>
 <p align="center">
-  Official website, documentation hub, and MVP demo of the LVS Autonomous Value Layer.
+  🌐 Official Website: <a href="https://lvs.network">lvs.network</a><br/>
+  Protocol overview, public documentation and simulation demos
 </p>
+<br/>
 
 ---
 
