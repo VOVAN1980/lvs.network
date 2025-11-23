@@ -10,20 +10,76 @@
     --ink:#e6f6ff;--grid:#0c1e34;--edge:#8dc7ff;--edge2:#b2ffcc
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,var(--bg),#02101b);color:var(--ink);padding:10px}
+  body{
+    margin:0;
+    font-family:Inter,system-ui,Arial;
+    background:linear-gradient(180deg,var(--bg),#02101b);
+    color:var(--ink);
+    padding:10px
+  }
   h1{font-size:18px;margin:0 0 10px}
+
+  /* НОВОЕ: верхняя панель с кнопкой на главный сайт */
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .topbar h1{
+    margin:0;
+    font-size:18px;
+  }
+
   .wrap{display:flex;gap:10px;flex-wrap:wrap}
-  .card{background:linear-gradient(180deg,var(--card),#051826);border-radius:12px;padding:10px;flex:1 1 340px;min-width:310px;box-shadow:0 6px 18px rgba(0,0,0,.6)}
+  .card{
+    background:linear-gradient(180deg,var(--card),#051826);
+    border-radius:12px;
+    padding:10px;
+    flex:1 1 340px;
+    min-width:310px;
+    box-shadow:0 6px 18px rgba(0,0,0,.6)
+  }
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   label{font-size:12px;color:var(--mut)}
-  input,select,button,textarea{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--ink)}
+  input,select,button,textarea{
+    padding:8px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.06);
+    background:rgba(255,255,255,.03);
+    color:var(--ink)
+  }
   button{cursor:pointer}
   .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);font-weight:700}
   .mut{color:var(--mut);font-size:12px}
   .list{max-height:220px;overflow:auto;margin-top:8px}
-  .item{display:flex;justify-content:space-between;gap:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.02);margin-bottom:8px}
-  .log{background:rgba(0,0,0,.2);padding:8px;border-radius:8px;height:160px;overflow:auto;font-family:monospace;font-size:12px;margin-top:8px;white-space:pre-wrap}
-  canvas{width:100%;display:block;border-radius:10px;background:linear-gradient(180deg,#041826,#01121a)}
+  .item{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    padding:8px;
+    border-radius:8px;
+    background:rgba(255,255,255,.02);
+    margin-bottom:8px
+  }
+  .log{
+    background:rgba(0,0,0,.2);
+    padding:8px;
+    border-radius:8px;
+    height:160px;
+    overflow:auto;
+    font-family:monospace;
+    font-size:12px;
+    margin-top:8px;
+    white-space:pre-wrap
+  }
+  canvas{
+    width:100%;
+    display:block;
+    border-radius:10px;
+    background:linear-gradient(180deg,#041826,#01121a)
+  }
   .btnAccent{background:var(--accent);color:white;border:0}
   .btnOk{background:var(--ok);color:#021;border:0}
   .btnBad{background:var(--bad);color:white;border:0}
@@ -31,7 +87,16 @@
 </style>
 </head>
 <body>
-  <h1>LVS — Full Browser Demo (VU + TC + Vault + Regenerator)</h1>
+
+  <!-- НОВОЕ: заголовок + кнопка "На главный сайт" -->
+  <div class="topbar">
+    <h1>LVS — Full Browser Demo (VU + TC + Vault + Regenerator)</h1>
+    <button
+      class="btnAccent"
+      onclick="window.location.href='https://lvs.network/index.html'">
+      На главный сайт
+    </button>
+  </div>
 
   <div class="wrap">
     <!-- LEFT: Network + controls -->
@@ -98,7 +163,10 @@
     </div>
   </div>
 
-  <footer>Самодостаточный демо-прототип: VU (ценность), TC (доверие), Vault Guard (несгораемый минимум), Cross-Audit (перекрёстная проверка), авто-симуляция, визуализация, экспорт/импорт, авто-сохранение.</footer>
+  <footer>
+    Самодостаточный демо-прототип: VU (ценность), TC (доверие), Vault Guard (несгораемый минимум),
+    Cross-Audit (перекрёстная проверка), авто-симуляция, визуализация, экспорт/импорт, авто-сохранение.
+  </footer>
 
 <script>
 /* ======= Core helpers ======= */
