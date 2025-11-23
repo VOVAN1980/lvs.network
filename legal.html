@@ -1,145 +1,161 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>LVS — Legal & Policies</title>
+  <meta charset="utf-8" />
+  <title>LVS – Legal & Policies</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="Legal, licensing, governance, security and policy documents for LVS — Living Value System."
+  />
   <link rel="stylesheet" href="style.css" />
-  <meta name="description" content="Legal, licensing, governance, security and policy documents for LVS — Living Value System." />
+
+  <style>
+    .legal-container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 40px 16px;
+    }
+    .legal-card {
+      background: linear-gradient(135deg, rgba(15,23,42,0.92), rgba(15,23,42,0.98));
+      border: 1px solid rgba(148,163,184,0.35);
+      border-radius: var(--radius-xl);
+      padding: 20px 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 20px 40px rgba(15,23,42,0.75);
+    }
+    .legal-card h2 {
+      color: var(--gold-soft);
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin-bottom: 10px;
+    }
+    .legal-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .legal-list {
+      list-style: none;
+      padding-left: 0;
+    }
+    .legal-list li {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .legal-list a {
+      color: var(--teal);
+    }
+    .legal-list a:hover {
+      color: var(--gold-soft);
+    }
+  </style>
 </head>
-<body class="page-dark">
-  <div class="page-wrap">
 
-    <!-- Top bar / logo -->
-    <header class="site-header">
-      <div class="header-inner">
-        <a href="index.html" class="logo-link">
-          <img src="assets/logo/lvs-logo-full.png" alt="LVS Logo" class="logo-img" />
-        </a>
-        <nav class="top-nav">
-          <a href="index.html">Home</a>
-          <a href="mvp-demo/lvs_browser_node.html">MVP Demo</a>
-          <a href="legal.html" class="active">Legal</a>
-        </nav>
-      </div>
-    </header>
+<body>
+<div class="page">
 
-    <main class="content">
-      <section class="hero hero-compact">
-        <h1>LVS — Legal Center</h1>
-        <p class="hero-subtitle">
-          Central hub for licensing, governance, security and policy documents of
-          <b>LVS — Living Value System</b>.
-        </p>
-      </section>
-
-      <section class="section">
-        <div class="section-inner">
-
-          <!-- Core Website Documents -->
-          <div class="card-grid">
-            <article class="card">
-              <h2>Website Policies</h2>
-              <p>
-                These documents apply to visitors of <b>lvs.network</b> and all public demo pages.
-              </p>
-              <ul class="doc-list">
-                <li>
-                  <a href="terms.html">Terms of Use</a> — usage rules, liability and disclaimers for the website and demo tools.
-                </li>
-                <li>
-                  <a href="privacy.html">Privacy Policy</a> — GDPR-aligned description of what data is (not) collected, cookies, logging and user rights.
-                </li>
-              </ul>
-            </article>
-
-            <!-- Licensing -->
-            <article class="card">
-              <h2>Licensing</h2>
-              <p>
-                LVS uses a composite licensing model: open research documentation plus a restricted core implementation.
-              </p>
-              <ul class="doc-list">
-                <li>
-                  <a href="LICENSE.md">LICENSE</a> — combined licensing for documentation and core technology.
-                </li>
-                <li>
-                  <a href="License%20Overview.md">License Overview</a> — human-readable summary of the composite model.
-                </li>
-                <li>
-                  <a href="LICENSE_TECHNOLOGY.md">LVS Core Technology License</a> —
-                  restricted license for the protocol engine and node/runtime implementations.
-                </li>
-              </ul>
-            </article>
-
-            <!-- Governance -->
-            <article class="card">
-              <h2>Governance & Contribution</h2>
-              <p>
-                These documents describe how changes to LVS are proposed, reviewed and accepted, and how contributors are expected to work with the project.
-              </p>
-              <ul class="doc-list">
-                <li>
-                  <a href="Governance.md">Governance</a> — roles, LIP process, decision-making and versioning rules.
-                </li>
-                <li>
-                  <a href="Contributing.md">Contributing</a> — contribution workflow, technical requirements and documentation rules.
-                </li>
-                <li>
-                  <a href="Code%20of%20Conduct.md">Code of Conduct</a> — required standards of behavior for all participants.
-                </li>
-              </ul>
-            </article>
-
-            <!-- Security & Trademarks -->
-            <article class="card">
-              <h2>Security & Trademarks</h2>
-              <p>
-                LVS is a security-sensitive research project with protected branding and a strict private disclosure process.
-              </p>
-              <ul class="doc-list">
-                <li>
-                  <a href="SECURITY.md">Security Policy</a> —
-                  how to responsibly report vulnerabilities and what is out of scope.
-                </li>
-                <li>
-                  <a href="Trademark%20Policy.md">Trademark Policy</a> —
-                  rules for using the “LVS”, “Living Value System”, “LVS Core” and “LVS Network” names and logos.
-                </li>
-              </ul>
-            </article>
-          </div>
-
-          <!-- Note -->
-          <div class="card card-note">
-            <h2>Scope</h2>
-            <p>
-              The documents listed here cover the LVS research repositories, the LVS Core implementation,
-              and the public website <b>lvs.network</b>. They may be updated as the project evolves
-              (e.g., when the LVS Foundation is formally established or when Testnet/Mainnet go live).
-            </p>
-            <p>
-              For the latest protocol specifications, whitepaper and technical architecture, please refer to the
-              official LVS documentation set linked from the main page.
-            </p>
-          </div>
-
+  <!-- HEADER -->
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <div class="nav-logo-circle">
+          <img src="/img/lvs-logo-circle.png" alt="LVS logo" />
         </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <div class="footer-inner">
-        <span>© 2025 LVS — Living Value System. All rights reserved.</span>
-        <nav class="footer-nav">
-          <a href="index.html">Home</a>
-          <a href="mvp-demo/lvs_browser_node.html">MVP Demo</a>
-          <a href="legal.html">Legal & Policies</a>
-        </nav>
+        <div>
+          <div class="nav-title-main">LVS</div>
+          <div class="nav-title-sub">Living Value System</div>
+        </div>
       </div>
-    </footer>
 
-  </div>
+      <div class="nav-links">
+        <a href="/index.html#about">About</a>
+        <a href="/index.html#mvp">Live MVP</a>
+        <a href="/index.html#docs">Docs</a>
+        <a href="/legal.html">Legal</a>
+      </div>
+
+      <div class="nav-cta">
+        <button class="btn btn-ghost" onclick="location.href='/index.html#mvp'">
+          Live demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="legal-container">
+
+      <h1 class="section-heading">Legal & Policies</h1>
+      <p class="section-subtitle">
+        All legal documents, licenses and governance policies for the LVS ecosystem.
+      </p>
+
+      <!-- WEBSITE POLICIES -->
+      <div class="legal-card">
+        <h2>Website Policies</h2>
+        <p>Rules governing the use of the lvs.network website and all public demo pages.</p>
+        <ul class="legal-list">
+          <li><a href="/privacy.html" target="_blank">Privacy Policy</a></li>
+          <li><a href="/terms.html" target="_blank">Terms of Use</a></li>
+        </ul>
+      </div>
+
+      <!-- LICENSING -->
+      <div class="legal-card">
+        <h2>Licensing</h2>
+        <p>The LVS project uses a composite licensing model (Open Documentation + Restricted Technology).</p>
+        <ul class="legal-list">
+          <li><a href="/LICENSE.md" target="_blank">LICENSE — Composite Model</a></li>
+          <li><a href="/License%20Overview.md" target="_blank">License Overview</a></li>
+          <li><a href="/LICENSE_TECHNOLOGY.md" target="_blank">LVS Core Technology License</a></li>
+        </ul>
+      </div>
+
+      <!-- GOVERNANCE -->
+      <div class="legal-card">
+        <h2>Governance & Contributing</h2>
+        <p>Documents defining how the LVS project evolves and how contributions are handled.</p>
+        <ul class="legal-list">
+          <li><a href="/Governance.md" target="_blank">Governance Model</a></li>
+          <li><a href="/Contributing.md" target="_blank">Contributing Guide</a></li>
+          <li><a href="/Code%20of%20Conduct.md" target="_blank">Code of Conduct</a></li>
+        </ul>
+      </div>
+
+      <!-- SECURITY & TRADEMARKS -->
+      <div class="legal-card">
+        <h2>Security & Trademarks</h2>
+        <p>Responsible disclosure and trademark protection information.</p>
+        <ul class="legal-list">
+          <li><a href="/SECURITY.md" target="_blank">Security Policy</a></li>
+          <li><a href="/Trademark%20Policy.md" target="_blank">Trademark Policy</a></li>
+        </ul>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div>LVS — Living Value System</div>
+        <div>© 2025 LVS. All rights reserved.</div>
+
+        <div class="footer-links">
+          <a href="/index.html">Main site</a>
+          <a href="/index.html#docs">Docs</a>
+          <a href="/index.html#mvp">Live MVP</a>
+          <a href="/privacy.html">Privacy Policy</a>
+          <a href="/terms.html">Terms of Use</a>
+          <a href="/legal.html">Legal & Policies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
 </body>
 </html>
