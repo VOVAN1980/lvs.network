@@ -17,7 +17,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0 10px 40px;
+      padding: 24px 10px 40px;
     }
 
     a {
@@ -28,149 +28,15 @@
       text-decoration: underline;
     }
 
-    /* TOP NAV (как на главном сайте, но компактная) */
-    .top-nav {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      width: 100%;
-      backdrop-filter: blur(18px);
-      background: linear-gradient(
-        to bottom,
-        rgba(3,7,18,0.96),
-        rgba(3,7,18,0.7),
-        transparent
-      );
-      border-bottom: 1px solid rgba(148,163,184,0.25);
-    }
-
-    .top-nav-inner {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 10px 6px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-    }
-
-    .top-nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .top-nav-logo-circle {
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #7ff5f0, #0891b2 45%, #022c22 90%);
-      border: 2px solid rgba(234,179,8,0.95);
-      box-shadow:
-        0 0 0 1px rgba(15,23,42,0.8),
-        0 0 18px rgba(45,212,191,0.8);
-    }
-
-    .top-nav-title-main {
-      font-size: 14px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #facc15;
-      font-weight: 600;
-      line-height: 1.2;
-    }
-
-    .top-nav-title-sub {
-      font-size: 10px;
-      color: #9ca3af;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-    }
-
-    .top-nav-links {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 12px;
-      color: #9ca3af;
-    }
-
-    .top-nav-links a {
-      position: relative;
-      padding-bottom: 2px;
-    }
-
-    .top-nav-links a::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 0%;
-      height: 1px;
-      background: linear-gradient(to right, #facc15, #22d3ee);
-      transition: width 0.18s ease-out;
-    }
-
-    .top-nav-links a:hover {
-      color: #e5e7eb;
-    }
-
-    .top-nav-links a:hover::after {
-      width: 100%;
-    }
-
-    .top-nav-cta {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .top-nav-btn {
-      border-radius: 999px;
-      padding: 5px 10px;
-      font-size: 11px;
-      border: 1px solid rgba(148,163,184,0.6);
-      background: rgba(15,23,42,0.96);
-      color: #e5e7eb;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .top-nav-btn.primary {
-      border-color: rgba(234,179,8,0.9);
-      background: radial-gradient(circle at 20% 0, #facc15, #b45309 60%, #451a03 100%);
-      color: #030712;
-      box-shadow:
-        0 0 0 1px rgba(250,204,21,0.6),
-        0 16px 30px rgba(234,179,8,0.45);
-    }
-
-    .top-nav-btn:hover {
-      border-color: rgba(248,250,252,0.9);
-    }
-
-    @media (max-width: 720px) {
-      .top-nav-inner {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .top-nav-links {
-        display: none;
-      }
-    }
-
     .shell {
       width: 100%;
       max-width: 1280px;
       display: flex;
       flex-direction: column;
       gap: 18px;
-      margin-top: 24px;
     }
 
-    /* HEADER (внутри страницы) */
+    /* HEADER */
 
     .header {
       display: flex;
@@ -330,27 +196,15 @@
       padding: 14px;
     }
 
-    /* Square wrapper – круг никогда не будет "яйцом" */
+    /* КАНВАС, КАК РАНЬШЕ — БОЛЬШОЙ КРУГ */
 
-    .canvas-inner {
-      position: relative;
-      width: 100%;
-      max-width: 520px;
-      margin: 0 auto;
-    }
-    .canvas-inner::before {
-      content: "";
-      display: block;
-      padding-top: 100%; /* perfect square */
-    }
     #lvsCanvas {
-      position: absolute;
-      inset: 0;
+      display: block;
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 520px;
       border-radius: 16px;
       background: #020617;
-      display: block;
     }
 
     .metrics-row {
@@ -595,8 +449,6 @@
       justify-content:space-between;
       align-items:center;
       gap:10px;
-      padding-top:10px;
-      border-top:1px solid rgba(30,64,175,0.5);
     }
 
     .footer-left {
@@ -609,15 +461,10 @@
       display:flex;
       flex-wrap:wrap;
       gap:12px;
-      margin-top:4px;
     }
 
     .footer-links a {
       color:#9ca3af;
-    }
-
-    .footer-links a:hover {
-      color:#facc15;
     }
 
     .footer-right {
@@ -629,63 +476,15 @@
     .social-links {
       display:flex;
       gap:8px;
-      font-size:11px;
-    }
-
-    .social-links a {
-      color:#9ca3af;
-    }
-    .social-links a[aria-disabled="true"] {
-      opacity:0.5;
-      pointer-events:none;
-      cursor:default;
     }
 
     .share-btns {
       display:flex;
       gap:6px;
     }
-
-    @media (max-width: 640px) {
-      .footer {
-        flex-direction:column;
-        align-items:flex-start;
-      }
-    }
   </style>
 </head>
 <body>
-
-  <!-- TOP NAV -->
-  <header class="top-nav">
-    <div class="top-nav-inner">
-      <a class="top-nav-brand" href="https://lvs.network/" target="_blank">
-        <div class="top-nav-logo-circle"></div>
-        <div>
-          <div class="top-nav-title-main">LVS</div>
-          <div class="top-nav-title-sub">Living Value System</div>
-        </div>
-      </a>
-
-      <nav class="top-nav-links">
-        <a href="https://lvs.network/#about" target="_blank">About</a>
-        <a href="https://lvs.network/#mvp" target="_blank">Live MVP</a>
-        <a href="https://lvs.network/#docs" target="_blank">Docs</a>
-      </nav>
-
-      <div class="top-nav-cta">
-        <button class="top-nav-btn"
-                onclick="window.open('https://lvs.network/#mvp','_blank')">
-          Live demo
-        </button>
-        <button class="top-nav-btn primary"
-                onclick="window.open('https://lvs.network/#docs','_blank')">
-          For investors
-        </button>
-      </div>
-    </div>
-  </header>
-
   <div class="shell">
 
     <!-- HEADER -->
@@ -744,9 +543,7 @@
         </div>
 
         <div class="canvas-wrap">
-          <div class="canvas-inner">
-            <canvas id="lvsCanvas"></canvas>
-          </div>
+          <canvas id="lvsCanvas" width="520" height="520"></canvas>
         </div>
 
         <div class="metrics-row">
@@ -786,9 +583,7 @@
           This browser node acts as a lightweight LVS participant. It receives SDM from Rust nodes,
           broadcasts its own drift every cycle and shows how the core “feels” each peer in real time.
           <br/>
-          <a href="https://lvs.network/#docs" target="_blank">
-            Read more in Docs → Consensus &amp; SDM
-          </a>
+          <a href="/#docs-consensus" target="_blank">Read more in Docs → Consensus &amp; SDM</a>
         </div>
 
         <!-- DEV PANEL -->
@@ -839,7 +634,6 @@
 
     </div>
 
-    <!-- FOOTER -->
     <div class="footer">
       <div class="footer-left">
         <div>LVS — Living Value System</div>
@@ -851,20 +645,18 @@
           <a href="https://lvs.network/#mvp" target="_blank">Live MVP</a>
 
           <a href="https://lvs.network/privacy.html" target="_blank" rel="noreferrer">Privacy Policy</a>
-          <a href="https://lvs.network/terms.html"   target="_blank" rel="noreferrer">Terms of Use</a>
+          <a href="https://lvs.network/terms.html" target="_blank" rel="noreferrer">Terms of Use</a>
 
           <a href="https://github.com/VOVAN1980" target="_blank">GitHub</a>
-          <a href="https://github.com/VOVAN1980/lvs.network/blob/main/docs/Lvs%20Whitepaper%20En.pdf"
-             target="_blank">Whitepaper</a>
+          <a href="https://github.com/VOVAN1980/lvs.network/blob/main/docs/Lvs%20Whitepaper%20En.pdf" target="_blank">Whitepaper</a>
         </div>
       </div>
 
       <div class="footer-right">
         <div class="social-links">
-          <span style="opacity:.6;">✕</span>
-          <a href="#" aria-disabled="true">Telegram</a>
-          <a href="#" aria-disabled="true">LinkedIn</a>
-          <a href="#" aria-disabled="true">X</a>
+          <a href="https://t.me/your_lvs_channel" target="_blank">Telegram</a>
+          <a href="https://www.linkedin.com/company/your-lvs" target="_blank">LinkedIn</a>
+          <a href="https://x.com/your_lvs" target="_blank">X</a>
         </div>
         <div class="share-btns">
           <button class="btn secondary" id="btn-capture">Capture frame</button>
@@ -878,7 +670,7 @@
   <!-- logic -->
   <script src="../browser-node.js"></script>
   <script>
-    // ====== query params (для dev panel reconnect) ======
+    // ====== query params (for dev panel reconnect) ======
     function getQueryParam(name, fallback) {
       const params = new URLSearchParams(window.location.search);
       return params.get(name) || fallback;
@@ -996,19 +788,6 @@
       netLastSdm.textContent = new Date().toLocaleTimeString();
     }
 
-    // ====== Canvas perfect square internal size ======
-    function ensureCanvasSquare() {
-      const canvas = document.getElementById("lvsCanvas");
-      const rect = canvas.getBoundingClientRect();
-      const size = Math.floor(rect.width);
-      if (size > 0) {
-        canvas.width = size;
-        canvas.height = size;
-      }
-    }
-    window.addEventListener("load", ensureCanvasSquare);
-    window.addEventListener("resize", ensureCanvasSquare);
-
     // ====== LVS BROWSER NODE ======
     const node = new LVSBrowserNode(NODE_ID, GATEWAY_URL, "lvsCanvas");
 
@@ -1035,6 +814,8 @@
 
     node.onSDM = () => {
       registerSdmTimestamp();
+      // можно логировать шум, если захочется
+      // addLog("sdm", "Δx=" + dx.toFixed(4));
     };
 
     addLog("init", "browser node UI attached to LVSBrowserNode");
@@ -1097,14 +878,9 @@
           window.location.href = mailto;
         }
       } catch (e) {
-        // юзер просто закрыл share — игнорим
+        // юзер передумал — ничего не делаем
       }
     });
-
-    // лёгкий hint для мобилки
-    if (window.innerWidth < 720) {
-      addLog("hint", "Browser node works best on desktop (full screen).");
-    }
   </script>
 </body>
 </html>
