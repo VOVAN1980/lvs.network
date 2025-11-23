@@ -515,11 +515,10 @@
           <span id="status-text">DISCONNECTED</span>
         </div>
 
-        <div class="net-status">
-          <div class="net-status-row">
-            <div class="net-status-label">Gateway</div>
-            <div id="net-gateway" class="net-status-value">ws://127.0.0.1:9001/ws</div>
-          </div>
+        <div class="net-status-row">
+          <div class="net-status-label">Gateway</div>
+            <div id="net-gateway" class="net-status-value">wss://ws.lvs.network/ws</div>
+             </div>
           <div class="net-status-row">
             <div class="net-status-label">Peers</div>
             <div id="net-peers" class="net-status-value">0</div>
@@ -691,7 +690,7 @@
       return params.get(name) || fallback;
     }
 
-    const DEFAULT_GATEWAY = "ws://127.0.0.1:9001/ws";
+    const DEFAULT_GATEWAY = "wss://ws.lvs.network/ws";
     const DEFAULT_NODE_ID = "browser-node-1";
 
     const GATEWAY_URL = getQueryParam("gateway", DEFAULT_GATEWAY);
