@@ -108,6 +108,7 @@ lvs.network/
 ├── browser-node.js # MVP browser-node client
 ├── assets/logo/
 ├── website/ # Public website content
+├── mvp-demo
 ├── src/ # Text content (EN sections)
 ├── docs/ # Site-level documents
 ├── style.css
@@ -120,7 +121,8 @@ lvs.network/
 ├── CODE_OF_CONDUCT.md # Contributor behavior rules Code of Conduct
 ├── GOVERNANCE.md # Governance model & LIP flow Governance
 ├── CONTRIBUTING.md # Contribution workflow & rules Contributing
-├── TRADEMARK_POLICY.md # Logo & branding restrictions LVS Trademark Policy
+├── TRADEMARK_POLICY.md # Logo & branding restrictions LVS Trademark Policy 
+├── legal.html
 
 yaml
 Копировать код
