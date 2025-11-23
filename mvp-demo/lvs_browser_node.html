@@ -196,7 +196,7 @@
       padding: 14px;
     }
 
-    /* квадратный контейнер для идеального круга */
+    /* Square wrapper so the circle is never "яйцо" */
 
     .canvas-inner {
       position: relative;
@@ -207,7 +207,7 @@
     .canvas-inner::before {
       content: "";
       display: block;
-      padding-top: 100%; /* 1:1 */
+      padding-top: 100%; /* perfect square */
     }
     #lvsCanvas {
       position: absolute;
@@ -354,9 +354,11 @@
     .log-line span.t {
       color: #6ee7b7;
     }
+
     .log-line span.k {
       color: #e5e7eb;
     }
+
     .log-line span.v {
       color: #93c5fd;
     }
@@ -646,24 +648,24 @@
 
     </div>
 
-    <!-- FOOTER -->
     <div class="footer">
-      <div class="footer-left">
-        <div>LVS — Living Value System</div>
-        <div>© 2025 LVS. All rights reserved.</div>
+  <div class="footer-left">
+    <div>LVS — Living Value System</div>
+    <div>© 2025 LVS. All rights reserved.</div>
 
-        <div class="footer-links">
-          <a href="https://lvs.network" target="_blank">Main site</a>
-          <a href="https://lvs.network/#docs" target="_blank">Docs</a>
-          <a href="https://lvs.network/#mvp" target="_blank">Live MVP</a>
+    <div class="footer-links">
+      <a href="https://lvs.network" target="_blank">Main site</a>
+      <a href="https://lvs.network/#docs" target="_blank">Docs</a>
+      <a href="https://lvs.network/#mvp" target="_blank">Live MVP</a>
 
-          <a href="https://lvs.network/privacy.html" target="_blank" rel="noreferrer">Privacy Policy</a>
-          <a href="https://lvs.network/terms.html" target="_blank" rel="noreferrer">Terms of Use</a>
+      <a href="https://lvs.network/privacy.html" target="_blank" rel="noreferrer">Privacy Policy</a>
+      <a href="https://lvs.network/terms.html" target="_blank" rel="noreferrer">Terms of Use</a>
 
-          <a href="https://github.com/VOVAN1980" target="_blank">GitHub</a>
-          <a href="https://github.com/VOVAN1980/lvs.network/blob/main/docs/Lvs%20Whitepaper%20En.pdf" target="_blank">Whitepaper</a>
-        </div>
-      </div>
+      <a href="https://github.com/VOVAN1980" target="_blank">GitHub</a>
+      <a href="https://github.com/VOVAN1980/lvs.network/blob/main/docs/Lvs%20Whitepaper%20En.pdf" target="_blank">Whitepaper</a>
+    </div>
+  </div>
+</div>
 
       <div class="footer-right">
         <div class="social-links">
@@ -801,6 +803,17 @@
       netLastSdm.textContent = new Date().toLocaleTimeString();
     }
 
+    // ====== Canvas perfect square internal size ======
+    (function ensureCanvasSquare() {
+      const canvas = document.getElementById("lvsCanvas");
+      const rect = canvas.getBoundingClientRect();
+      const size = Math.floor(rect.width);
+      if (size > 0) {
+        canvas.width = size;
+        canvas.height = size;
+      }
+    })();
+
     // ====== LVS BROWSER NODE ======
     const node = new LVSBrowserNode(NODE_ID, GATEWAY_URL, "lvsCanvas");
 
@@ -827,6 +840,8 @@
 
     node.onSDM = () => {
       registerSdmTimestamp();
+      // шум можно логировать при необходимости
+      // addLog("sdm", "Δx=" + dx.toFixed(4));
     };
 
     addLog("init", "browser node UI attached to LVSBrowserNode");
@@ -889,7 +904,7 @@
           window.location.href = mailto;
         }
       } catch (e) {
-        // user canceled — ignore
+        // юзер просто закрыл share — молча игнорируем
       }
     });
   </script>
