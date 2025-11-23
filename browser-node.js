@@ -27,7 +27,8 @@ class LVSBrowserNode {
     this.lastPeerWeight = null;
 
     // peers на кольце
-    this.peers = []; // [{ id, angle, x, y, pulse, lastSdmTime }]
+    // [{ id, angle, x, y, pulse, lastSdmTime, isLeaving, fade }]
+    this.peers = [];
     this.peerRingRadius = this.radius * 0.86;
 
     // ядро сети
@@ -170,7 +171,7 @@ class LVSBrowserNode {
   }
 
   // ===========================
-  //   Peers ring
+  //   Peers ring (c fade-out)
   // ===========================
 
   updatePeers(peersRaw) {
@@ -179,17 +180,15 @@ class LVSBrowserNode {
       .map((p) => (typeof p === "string" ? p : (p.node_id || p.id || "")))
       .filter((id) => id && id !== this.nodeId);
 
-    if (!ids.length) {
-      this.peers = [];
-      return;
-    }
-
-    ids.sort();
-
     const existing = new Map(this.peers.map((p) => [p.id, p]));
-    const count = ids.length;
+    const usedIds  = new Set();
+    const count    = ids.length || 1;
 
-    const newPeers = ids.map((id, index) => {
+    const newPeers = [];
+
+    // актуальные (живые) ноды
+    ids.sort().forEach((id, index) => {
+      usedIds.add(id);
       let peer = existing.get(id);
       const baseAngle = (index / count) * Math.PI * 2 - Math.PI / 2;
 
@@ -201,14 +200,30 @@ class LVSBrowserNode {
           y: 0,
           pulse: 0,
           lastSdmTime: 0,
+          isLeaving: false,
+          fade: 1.0,
         };
       } else {
-        peer.angle = baseAngle;
+        peer.angle     = baseAngle;
+        peer.isLeaving = false;
+        peer.fade      = 1.0; // вернулся в онлайн
       }
 
       peer.x = this.centerX + Math.cos(peer.angle) * this.peerRingRadius;
       peer.y = this.centerY + Math.sin(peer.angle) * this.peerRingRadius;
-      return peer;
+
+      newPeers.push(peer);
+    });
+
+    // старые ноды, которых больше нет в списке → помечаем как "уходящие"
+    existing.forEach((peer, id) => {
+      if (!usedIds.has(id)) {
+        if (!peer.isLeaving) {
+          peer.isLeaving = true;
+          if (peer.fade == null) peer.fade = 1.0;
+        }
+        newPeers.push(peer);
+      }
     });
 
     this.peers = newPeers;
@@ -371,11 +386,24 @@ class LVSBrowserNode {
     if (n > 250) baseSize = 2;
     if (n > 800) baseSize = 1.4;
 
+    const nextPeers = [];
+
     for (const peer of this.peers) {
       // медленная орбита вокруг ядра
       peer.angle += 0.0006;
       peer.x = this.centerX + Math.cos(peer.angle) * this.peerRingRadius;
       peer.y = this.centerY + Math.sin(peer.angle) * this.peerRingRadius;
+
+      // глобальная прозрачность для fade-out
+      if (peer.isLeaving) {
+        peer.fade = (peer.fade ?? 1.0) * 0.88;   // скорость затухания
+        if (peer.fade < 0.03) {
+          // полностью исчез → не кладём в nextPeers
+          continue;
+        }
+      } else {
+        peer.fade = 1.0;
+      }
 
       // лёгкая вибрация
       const vibAmp = 1.0 + peer.pulse * 1.2;
@@ -390,19 +418,26 @@ class LVSBrowserNode {
         ctx.beginPath();
         ctx.moveTo(this.centerX, this.centerY);
         ctx.lineTo(x, y);
-        ctx.strokeStyle = `rgba(56,189,248,${0.15 + peer.pulse * 0.6})`;
-        ctx.lineWidth = 0.8 + peer.pulse * 2.0;
+        const alphaLine = (0.15 + peer.pulse * 0.6) * peer.fade;
+        ctx.strokeStyle = `rgba(56,189,248,${alphaLine})`;
+        ctx.lineWidth = (0.8 + peer.pulse * 2.0) * peer.fade;
         ctx.stroke();
       }
 
       peer.pulse *= 0.9;
-      const size = baseSize + peer.pulse * 4.0;
+      const size = (baseSize + peer.pulse * 4.0) * peer.fade;
 
       ctx.beginPath();
       ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(59,199,255,${0.5 + peer.pulse * 0.5})`;
+      const alphaDot = (0.5 + peer.pulse * 0.5) * peer.fade;
+      ctx.fillStyle = `rgba(59,199,255,${alphaDot})`;
       ctx.fill();
+
+      // оставляем peer в списке, если он ещё видим
+      nextPeers.push(peer);
     }
+
+    this.peers = nextPeers;
   }
 
   drawSelf() {
