@@ -175,7 +175,6 @@ class LVSBrowserNode {
   // ===========================
 
   updatePeers(peersRaw) {
-    // забираем node_id, но отбрасываем self
     const ids = peersRaw
       .map((p) => (typeof p === "string" ? p : (p.node_id || p.id || "")))
       .filter((id) => id && id !== this.nodeId);
@@ -206,7 +205,7 @@ class LVSBrowserNode {
       } else {
         peer.angle     = baseAngle;
         peer.isLeaving = false;
-        peer.fade      = 1.0; // вернулся в онлайн
+        peer.fade      = 1.0;
       }
 
       peer.x = this.centerX + Math.cos(peer.angle) * this.peerRingRadius;
@@ -230,7 +229,6 @@ class LVSBrowserNode {
   }
 
   registerSdmVisual(nodeId, diff, weight) {
-    // свои SDM визуально НЕ считаем в ядро/peers
     if (!nodeId || nodeId === this.nodeId) {
       return;
     }
@@ -276,28 +274,23 @@ class LVSBrowserNode {
   }
 
   applyDrift(d) {
-    // пружина к центру
     const dxCenter = this.centerX - this.selfX;
     const dyCenter = this.centerY - this.selfY;
     d[0] += dxCenter * this.springK;
     d[1] += dyCenter * this.springK;
 
-    // ограничиваем скорость
     const MAX = 0.4;
     if (d[0] >  MAX) d[0] =  MAX;
     if (d[0] < -MAX) d[0] = -MAX;
     if (d[1] >  MAX) d[1] =  MAX;
     if (d[1] < -MAX) d[1] = -MAX;
 
-    // обновляем VU
     this.vu += d[0];
 
-    // сдвиг точки
     const POS_SCALE = 16;
     this.selfX += d[0] * POS_SCALE;
     this.selfY += d[1] * POS_SCALE;
 
-    // жёсткий предел: 70% радиуса
     const vx = this.selfX - this.centerX;
     const vy = this.selfY - this.centerY;
     const dist = Math.hypot(vx, vy) || 1;
@@ -334,7 +327,6 @@ class LVSBrowserNode {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // кольцо value-space
     ctx.beginPath();
     ctx.arc(this.centerX, this.centerY, this.radius, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(148,163,184,0.35)";
@@ -389,23 +381,19 @@ class LVSBrowserNode {
     const nextPeers = [];
 
     for (const peer of this.peers) {
-      // медленная орбита вокруг ядра
       peer.angle += 0.0006;
       peer.x = this.centerX + Math.cos(peer.angle) * this.peerRingRadius;
       peer.y = this.centerY + Math.sin(peer.angle) * this.peerRingRadius;
 
-      // глобальная прозрачность для fade-out
       if (peer.isLeaving) {
-        peer.fade = (peer.fade ?? 1.0) * 0.88;   // скорость затухания
+        peer.fade = (peer.fade ?? 1.0) * 0.88;
         if (peer.fade < 0.03) {
-          // полностью исчез → не кладём в nextPeers
           continue;
         }
       } else {
         peer.fade = 1.0;
       }
 
-      // лёгкая вибрация
       const vibAmp = 1.0 + peer.pulse * 1.2;
       const offsetX = Math.sin(t * 3.1 + peer.angle * 4.3) * vibAmp;
       const offsetY = Math.cos(t * 2.6 + peer.angle * 3.7) * vibAmp;
@@ -413,7 +401,6 @@ class LVSBrowserNode {
       const x = peer.x + offsetX;
       const y = peer.y + offsetY;
 
-      // луч к ядру при активности
       if (peer.pulse > 0.06) {
         ctx.beginPath();
         ctx.moveTo(this.centerX, this.centerY);
@@ -433,7 +420,6 @@ class LVSBrowserNode {
       ctx.fillStyle = `rgba(59,199,255,${alphaDot})`;
       ctx.fill();
 
-      // оставляем peer в списке, если он ещё видим
       nextPeers.push(peer);
     }
 
@@ -443,7 +429,6 @@ class LVSBrowserNode {
   drawSelf() {
     const ctx = this.ctx;
 
-    // хвост движения browser-ноды
     if (this.selfTrail.length > 1) {
       ctx.beginPath();
       for (let i = 0; i < this.selfTrail.length; i++) {
@@ -501,7 +486,7 @@ class LVSBrowserNode {
       this.redraw();
 
       this.onCycle(this.cycle, this.vu, this.tc);
-    }, 90); // ~11 FPS
+    }, 90);
   }
 }
 
