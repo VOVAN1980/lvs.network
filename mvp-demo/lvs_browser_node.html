@@ -886,12 +886,8 @@
 
       if (window.lvsNode instanceof LVSBrowserNode) {
         window.lvsNode.accountId = accountId;
-        try {
-          if (window.lvsNode.ws && window.lvsNode.ws.readyState === WebSocket.OPEN) {
-            window.lvsNode.ws.close();
-          }
-        } catch (e) {
-          console.warn("Cannot close ws on login:", e);
+        if (typeof window.lvsNode.stop === "function") {
+          window.lvsNode.stop();
         }
         window.lvsNode.start();
       }
@@ -903,15 +899,20 @@
 
       if (window.lvsNode instanceof LVSBrowserNode) {
         window.lvsNode.accountId = null;
-        try {
-          if (window.lvsNode.ws && window.lvsNode.ws.readyState === WebSocket.OPEN) {
-            window.lvsNode.ws.close();
+        if (typeof window.lvsNode.stop === "function") {
+          window.lvsNode.stop();
+        } else {
+          try {
+            if (window.lvsNode.ws && window.lvsNode.ws.readyState === WebSocket.OPEN) {
+              window.lvsNode.ws.close();
+            }
+          } catch (e) {
+            console.warn("Cannot close ws on logout:", e);
           }
-        } catch (e) {
-          console.warn("Cannot close ws on logout:", e);
         }
-        window.lvsNode.start();
       }
+      setStatus("disconnected");
+      addLog("account", "signed out, node stopped");
     }
 
     // ====== LVS BROWSER NODE ======
@@ -949,8 +950,13 @@
       registerSdmTimestamp();
     };
 
-    addLog("init", "browser node UI attached to LVSBrowserNode");
-    window.lvsNode.start();
+    if (savedAccountId) {
+      addLog("init", "auto sign-in as " + savedAccountId + ", starting node");
+      window.lvsNode.start();
+    } else {
+      addLog("init", "browser node is idle, waiting for sign-in");
+      setStatus("disconnected");
+    }
 
     // ====== Dev panel behaviour ======
     devToggle.addEventListener("click", () => {
