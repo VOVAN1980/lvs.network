@@ -205,7 +205,7 @@
     .canvas-inner::before {
       content: "";
       display: block;
-      padding-top: 100%;
+      padding-top: 100%; /* квадрат */
     }
     #lvsCanvas {
       position: absolute;
@@ -534,6 +534,32 @@
       </div>
     </div>
 
+    <!-- ACCOUNT PANEL -->
+    <section id="accountPanel" style="max-width: 1280px; margin: 4px auto 0; padding: 10px 12px; background:#020617; border-radius:14px; border:1px solid rgba(55,65,81,0.9); color:#e5e7eb; font-family:system-ui;">
+      <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px;">
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+          <strong style="text-transform:uppercase; letter-spacing:0.16em; font-size:11px; color:#9ca3af;">Account</strong>
+          <span id="accountStatus" style="font-size:12px; color:#e5e7eb;">not signed in</span>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+          <input id="accountNameInput"
+                 type="text"
+                 placeholder="Your account name"
+                 style="padding:4px 8px; border-radius:6px; border:1px solid #4b5563; background:#020617; color:#e5e7eb; font-size:12px; min-width:160px;">
+          <button type="button"
+                  onclick="loginAccount()"
+                  style="padding:4px 10px; border-radius:999px; border:none; background:#22c55e; color:#000; font-size:11px; font-weight:600; cursor:pointer;">
+            Sign in
+          </button>
+          <button type="button"
+                  onclick="logoutAccount()"
+                  style="padding:4px 10px; border-radius:999px; border:1px solid #4b5563; background:#020617; color:#e5e7eb; font-size:11px; cursor:pointer;">
+            Sign out
+          </button>
+        </div>
+      </div>
+    </section>
+
     <!-- MAIN GRID -->
     <div class="grid">
 
@@ -682,6 +708,7 @@
   <!-- logic -->
   <script src="../browser-node.js"></script>
   <script>
+    // ====== query params (for dev panel reconnect) ======
     function getQueryParam(name, fallback) {
       const params = new URLSearchParams(window.location.search);
       return params.get(name) || fallback;
@@ -693,6 +720,7 @@
     const GATEWAY_URL = getQueryParam("gateway", DEFAULT_GATEWAY);
     const NODE_ID     = getQueryParam("node", DEFAULT_NODE_ID);
 
+    // ====== DOM ======
     const statusDot   = document.getElementById("status-dot");
     const statusText  = document.getElementById("status-text");
     const nodeIdSpan  = document.getElementById("node-id");
@@ -717,6 +745,9 @@
 
     const btnCapture = document.getElementById("btn-capture");
     const btnShare   = document.getElementById("btn-share");
+
+    const accountStatus    = document.getElementById("accountStatus");
+    const accountNameInput = document.getElementById("accountNameInput");
 
     nodeIdSpan.textContent = NODE_ID;
     netGateway.textContent = GATEWAY_URL;
@@ -784,6 +815,7 @@
       });
     }
 
+    // ====== SDM rate calc ======
     const sdmTimes = [];
     function registerSdmTimestamp() {
       const now = Date.now();
@@ -797,6 +829,7 @@
       netLastSdm.textContent = new Date().toLocaleTimeString();
     }
 
+    // ====== Canvas perfect square internal size ======
     (function ensureCanvasSquare() {
       const canvas = document.getElementById("lvsCanvas");
       const rect = canvas.getBoundingClientRect();
@@ -807,36 +840,119 @@
       }
     })();
 
-    const node = new LVSBrowserNode(NODE_ID, GATEWAY_URL, "lvsCanvas");
+    // ====== ACCOUNT HELPERS ======
+    function applyAccountToUI(accountId) {
+      if (!accountStatus) return;
+      if (accountId) {
+        accountStatus.textContent = "signed in as " + accountId;
+      } else {
+        accountStatus.textContent = "not signed in";
+      }
+    }
 
-    node.onStatus = (s) => {
+    function loadSavedAccountId() {
+      try {
+        const saved = window.localStorage.getItem("lvs_account_id");
+        return saved || null;
+      } catch (e) {
+        console.warn("Cannot read lvs_account_id:", e);
+        return null;
+      }
+    }
+
+    function saveAccountId(accountId) {
+      try {
+        if (accountId) {
+          window.localStorage.setItem("lvs_account_id", accountId);
+        } else {
+          window.localStorage.removeItem("lvs_account_id");
+        }
+      } catch (e) {
+        console.warn("Cannot write lvs_account_id:", e);
+      }
+    }
+
+    function loginAccount() {
+      if (!accountNameInput) return;
+      const name = (accountNameInput.value || "").trim();
+      if (!name) {
+        alert("Enter account name");
+        return;
+      }
+
+      const accountId = "acc_" + name;
+      saveAccountId(accountId);
+      applyAccountToUI(accountId);
+
+      if (window.lvsNode instanceof LVSBrowserNode) {
+        window.lvsNode.accountId = accountId;
+        try {
+          if (window.lvsNode.ws && window.lvsNode.ws.readyState === WebSocket.OPEN) {
+            window.lvsNode.ws.close();
+          }
+        } catch (e) {
+          console.warn("Cannot close ws on login:", e);
+        }
+        window.lvsNode.start();
+      }
+    }
+
+    function logoutAccount() {
+      saveAccountId(null);
+      applyAccountToUI(null);
+
+      if (window.lvsNode instanceof LVSBrowserNode) {
+        window.lvsNode.accountId = null;
+        try {
+          if (window.lvsNode.ws && window.lvsNode.ws.readyState === WebSocket.OPEN) {
+            window.lvsNode.ws.close();
+          }
+        } catch (e) {
+          console.warn("Cannot close ws on logout:", e);
+        }
+        window.lvsNode.start();
+      }
+    }
+
+    // ====== LVS BROWSER NODE ======
+    const savedAccountId = loadSavedAccountId();
+    applyAccountToUI(savedAccountId);
+
+    window.lvsNode = new LVSBrowserNode(NODE_ID, GATEWAY_URL, "lvsCanvas");
+
+    if (savedAccountId) {
+      window.lvsNode.accountId = savedAccountId;
+    }
+
+    window.lvsNode.onStatus = (s) => {
       setStatus(s);
       addLog("status", s);
     };
 
-    node.onCycle = (cycle, vu, tc) => {
+    window.lvsNode.onCycle = (cycle, vu, tc) => {
       mCycle.textContent = cycle.toString();
       mVu.textContent    = vu.toFixed(2);
       mTc.textContent    = tc.toFixed(2);
     };
 
-    node.onPeers = (peers) => {
+    window.lvsNode.onPeers = (peers) => {
       renderPeers(peers);
       const count = peers ? peers.length : 0;
       addLog("peers", "received " + count + " peer(s) from gateway");
     };
 
-    node.onHello = (fromId) => {
+    window.lvsNode.onHello = (fromId) => {
       addLog("hello", "from " + fromId);
     };
 
-    node.onSDM = () => {
+    window.lvsNode.onSDM = () => {
       registerSdmTimestamp();
     };
 
     addLog("init", "browser node UI attached to LVSBrowserNode");
-    node.start();
+    window.lvsNode.start();
 
+    // ====== Dev panel behaviour ======
     devToggle.addEventListener("click", () => {
       const visible = devBody.style.display === "flex";
       devBody.style.display = visible ? "none" : "flex";
@@ -861,6 +977,7 @@
       window.location.href = url.toString();
     });
 
+    // ====== Capture frame ======
     btnCapture.addEventListener("click", () => {
       const canvas = document.getElementById("lvsCanvas");
       try {
@@ -876,6 +993,7 @@
       }
     });
 
+    // ====== Share button ======
     btnShare.addEventListener("click", async () => {
       const shareUrl = window.location.href.split("#")[0];
       const text = "LVS Browser Testnet Node — live drift & peers view.";
@@ -891,7 +1009,7 @@
           window.location.href = mailto;
         }
       } catch (e) {
-        // юзер просто закрыл share
+        // ignore
       }
     });
   </script>
