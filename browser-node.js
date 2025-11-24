@@ -47,8 +47,9 @@ class LVSBrowserNode {
     // пружина к центру — чтобы self не "падал"
     this.springK = 0.015;
 
-    // таймер цикла
-    this.loopTimer = null;
+    // таймеры
+    this.loopTimer        = null;
+    this.peersRequestTimer = null;
 
     // флаг ручной остановки (чтобы не было автореконнекта после logout)
     this.manualStop = false;
@@ -59,6 +60,10 @@ class LVSBrowserNode {
     this.onCycle  = () => {};
     this.onHello  = () => {};
     this.onSDM    = () => {};
+
+    // "память" для анти-спама
+    this.lastPeersSet    = new Set(); // текущий список node_id
+    this.seenHelloFrom   = new Set(); // от кого уже видели hello
   }
 
   // ===========================
@@ -81,9 +86,23 @@ class LVSBrowserNode {
     this.ws.onopen = () => {
       this.onStatus("connected");
       console.log("[LVS] connected");
+
+      // hello — ровно один раз на коннект
       this.sendHello();
+
+      // запрос пиров — сразу после коннекта
       this.requestPeers();
 
+      // периодический мягкий ресинк по пирами (раз в минуту)
+      if (!this.peersRequestTimer) {
+        this.peersRequestTimer = setInterval(() => {
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.requestPeers();
+          }
+        }, 60000);
+      }
+
+      // запуск основного цикла визуализации/SDM
       if (!this.loopTimer) {
         this.loop();
       }
@@ -92,6 +111,12 @@ class LVSBrowserNode {
     this.ws.onclose = () => {
       this.onStatus("disconnected");
       console.log("[LVS] disconnected");
+
+      // сносим таймеры запросов
+      if (this.peersRequestTimer) {
+        clearInterval(this.peersRequestTimer);
+        this.peersRequestTimer = null;
+      }
 
       // если нас не остановили вручную — пробуем переподключиться
       if (!this.manualStop) {
@@ -114,6 +139,11 @@ class LVSBrowserNode {
     if (this.loopTimer) {
       clearInterval(this.loopTimer);
       this.loopTimer = null;
+    }
+
+    if (this.peersRequestTimer) {
+      clearInterval(this.peersRequestTimer);
+      this.peersRequestTimer = null;
     }
 
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -185,14 +215,31 @@ class LVSBrowserNode {
       return;
     }
 
-    if (msg.type === "hello" && msg.node_id !== this.nodeId) {
-      this.onHello(msg.node_id);
+    // HELLO: лог только при первом hello от этой ноды
+    if (msg.type === "hello" && msg.node_id && msg.node_id !== this.nodeId) {
+      if (!this.seenHelloFrom.has(msg.node_id)) {
+        this.seenHelloFrom.add(msg.node_id);
+        this.onHello(msg.node_id);
+      }
     }
 
     if (msg.type === "peers" || msg.type === "peers_response") {
       const peersRaw = (msg.payload && msg.payload.peers) || [];
-      this.updatePeers(peersRaw);
-      this.onPeers(peersRaw);
+      const peerIds = peersRaw
+        .map((p) => (typeof p === "string" ? p : (p.node_id || p.id || "")))
+        .filter((id) => id && id !== this.nodeId);
+
+      const newSet = new Set(peerIds);
+
+      // проверяем, действительно ли список пиров изменился
+      if (!this._setsEqual(this.lastPeersSet, newSet)) {
+        this.lastPeersSet = newSet;
+        this.updatePeers(peersRaw);
+        this.onPeers(peersRaw);  // UI видит только реальные изменения
+      } else {
+        // список тот же, но можно обновить геометрию кольца
+        this.updatePeers(peersRaw);
+      }
       return;
     }
 
@@ -208,6 +255,14 @@ class LVSBrowserNode {
 
       this.registerSdmVisual(msg.node_id, diff, weight);
     }
+  }
+
+  _setsEqual(a, b) {
+    if (a.size !== b.size) return false;
+    for (const v of a) {
+      if (!b.has(v)) return false;
+    }
+    return true;
   }
 
   // ===========================
