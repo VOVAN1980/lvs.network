@@ -20,7 +20,6 @@
         renderer.outputEncoding = THREE.sRGBEncoding;
     }
 
-    // дистанция камеры — подобрана чтобы шар не обрезался
     const INIT_DIST = 3.6;
     const MIN_DIST  = 2.4;
     const MAX_DIST  = 8.0;
@@ -109,14 +108,14 @@
     const sparks = new THREE.Points(sparksGeo, sparksMat);
     globeGroup.add(sparks);
 
-    // ----- INTERACTION -----
+    // ----- STATE -----
     let isDragging = false;
     let prevX = 0;
     let prevY = 0;
 
-    // углы камеры вокруг центра
+    // углы камеры вокруг центра (как широта/долгота)
     let rotX = 0;          // наклон вверх/вниз
-    let rotY = 0;          // разворот вокруг оси
+    let rotY = 0;          // поворот вокруг оси
     let targetRotX = 0;
     let targetRotY = 0;
 
@@ -130,6 +129,7 @@
         return Math.min(max, Math.max(min, v));
     }
 
+    // ----- POINTER -----
     function onPointerDown(e) {
         if (e.button === 2) return; // правая — назад
         isDragging = true;
@@ -149,11 +149,10 @@
 
         const rotSpeed = 0.005;
 
-        targetRotY += dx * rotSpeed;      // влево/вправо
-        targetRotX += -dy * rotSpeed;     // вверх/вниз (инверсия)
+        targetRotY += dx * rotSpeed;      // влево / вправо
+        targetRotX += -dy * rotSpeed;     // вверх / вниз
 
-        // чтобы не переворачивало через полюса
-        const limit = Math.PI / 2 - 0.1;
+        const limit = Math.PI / 2 - 0.1;  // чтобы не переворачивало
         targetRotX = clamp(targetRotX, -limit, limit);
     }
 
@@ -161,7 +160,7 @@
         isDragging = false;
     }
 
-    // zoom колесом
+    // ----- WHEEL ZOOM -----
     function onWheel(e) {
         e.preventDefault();
         const delta = e.deltaY;
@@ -174,7 +173,7 @@
         }
     }
 
-    // назад на главную
+    // ----- BACK -----
     function goBack() {
         window.location.href = "index.html#work";
     }
@@ -192,7 +191,7 @@
         backBtn.addEventListener("click", goBack);
     }
 
-    // double click — выбрать регион
+    // ----- DOUBLE CLICK REGION -----
     function onDblClick(e) {
         const rect = canvas.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -209,7 +208,7 @@
         const lat = Math.asin(p.y);           // радианы
         const lon = Math.atan2(p.x, p.z);     // радианы
 
-        // разворачиваем камеру так, чтобы точка ушла в центр
+        // разворачиваем камеру на эту точку
         targetRotX = -lat;
         targetRotY = lon;
         targetDist = clamp(targetDist * 0.8, MIN_DIST, MAX_DIST);
@@ -235,7 +234,7 @@
         `;
     }
 
-    // события
+    // ----- EVENTS -----
     canvas.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
@@ -248,7 +247,7 @@
     canvas.addEventListener("dblclick", onDblClick);
     window.addEventListener("keydown", onKeyDown);
 
-    // resize — канвас на всю область
+    // ----- RESIZE -----
     function resize() {
         const rect = canvas.getBoundingClientRect();
         const width  = rect.width  || window.innerWidth;
@@ -262,10 +261,7 @@
     resize();
     window.addEventListener("resize", resize);
 
-    // анимация
-    let rotX = 0;
-    let rotY = 0;
-
+    // ----- ANIMATE -----
     function animate() {
         requestAnimationFrame(animate);
 
