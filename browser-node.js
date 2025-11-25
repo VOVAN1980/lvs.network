@@ -3,7 +3,7 @@ class LVSBrowserNode {
     this.nodeId = nodeId;
     this.gatewayUrl = gatewayUrl;
 
-    // аккаунт пользователя (может быть null)
+    // аккаунт пользователя (может быть null до логина)
     this.accountId = null;
 
     this.canvas = document.getElementById(canvasId);
@@ -47,12 +47,14 @@ class LVSBrowserNode {
     // пружина к центру — чтобы self не "падал"
     this.springK = 0.015;
 
-    // таймеры
-    this.loopTimer        = null;
-    this.peersRequestTimer = null;
+    // таймер цикла
+    this.loopTimer = null;
 
     // флаг ручной остановки (чтобы не было автореконнекта после logout)
     this.manualStop = false;
+
+    // флаг: отправляли ли hello в этом соединении
+    this.helloSent = false;
 
     // колбэки для UI
     this.onStatus = () => {};
@@ -61,9 +63,9 @@ class LVSBrowserNode {
     this.onHello  = () => {};
     this.onSDM    = () => {};
 
-    // "память" для анти-спама
-    this.lastPeersSet    = new Set(); // текущий список node_id
-    this.seenHelloFrom   = new Set(); // от кого уже видели hello
+    // анти-спам для логов
+    this.lastPeersSet  = new Set(); // текущий набор peers (node_id)
+    this.seenHelloFrom = new Set(); // от кого уже был hello
   }
 
   // ===========================
@@ -71,10 +73,18 @@ class LVSBrowserNode {
   // ===========================
 
   start() {
+    // без аккаунта — не стартуем вообще
+    if (!this.accountId) {
+      this.onStatus("no-account");
+      console.log("[LVS] start(): no accountId, not starting node");
+      return;
+    }
+
     this.onStatus("connecting...");
     console.log("[LVS] connecting:", this.gatewayUrl);
 
     this.manualStop = false;
+    this.helloSent  = false;
 
     // если вдруг что-то уже открыто — аккуратно закрываем
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -87,22 +97,10 @@ class LVSBrowserNode {
       this.onStatus("connected");
       console.log("[LVS] connected");
 
-      // hello — ровно один раз на коннект
+      // hello и запрос peers — как раньше, только hello один раз
       this.sendHello();
-
-      // запрос пиров — сразу после коннекта
       this.requestPeers();
 
-      // периодический мягкий ресинк по пирами (раз в минуту)
-      if (!this.peersRequestTimer) {
-        this.peersRequestTimer = setInterval(() => {
-          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.requestPeers();
-          }
-        }, 60000);
-      }
-
-      // запуск основного цикла визуализации/SDM
       if (!this.loopTimer) {
         this.loop();
       }
@@ -111,12 +109,6 @@ class LVSBrowserNode {
     this.ws.onclose = () => {
       this.onStatus("disconnected");
       console.log("[LVS] disconnected");
-
-      // сносим таймеры запросов
-      if (this.peersRequestTimer) {
-        clearInterval(this.peersRequestTimer);
-        this.peersRequestTimer = null;
-      }
 
       // если нас не остановили вручную — пробуем переподключиться
       if (!this.manualStop) {
@@ -141,11 +133,6 @@ class LVSBrowserNode {
       this.loopTimer = null;
     }
 
-    if (this.peersRequestTimer) {
-      clearInterval(this.peersRequestTimer);
-      this.peersRequestTimer = null;
-    }
-
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       try {
         this.ws.close();
@@ -166,6 +153,10 @@ class LVSBrowserNode {
   }
 
   sendHello() {
+    // hello — максимум один раз на WebSocket-соединение
+    if (this.helloSent) return;
+    this.helloSent = true;
+
     const msg = {
       type: "hello",
       node_id: this.nodeId,
@@ -215,7 +206,7 @@ class LVSBrowserNode {
       return;
     }
 
-    // HELLO: лог только при первом hello от этой ноды
+    // HELLO от других нод: в UI только один раз на ноду
     if (msg.type === "hello" && msg.node_id && msg.node_id !== this.nodeId) {
       if (!this.seenHelloFrom.has(msg.node_id)) {
         this.seenHelloFrom.add(msg.node_id);
@@ -225,19 +216,21 @@ class LVSBrowserNode {
 
     if (msg.type === "peers" || msg.type === "peers_response") {
       const peersRaw = (msg.payload && msg.payload.peers) || [];
-      const peerIds = peersRaw
+
+      // список ID пиров (кроме себя)
+      const ids = peersRaw
         .map((p) => (typeof p === "string" ? p : (p.node_id || p.id || "")))
         .filter((id) => id && id !== this.nodeId);
 
-      const newSet = new Set(peerIds);
+      const newSet = new Set(ids);
 
-      // проверяем, действительно ли список пиров изменился
+      // если peers реально поменялись — даём UI сигнал
       if (!this._setsEqual(this.lastPeersSet, newSet)) {
         this.lastPeersSet = newSet;
         this.updatePeers(peersRaw);
-        this.onPeers(peersRaw);  // UI видит только реальные изменения
+        this.onPeers(peersRaw);
       } else {
-        // список тот же, но можно обновить геометрию кольца
+        // состав тот же, просто обновим геометрию кольца
         this.updatePeers(peersRaw);
       }
       return;
