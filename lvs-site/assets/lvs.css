@@ -341,4 +341,17 @@ button {
         align-items: flex-start;
         gap: 6px;
     }
+    html, body {
+    width: 100%;
+    overflow-x: hidden;
 }
+
+canvas, .lvs-globe-wrapper {
+    overflow: hidden;
+  }
+    
+    .lvs-card-globe-note {
+    margin-top: 24px;   /* можешь увеличить до 32px */
+ }
+}
+
