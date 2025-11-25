@@ -1,19 +1,21 @@
-// lvs-globe.js – детализированный глобус без облаков + искорки жизни
+// lvs-globe.js – детализированный глобус без облаков + искры жизни
 
 (function () {
     const canvas = document.getElementById("lvs-globe-canvas");
     if (!canvas || !window.THREE) return;
 
-    // ---------- БАЗА THREE ----------
+    // ---------- СЦЕНА И РЕНДЕР ----------
+
     const scene = new THREE.Scene();
 
     const renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
-        alpha: true
+        alpha: true   // главное: фон canvas прозрачный
     });
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setClearColor(0x000000, 0); // чёрный, но с альфой 0
 
     const camera = new THREE.PerspectiveCamera(
         35,
@@ -25,8 +27,9 @@
     scene.add(camera);
 
     function resize() {
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight || width;
+        const rect = canvas.getBoundingClientRect();
+        const width = rect.width || 400;
+        const height = rect.height || width;
 
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
@@ -37,19 +40,21 @@
     window.addEventListener("resize", resize);
 
     // ---------- СВЕТ ----------
+
     const ambient = new THREE.AmbientLight(0xffffff, 0.7);
     const dir = new THREE.DirectionalLight(0xffffff, 1.2);
     dir.position.set(3, 2, 1.5);
     scene.add(ambient, dir);
 
     // ---------- ГЛОБУС ----------
+
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
 
     const loader = new THREE.TextureLoader();
 
-    // ВАЖНО: закинь текстуру Земли без облаков в /img и назови earth_noclouds_4k.jpg
-    // путь относительно index.html → ../img/earth_noclouds_4k.jpg
+    // Текстура Земли без облаков.
+    // Положи файл earth_noclouds_4k.jpg в /img
     const earthTexture = loader.load("../img/earth_noclouds_4k.jpg");
 
     const earthGeometry = new THREE.SphereGeometry(1, 96, 96);
@@ -62,19 +67,19 @@
     globeGroup.add(earthMesh);
 
     // ---------- ИСКОРКИ ЖИЗНИ ----------
+
     const sparklesCount = 900;
     const sparklesGeometry = new THREE.BufferGeometry();
     const positions = new Float32Array(sparklesCount * 3);
     const colors = new Float32Array(sparklesCount * 3);
 
     for (let i = 0; i < sparklesCount; i++) {
-        // равномерно по сфере
         const u = Math.random();
         const v = Math.random();
         const theta = 2 * Math.PI * u;
         const phi = Math.acos(2 * v - 1);
 
-        const r = 1.03; // чуть выше поверхности Земли
+        const r = 1.03; // чуть над поверхностью
         const x = r * Math.sin(phi) * Math.cos(theta);
         const y = r * Math.cos(phi);
         const z = r * Math.sin(phi) * Math.sin(theta);
@@ -83,11 +88,10 @@
         positions[3 * i + 1] = y;
         positions[3 * i + 2] = z;
 
-        // цвет: тёплый голубовато-зеленый, лёгкий рандом по яркости
-        const intensity = 0.6 + 0.4 * Math.random();
-        colors[3 * i] = 0.3 * intensity;       // R
-        colors[3 * i + 1] = 0.9 * intensity;   // G
-        colors[3 * i + 2] = 1.0 * intensity;   // B
+        const intensity = 0.5 + 0.5 * Math.random();
+        colors[3 * i]     = 0.3 * intensity;
+        colors[3 * i + 1] = 0.9 * intensity;
+        colors[3 * i + 2] = 1.0 * intensity;
     }
 
     sparklesGeometry.setAttribute(
@@ -111,7 +115,8 @@
     const sparkles = new THREE.Points(sparklesGeometry, sparklesMaterial);
     globeGroup.add(sparkles);
 
-    // ---------- УПРАВЛЕНИЕ МЫШКОЙ ----------
+    // ---------- УПРАВЛЕНИЕ (вращение) ----------
+
     let isDragging = false;
     let prevX = 0;
     let prevY = 0;
@@ -138,12 +143,10 @@
         targetRotY += dx * 0.005;
         targetRotX += dy * 0.005;
 
-        // ограничиваем наклон по вертикали
         const maxTilt = Math.PI / 3;
         targetRotX = Math.max(-maxTilt, Math.min(maxTilt, targetRotX));
     });
 
-    // для тач-устройств
     canvas.addEventListener("touchstart", (e) => {
         if (!e.touches.length) return;
         isDragging = true;
@@ -157,11 +160,11 @@
 
     window.addEventListener("touchmove", (e) => {
         if (!isDragging || !e.touches.length) return;
-        const touch = e.touches[0];
-        const dx = touch.clientX - prevX;
-        const dy = touch.clientY - prevY;
-        prevX = touch.clientX;
-        prevY = touch.clientY;
+        const t = e.touches[0];
+        const dx = t.clientX - prevX;
+        const dy = t.clientY - prevY;
+        prevX = t.clientX;
+        prevY = t.clientY;
 
         targetRotY += dx * 0.005;
         targetRotX += dy * 0.005;
@@ -171,19 +174,17 @@
     });
 
     // ---------- АНИМАЦИЯ ----------
+
     let autoSpin = 0.002;
 
     function animate() {
         requestAnimationFrame(animate);
 
-        // лёгкое автокручение
         targetRotY += autoSpin;
 
-        // плавно тянем глобус к целевому вращению
         globeGroup.rotation.y += (targetRotY - globeGroup.rotation.y) * 0.08;
         globeGroup.rotation.x += (targetRotX - globeGroup.rotation.x) * 0.08;
 
-        // дыхание искорок (размер)
         const t = performance.now() * 0.001;
         sparklesMaterial.size = 0.012 + Math.sin(t * 2.0) * 0.004;
 
