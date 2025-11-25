@@ -1,195 +1,208 @@
-// lvs-globe.js – детализированный глобус без облаков + искры жизни
+// lvs-globe.js
+// Простой 3D-глобус без облаков, с "искорками жизни" по поверхности.
 
 (function () {
     const canvas = document.getElementById("lvs-globe-canvas");
-    if (!canvas || !window.THREE) return;
-
-    // ---------- СЦЕНА И РЕНДЕР ----------
+    if (!canvas) return;
 
     const scene = new THREE.Scene();
 
     const renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
-        alpha: true   // главное: фон canvas прозрачный
+        alpha: true
+    });
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.setClearColor(0x000000, 0); // полностью прозрачный фон
+
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
+    camera.position.set(0, 0, 3.2);
+
+    // свет
+    const light = new THREE.DirectionalLight(0xffffff, 1.1);
+    light.position.set(3, 2, 2);
+    scene.add(light);
+
+    const ambient = new THREE.AmbientLight(0x404040, 0.6);
+    scene.add(ambient);
+
+    // текстуры земли
+    const texLoader = new THREE.TextureLoader();
+
+    const earthTexture = texLoader.load(
+        "assets/space/earth-day.jpg",
+        () => render() // старт когда текстура загрузилась
+    );
+
+    let lightsTexture;
+    try {
+        lightsTexture = texLoader.load("assets/space/earth-lights.png");
+    } catch (e) {
+        lightsTexture = null;
+    }
+
+    const geo = new THREE.SphereGeometry(1, 96, 96);
+
+    const matParams = {
+        map: earthTexture,
+        metalness: 0.0,
+        roughness: 1.0
+    };
+
+    const earthMaterial = new THREE.MeshStandardMaterial(matParams);
+
+    if (lightsTexture) {
+        lightsTexture.encoding = THREE.sRGBEncoding;
+        lightsTexture.wrapS = lightsTexture.wrapT = THREE.ClampToEdgeWrapping;
+
+        const lightsMaterial = new THREE.MeshBasicMaterial({
+            map: lightsTexture,
+            blending: THREE.AdditiveBlending,
+            transparent: true
+        });
+
+        const earthGroup = new THREE.Group();
+        const earthMesh = new THREE.Mesh(geo, earthMaterial);
+        const lightsMesh = new THREE.Mesh(geo, lightsMaterial);
+
+        earthGroup.add(earthMesh);
+        earthGroup.add(lightsMesh);
+        scene.add(earthGroup);
+
+        // прокрутка будет для всей группы
+        scene.userData.earthObject = earthGroup;
+    } else {
+        const earthMesh = new THREE.Mesh(geo, earthMaterial);
+        scene.add(earthMesh);
+        scene.userData.earthObject = earthMesh;
+    }
+
+    // искорки жизни (точки по поверхности)
+    const sparkCount = 600;
+    const positions = new Float32Array(sparkCount * 3);
+
+    for (let i = 0; i < sparkCount; i++) {
+        // равномерное распределение по сфере
+        const u = Math.random();
+        const v = Math.random();
+
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+
+        const r = 1.01; // чуть выше поверхности
+
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.cos(phi);
+        const z = r * Math.sin(phi) * Math.sin(theta);
+
+        positions[i * 3 + 0] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+    }
+
+    const sparkGeometry = new THREE.BufferGeometry();
+    sparkGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+    const sparkMaterial = new THREE.PointsMaterial({
+        color: 0x63ffe0,
+        size: 0.012,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.9
     });
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setClearColor(0x000000, 0); // чёрный, но с альфой 0
+    const sparks = new THREE.Points(sparkGeometry, sparkMaterial);
+    scene.add(sparks);
 
-    const camera = new THREE.PerspectiveCamera(
-        35,
-        canvas.clientWidth / canvas.clientHeight,
-        0.1,
-        100
-    );
-    camera.position.set(0, 0, 3.2);
-    scene.add(camera);
+    // ротация
+    let autoRotateSpeed = 0.0023;
+    let isDragging = false;
+    let lastX = 0;
+    let lastY = 0;
 
-    function resize() {
+    function resizeRenderer() {
         const rect = canvas.getBoundingClientRect();
-        const width = rect.width || 400;
-        const height = rect.height || width;
+        const size = Math.min(rect.width, rect.height || rect.width);
+        const width = size;
+        const height = size;
 
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
     }
 
-    resize();
-    window.addEventListener("resize", resize);
-
-    // ---------- СВЕТ ----------
-
-    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
-    dir.position.set(3, 2, 1.5);
-    scene.add(ambient, dir);
-
-    // ---------- ГЛОБУС ----------
-
-    const globeGroup = new THREE.Group();
-    scene.add(globeGroup);
-
-    const loader = new THREE.TextureLoader();
-
-    // Текстура Земли без облаков.
-    // Положи файл earth_noclouds_4k.jpg в /img
-    const earthTexture = loader.load("../img/earth_noclouds_4k.jpg");
-
-    const earthGeometry = new THREE.SphereGeometry(1, 96, 96);
-    const earthMaterial = new THREE.MeshPhongMaterial({
-        map: earthTexture,
-        shininess: 6
-    });
-
-    const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
-    globeGroup.add(earthMesh);
-
-    // ---------- ИСКОРКИ ЖИЗНИ ----------
-
-    const sparklesCount = 900;
-    const sparklesGeometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(sparklesCount * 3);
-    const colors = new Float32Array(sparklesCount * 3);
-
-    for (let i = 0; i < sparklesCount; i++) {
-        const u = Math.random();
-        const v = Math.random();
-        const theta = 2 * Math.PI * u;
-        const phi = Math.acos(2 * v - 1);
-
-        const r = 1.03; // чуть над поверхностью
-        const x = r * Math.sin(phi) * Math.cos(theta);
-        const y = r * Math.cos(phi);
-        const z = r * Math.sin(phi) * Math.sin(theta);
-
-        positions[3 * i] = x;
-        positions[3 * i + 1] = y;
-        positions[3 * i + 2] = z;
-
-        const intensity = 0.5 + 0.5 * Math.random();
-        colors[3 * i]     = 0.3 * intensity;
-        colors[3 * i + 1] = 0.9 * intensity;
-        colors[3 * i + 2] = 1.0 * intensity;
-    }
-
-    sparklesGeometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3)
-    );
-    sparklesGeometry.setAttribute(
-        "color",
-        new THREE.BufferAttribute(colors, 3)
-    );
-
-    const sparklesMaterial = new THREE.PointsMaterial({
-        size: 0.015,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.9,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending
-    });
-
-    const sparkles = new THREE.Points(sparklesGeometry, sparklesMaterial);
-    globeGroup.add(sparkles);
-
-    // ---------- УПРАВЛЕНИЕ (вращение) ----------
-
-    let isDragging = false;
-    let prevX = 0;
-    let prevY = 0;
-    let targetRotY = 0;
-    let targetRotX = 0;
-
-    canvas.addEventListener("mousedown", (e) => {
-        isDragging = true;
-        prevX = e.clientX;
-        prevY = e.clientY;
-    });
-
-    window.addEventListener("mouseup", () => {
-        isDragging = false;
-    });
-
-    window.addEventListener("mousemove", (e) => {
-        if (!isDragging) return;
-        const dx = e.clientX - prevX;
-        const dy = e.clientY - prevY;
-        prevX = e.clientX;
-        prevY = e.clientY;
-
-        targetRotY += dx * 0.005;
-        targetRotX += dy * 0.005;
-
-        const maxTilt = Math.PI / 3;
-        targetRotX = Math.max(-maxTilt, Math.min(maxTilt, targetRotX));
-    });
-
-    canvas.addEventListener("touchstart", (e) => {
-        if (!e.touches.length) return;
-        isDragging = true;
-        prevX = e.touches[0].clientX;
-        prevY = e.touches[0].clientY;
-    });
-
-    window.addEventListener("touchend", () => {
-        isDragging = false;
-    });
-
-    window.addEventListener("touchmove", (e) => {
-        if (!isDragging || !e.touches.length) return;
-        const t = e.touches[0];
-        const dx = t.clientX - prevX;
-        const dy = t.clientY - prevY;
-        prevX = t.clientX;
-        prevY = t.clientY;
-
-        targetRotY += dx * 0.005;
-        targetRotX += dy * 0.005;
-
-        const maxTilt = Math.PI / 3;
-        targetRotX = Math.max(-maxTilt, Math.min(maxTilt, targetRotX));
-    });
-
-    // ---------- АНИМАЦИЯ ----------
-
-    let autoSpin = 0.002;
-
     function animate() {
         requestAnimationFrame(animate);
 
-        targetRotY += autoSpin;
-
-        globeGroup.rotation.y += (targetRotY - globeGroup.rotation.y) * 0.08;
-        globeGroup.rotation.x += (targetRotX - globeGroup.rotation.x) * 0.08;
-
-        const t = performance.now() * 0.001;
-        sparklesMaterial.size = 0.012 + Math.sin(t * 2.0) * 0.004;
+        const earthObject = scene.userData.earthObject;
+        if (earthObject && !isDragging) {
+            earthObject.rotation.y += autoRotateSpeed;
+        }
+        sparks.rotation.y += autoRotateSpeed * 1.2;
 
         renderer.render(scene, camera);
     }
 
-    animate();
+    function render() {
+        resizeRenderer();
+        animate();
+    }
+
+    // drag вращение мышкой
+    function onPointerDown(e) {
+        isDragging = true;
+        lastX = e.clientX || e.touches?.[0]?.clientX || 0;
+        lastY = e.clientY || e.touches?.[0]?.clientY || 0;
+    }
+
+    function onPointerMove(e) {
+        if (!isDragging) return;
+
+        const x = e.clientX || e.touches?.[0]?.clientX || 0;
+        const y = e.clientY || e.touches?.[0]?.clientY || 0;
+
+        const dx = (x - lastX) / 180;
+        const dy = (y - lastY) / 180;
+
+        lastX = x;
+        lastY = y;
+
+        const earthObject = scene.userData.earthObject;
+        if (earthObject) {
+            earthObject.rotation.y += dx * 1.6;
+            earthObject.rotation.x += dy * 1.1;
+            earthObject.rotation.x = Math.max(
+                -Math.PI / 2,
+                Math.min(Math.PI / 2, earthObject.rotation.x)
+            );
+        }
+    }
+
+    function onPointerUp() {
+        isDragging = false;
+    }
+
+    canvas.addEventListener("mousedown", onPointerDown);
+    canvas.addEventListener("mousemove", onPointerMove);
+    window.addEventListener("mouseup", onPointerUp);
+
+    canvas.addEventListener("touchstart", onPointerDown, { passive: true });
+    canvas.addEventListener("touchmove", onPointerMove, { passive: true });
+    window.addEventListener("touchend", onPointerUp);
+
+    // адаптив
+    window.addEventListener("resize", resizeRenderer);
+
+    // кнопка "Найти работу рядом со мной" — пока просто авто-фокус на Европе (демо)
+    const btnNearMe = document.getElementById("btn-focus-my-region");
+    if (btnNearMe) {
+        btnNearMe.addEventListener("click", () => {
+            const earthObject = scene.userData.earthObject;
+            if (!earthObject) return;
+
+            // грубо поворачиваем так, чтобы Европа была по центру
+            earthObject.rotation.y = -0.6;
+            earthObject.rotation.x = 0.3;
+        });
+    }
 })();
