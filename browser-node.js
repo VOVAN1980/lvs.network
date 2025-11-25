@@ -3,7 +3,7 @@ class LVSBrowserNode {
     this.nodeId = nodeId;
     this.gatewayUrl = gatewayUrl;
 
-    // аккаунт пользователя (может быть null)
+    // аккаунт пользователя (null = гость, ноды нет)
     this.accountId = null;
 
     this.canvas = document.getElementById(canvasId);
@@ -35,7 +35,7 @@ class LVSBrowserNode {
     this.peerRingRadius = this.radius * 0.86;
 
     // ядро сети
-    this.corePulse = 0;  // пульсация ядра от нагрузки
+    this.corePulse = 0;  // пульсация от внешних SDM
 
     // позиция самой browser-ноды (внутри круга)
     this.selfX = this.centerX;
@@ -53,7 +53,7 @@ class LVSBrowserNode {
     // флаг ручной остановки (чтобы не было автореконнекта после logout)
     this.manualStop = false;
 
-    // флаг живого WebSocket для этой ноды
+    // флаг живого WebSocket для ЭТОЙ страницы
     this.isConnected = false;
 
     // колбэки для UI
@@ -79,53 +79,59 @@ class LVSBrowserNode {
     this.manualStop  = false;
     this.isConnected = false;
 
-    // если вдруг что-то уже открыто — аккуратно закрываем
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       try { this.ws.close(); } catch (e) {}
     }
 
     this.ws = new WebSocket(this.gatewayUrl);
 
+    // фикс мобильных: небольшая задержка перед первым send
     this.ws.onopen = () => {
-      this.isConnected = true;
-      this.onStatus("connected");
-      console.log("[LVS] connected");
+      console.log("[LVS] ws open");
+      setTimeout(() => {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+          console.warn("[LVS] ws not open after delay");
+          return;
+        }
 
-      this.sendHello();
-      this.requestPeers();
+        this.isConnected = true;
+        this.onStatus("connected");
 
-      if (!this.loopTimer) {
-        this.loop();
-      }
+        this.sendHello();      // ОДИН hello на коннект
+        this.requestPeers();   // сразу список пиров
+        setTimeout(() => this.requestPeers(), 500); // ещё раз, на всякий случай
+
+        if (!this.loopTimer) {
+          this.loop();
+        }
+      }, 80);
     };
 
     this.ws.onclose = () => {
+      console.log("[LVS] disconnected");
       this.isConnected = false;
       this.onStatus("disconnected");
-      console.log("[LVS] disconnected");
 
-      // при дисконнекте чистим визуал
-      this.peers     = [];
-      this.selfTrail = [];
-      this.corePulse = 0;
+      // при дисконнекте: НИ ядра, НИ нод
+      this.peers      = [];
+      this.selfTrail  = [];
+      this.corePulse  = 0;
       this.redraw();
 
-      // если нас не остановили вручную — пробуем переподключиться
       if (!this.manualStop) {
         setTimeout(() => this.start(), 1500);
       }
     };
 
     this.ws.onerror = (err) => {
-      this.onStatus("error");
       console.log("[LVS] ws error:", err);
+      this.onStatus("error");
     };
 
     this.ws.onmessage = (ev) => this.handleMessage(ev.data);
   }
 
   stop() {
-    // ручная остановка: больше не автореконнектимся
     this.manualStop  = true;
     this.isConnected = false;
 
@@ -142,10 +148,10 @@ class LVSBrowserNode {
       }
     }
 
-    // оффлайн-визуал
-    this.peers     = [];
-    this.selfTrail = [];
-    this.corePulse = 0;
+    // стоп ноды: НИ ядра, НИ нод
+    this.peers      = [];
+    this.selfTrail  = [];
+    this.corePulse  = 0;
     this.redraw();
   }
 
@@ -181,6 +187,8 @@ class LVSBrowserNode {
   }
 
   sendSDM(diff) {
+    if (!this.isConnected) return; // если сервера нет — нечего слать
+
     const msg = {
       type: "sdm",
       node_id: this.nodeId,
@@ -192,7 +200,6 @@ class LVSBrowserNode {
     };
     this.send(msg);
 
-    // вспышка для собственной точки
     this.selfPulse = Math.min(1.3, this.selfPulse + 0.6);
     this.onSDM(diff[0]);
   }
@@ -209,7 +216,7 @@ class LVSBrowserNode {
       return;
     }
 
-    // HELLO: в лог (onHello) только ПЕРВЫЙ раз от каждой ноды
+    // HELLO: логим только первый раз от каждой ноды
     if (msg.type === "hello" && msg.node_id && msg.node_id !== this.nodeId) {
       if (!this.seenHelloFrom.has(msg.node_id)) {
         this.seenHelloFrom.add(msg.node_id);
@@ -220,14 +227,11 @@ class LVSBrowserNode {
     if (msg.type === "peers" || msg.type === "peers_response") {
       const peersRaw = (msg.payload && msg.payload.peers) || [];
 
-      // состав peers как набор node_id (без себя)
       const ids = peersRaw
         .map((p) => (typeof p === "string" ? p : (p.node_id || p.id || "")))
         .filter((id) => id && id !== this.nodeId);
 
       const newSet = new Set(ids);
-
-      // UI вызываем только если peers действительно поменялись
       const changed = !this._setsEqual(this.lastPeersSet, newSet);
       this.lastPeersSet = newSet;
 
@@ -242,7 +246,7 @@ class LVSBrowserNode {
       const diff   = msg.payload?.diff   || [0, 0];
       const weight = msg.payload?.weight ?? 0.5;
 
-      // для дрейфа учитываем только чужие ноды
+      // дрейф только от чужих нод
       if (msg.node_id && msg.node_id !== this.nodeId) {
         this.lastPeerDiff   = diff;
         this.lastPeerWeight = weight;
@@ -254,18 +258,15 @@ class LVSBrowserNode {
 
   _setsEqual(a, b) {
     if (a.size !== b.size) return false;
-    for (const v of a) {
-      if (!b.has(v)) return false;
-    }
+    for (const v of a) if (!b.has(v)) return false;
     return true;
   }
 
   // ===========================
-  //   Peers ring (c fade-out)
+  //   Peers ring (fade-out)
   // ===========================
 
   updatePeers(peersRaw) {
-    // забираем node_id, но отбрасываем self
     const ids = peersRaw
       .map((p) => (typeof p === "string" ? p : (p.node_id || p.id || "")))
       .filter((id) => id && id !== this.nodeId);
@@ -273,10 +274,8 @@ class LVSBrowserNode {
     const existing = new Map(this.peers.map((p) => [p.id, p]));
     const usedIds  = new Set();
     const count    = ids.length || 1;
-
     const newPeers = [];
 
-    // актуальные (живые) ноды
     ids.sort().forEach((id, index) => {
       usedIds.add(id);
       let peer = existing.get(id);
@@ -296,7 +295,7 @@ class LVSBrowserNode {
       } else {
         peer.angle     = baseAngle;
         peer.isLeaving = false;
-        peer.fade      = 1.0; // вернулся в онлайн
+        peer.fade      = 1.0;
       }
 
       peer.x = this.centerX + Math.cos(peer.angle) * this.peerRingRadius;
@@ -305,7 +304,6 @@ class LVSBrowserNode {
       newPeers.push(peer);
     });
 
-    // старые ноды, которых больше нет в списке → помечаем как "уходящие"
     existing.forEach((peer, id) => {
       if (!usedIds.has(id)) {
         if (!peer.isLeaving) {
@@ -320,16 +318,12 @@ class LVSBrowserNode {
   }
 
   registerSdmVisual(nodeId, diff, weight) {
-    // свои SDM визуально НЕ считаем в ядро/peers
-    if (!nodeId || nodeId === this.nodeId) {
-      return;
-    }
+    if (!nodeId || nodeId === this.nodeId) return;
 
     const mag = Math.hypot(diff[0] || 0, diff[1] || 0);
     const baseBoost = 0.15 + mag * 3.0 + (weight || 0) * 0.2;
     const boost = Math.min(1.5, baseBoost);
 
-    // ядро чувствует внешнюю активность
     this.corePulse = Math.min(3.0, this.corePulse + boost * 0.7);
 
     const peer = this.peers.find((p) => p.id === nodeId);
@@ -366,28 +360,23 @@ class LVSBrowserNode {
   }
 
   applyDrift(d) {
-    // пружина к центру
     const dxCenter = this.centerX - this.selfX;
     const dyCenter = this.centerY - this.selfY;
     d[0] += dxCenter * this.springK;
     d[1] += dyCenter * this.springK;
 
-    // ограничиваем скорость
     const MAX = 0.4;
     if (d[0] >  MAX) d[0] =  MAX;
     if (d[0] < -MAX) d[0] = -MAX;
     if (d[1] >  MAX) d[1] =  MAX;
     if (d[1] < -MAX) d[1] = -MAX;
 
-    // обновляем VU
     this.vu += d[0];
 
-    // сдвиг точки
     const POS_SCALE = 16;
     this.selfX += d[0] * POS_SCALE;
     this.selfY += d[1] * POS_SCALE;
 
-    // жёсткий предел: 70% радиуса
     const vx = this.selfX - this.centerX;
     const vy = this.selfY - this.centerY;
     const dist = Math.hypot(vx, vy) || 1;
@@ -424,7 +413,6 @@ class LVSBrowserNode {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // кольцо value-space
     ctx.beginPath();
     ctx.arc(this.centerX, this.centerY, this.radius, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(148,163,184,0.35)";
@@ -435,6 +423,11 @@ class LVSBrowserNode {
   }
 
   drawCore() {
+    if (!this.isConnected) {
+      // сервер мёртв → НЕТ ЯДРА
+      return;
+    }
+
     const ctx = this.ctx;
     const t = performance.now() * 0.004;
 
@@ -443,26 +436,6 @@ class LVSBrowserNode {
     this.corePulse *= 0.92;
     const pulseLevel = this.corePulse;
 
-    // если нода оффлайн — маленькое тусклое ядро
-    if (!this.isConnected) {
-      const size = 6;
-
-      ctx.beginPath();
-      ctx.arc(this.centerX, this.centerY, size, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(30,64,175,0.5)";
-      ctx.shadowColor = "rgba(15,23,42,0.9)";
-      ctx.shadowBlur = 4;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      ctx.beginPath();
-      ctx.arc(this.centerX - 1, this.centerY - 1, 2, 0, Math.PI * 2);
-      ctx.fillStyle = "#93c5fd";
-      ctx.fill();
-      return;
-    }
-
-    // онлайн — как раньше
     const size =
       9 +
       baseBreath * 3 +
@@ -499,23 +472,19 @@ class LVSBrowserNode {
     const nextPeers = [];
 
     for (const peer of this.peers) {
-      // медленная орбита вокруг ядра
       peer.angle += 0.0006;
       peer.x = this.centerX + Math.cos(peer.angle) * this.peerRingRadius;
       peer.y = this.centerY + Math.sin(peer.angle) * this.peerRingRadius;
 
-      // глобальная прозрачность для fade-out
       if (peer.isLeaving) {
-        peer.fade = (peer.fade ?? 1.0) * 0.88;   // скорость затухания
+        peer.fade = (peer.fade ?? 1.0) * 0.88;
         if (peer.fade < 0.03) {
-          // полностью исчез → не кладём в nextPeers
           continue;
         }
       } else {
         peer.fade = 1.0;
       }
 
-      // лёгкая вибрация
       const vibAmp = 1.0 + peer.pulse * 1.2;
       const offsetX = Math.sin(t * 3.1 + peer.angle * 4.3) * vibAmp;
       const offsetY = Math.cos(t * 2.6 + peer.angle * 3.7) * vibAmp;
@@ -523,7 +492,6 @@ class LVSBrowserNode {
       const x = peer.x + offsetX;
       const y = peer.y + offsetY;
 
-      // луч к ядру при активности
       if (peer.pulse > 0.06) {
         ctx.beginPath();
         ctx.moveTo(this.centerX, this.centerY);
@@ -543,7 +511,6 @@ class LVSBrowserNode {
       ctx.fillStyle = `rgba(59,199,255,${alphaDot})`;
       ctx.fill();
 
-      // оставляем peer в списке, если он ещё видим
       nextPeers.push(peer);
     }
 
@@ -553,10 +520,11 @@ class LVSBrowserNode {
   drawSelf() {
     const ctx = this.ctx;
 
-    // ВАЖНО: нода рисуется ВСЕГДА, даже если сокет отвалился.
-    // Оффлайн мы уже показываем через маленькое ядро, здесь не трогаем.
+    // своя нода есть ТОЛЬКО когда:
+    // 1) есть соединение с сервером
+    // 2) аккаунт выбран (залогинен)
+    if (!this.isConnected || !this.accountId) return;
 
-    // хвост движения browser-ноды
     if (this.selfTrail.length > 1) {
       ctx.beginPath();
       for (let i = 0; i < this.selfTrail.length; i++) {
@@ -611,11 +579,9 @@ class LVSBrowserNode {
       drift = this.vaultGuard(drift);
       this.applyDrift(drift);
 
-      if (this.isConnected) {
-        this.sendSDM(drift);
-      }
-
+      this.sendSDM(drift);
       this.redraw();
+
       this.onCycle(this.cycle, this.vu, this.tc);
     }, 90); // ~11 FPS
   }
