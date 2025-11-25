@@ -3,9 +3,6 @@ class LVSBrowserNode {
     this.nodeId = nodeId;
     this.gatewayUrl = gatewayUrl;
 
-    // аккаунт пользователя (может быть null)
-    this.accountId = null;
-
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext("2d");
 
@@ -50,35 +47,21 @@ class LVSBrowserNode {
     // таймер цикла
     this.loopTimer = null;
 
-    // флаг ручной остановки (чтобы не было автореконнекта после logout)
-    this.manualStop = false;
-
     // колбэки для UI
     this.onStatus = () => {};
     this.onPeers  = () => {};
     this.onCycle  = () => {};
     this.onHello  = () => {};
     this.onSDM    = () => {};
-
-    // антиспам для логов
-    this.seenHelloFrom = new Set(); // node_id, от кого уже был hello
-    this.lastPeersSet  = new Set(); // текущий состав peers (node_id)
   }
 
   // ===========================
-  //   Публичные методы
+  //   WebSocket lifecycle
   // ===========================
 
   start() {
     this.onStatus("connecting...");
     console.log("[LVS] connecting:", this.gatewayUrl);
-
-    this.manualStop = false;
-
-    // если вдруг что-то уже открыто — аккуратно закрываем
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      try { this.ws.close(); } catch (e) {}
-    }
 
     this.ws = new WebSocket(this.gatewayUrl);
 
@@ -96,11 +79,7 @@ class LVSBrowserNode {
     this.ws.onclose = () => {
       this.onStatus("disconnected");
       console.log("[LVS] disconnected");
-
-      // если нас не остановили вручную — пробуем переподключиться
-      if (!this.manualStop) {
-        setTimeout(() => this.start(), 1500);
-      }
+      setTimeout(() => this.start(), 1500);
     };
 
     this.ws.onerror = (err) => {
@@ -110,28 +89,6 @@ class LVSBrowserNode {
 
     this.ws.onmessage = (ev) => this.handleMessage(ev.data);
   }
-
-  stop() {
-    // ручная остановка: больше не автореконнектимся
-    this.manualStop = true;
-
-    if (this.loopTimer) {
-      clearInterval(this.loopTimer);
-      this.loopTimer = null;
-    }
-
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      try {
-        this.ws.close();
-      } catch (e) {
-        console.warn("[LVS] stop(): ws close error", e);
-      }
-    }
-  }
-
-  // ===========================
-  //   Вспомогательные send
-  // ===========================
 
   send(msg) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -143,7 +100,6 @@ class LVSBrowserNode {
     const msg = {
       type: "hello",
       node_id: this.nodeId,
-      account_id: this.accountId || null,
       payload: {
         kind: "browser",
         version: "0.5.0",
@@ -189,32 +145,14 @@ class LVSBrowserNode {
       return;
     }
 
-    // HELLO: в лог (onHello) только ПЕРВЫЙ раз от каждой ноды
-    if (msg.type === "hello" && msg.node_id && msg.node_id !== this.nodeId) {
-      if (!this.seenHelloFrom.has(msg.node_id)) {
-        this.seenHelloFrom.add(msg.node_id);
-        this.onHello(msg.node_id);
-      }
+    if (msg.type === "hello" && msg.node_id !== this.nodeId) {
+      this.onHello(msg.node_id);
     }
 
     if (msg.type === "peers" || msg.type === "peers_response") {
       const peersRaw = (msg.payload && msg.payload.peers) || [];
-
-      // состав peers как набор node_id (без себя)
-      const ids = peersRaw
-        .map((p) => (typeof p === "string" ? p : (p.node_id || p.id || "")))
-        .filter((id) => id && id !== this.nodeId);
-
-      const newSet = new Set(ids);
-
-      // UI вызываем только если peers действительно поменялись
-      const changed = !this._setsEqual(this.lastPeersSet, newSet);
-      this.lastPeersSet = newSet;
-
       this.updatePeers(peersRaw);
-      if (changed) {
-        this.onPeers(peersRaw);
-      }
+      this.onPeers(peersRaw);
       return;
     }
 
@@ -230,14 +168,6 @@ class LVSBrowserNode {
 
       this.registerSdmVisual(msg.node_id, diff, weight);
     }
-  }
-
-  _setsEqual(a, b) {
-    if (a.size !== b.size) return false;
-    for (const v of a) {
-      if (!b.has(v)) return false;
-    }
-    return true;
   }
 
   // ===========================
