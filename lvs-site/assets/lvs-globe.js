@@ -1,117 +1,154 @@
-// lvs-globe.js — вариант C: чёрный шар + бирюзовые искры
+// lvs-globe.js — простой 3D-глобус Земли
 
-(() => {
-  const canvas = document.getElementById("lvs-globe-canvas");
-  if (!canvas) return;
+(function () {
+    const canvas = document.getElementById("lvs-globe-canvas");
+    if (!canvas || typeof THREE === "undefined") return;
 
-  const scene = new THREE.Scene();
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true,
-    alpha: true
-  });
+    // ---------- БАЗА СЦЕНЫ ----------
+    const scene = new THREE.Scene();
 
-  function resizeRenderer() {
-    const { clientWidth, clientHeight } = canvas;
-    const size = Math.min(clientWidth, clientHeight || clientWidth);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(size, size, false);
-  }
+    const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+    });
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
 
-  resizeRenderer();
+    const camera = new THREE.PerspectiveCamera(
+        35,
+        1,          // временно, дальше пересчитаем
+        0.1,
+        100
+    );
+    camera.position.set(0, 0, 3.2);
 
-  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
-  camera.position.set(0, 0, 6);
-  scene.add(camera);
+    // Мягкий свет
+    const ambient = new THREE.AmbientLight(0xffffff, 0.65);
+    scene.add(ambient);
 
-  // чёрный шар — сама "Земля"
-  const globeGeom = new THREE.SphereGeometry(2, 64, 64);
-  const globeMat = new THREE.MeshStandardMaterial({
-    color: 0x020204,
-    roughness: 0.4,
-    metalness: 0.2
-  });
-  const globe = new THREE.Mesh(globeGeom, globeMat);
-  scene.add(globe);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    dirLight.position.set(3, 2, 2);
+    scene.add(dirLight);
 
-  // бирюзовый ореол (немного glow)
-  const glowGeom = new THREE.SphereGeometry(2.05, 64, 64);
-  const glowMat = new THREE.MeshBasicMaterial({
-    color: 0x2fd3ff,
-    transparent: true,
-    opacity: 0.18
-  });
-  const glow = new THREE.Mesh(glowGeom, glowMat);
-  scene.add(glow);
+    // ---------- ГЛОБУС ЗЕМЛИ ----------
+    const globeGroup = new THREE.Group();
+    scene.add(globeGroup);
 
-  // точки-искорки жизни по поверхности
-  const starCount = 600;
-  const starGeom = new THREE.BufferGeometry();
-  const positions = new Float32Array(starCount * 3);
+    const radius = 1.0;
+    const segments = 64;
 
-  for (let i = 0; i < starCount; i++) {
-    // случайная точка на сфере радиуса ~2
-    const u = Math.random();
-    const v = Math.random();
-    const theta = 2 * Math.PI * u;
-    const phi = Math.acos(2 * v - 1);
-    const r = 2.02;
+    const sphereGeo = new THREE.SphereGeometry(radius, segments, segments);
 
-    const x = r * Math.sin(phi) * Math.cos(theta);
-    const y = r * Math.sin(phi) * Math.sin(theta);
-    const z = r * Math.cos(phi);
+    // Текстура Земли — КЛЮЧЕВОЕ МЕСТО
+    // Положи картинку (например 2048x1024) в:
+    //   lvs-site/assets/space/earth-map.jpg
+    // и пути ниже трогать не надо.
+    const texLoader = new THREE.TextureLoader();
+    const earthTexture = texLoader.load("assets/space/earth-map.jpg");
 
-    positions[i * 3 + 0] = x;
-    positions[i * 3 + 1] = y;
-    positions[i * 3 + 2] = z;
-  }
+    const earthMat = new THREE.MeshPhongMaterial({
+        map: earthTexture,
+        shininess: 8,
+        specular: new THREE.Color(0x333333),
+    });
 
-  starGeom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const earthMesh = new THREE.Mesh(sphereGeo, earthMat);
+    globeGroup.add(earthMesh);
 
-  const starMat = new THREE.PointsMaterial({
-    color: 0x48e0b0,
-    size: 0.035,
-    transparent: true,
-    opacity: 0.95
-  });
+    // ---------- МАЛЕНЬКИЕ "ИСКРЫ ЖИЗНИ" ----------
+    const sparksGeo = new THREE.BufferGeometry();
+    const sparksCount = 350;
+    const positions = new Float32Array(sparksCount * 3);
 
-  const stars = new THREE.Points(starGeom, starMat);
-  scene.add(stars);
+    for (let i = 0; i < sparksCount; i++) {
+        // случайная точка на сфере, чуть выше поверхности
+        const u = Math.random() * 2 * Math.PI;
+        const v = Math.random() * Math.PI;
 
-  // освещение
-  const light1 = new THREE.DirectionalLight(0xffffff, 1.0);
-  light1.position.set(3, 2, 4);
-  scene.add(light1);
+        const r = radius * 1.01;
+        const x = r * Math.cos(u) * Math.sin(v);
+        const y = r * Math.sin(u) * Math.sin(v);
+        const z = r * Math.cos(v);
 
-  const light2 = new THREE.DirectionalLight(0x48e09b, 0.6);
-  light2.position.set(-4, -3, -2);
-  scene.add(light2);
+        positions[i * 3 + 0] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+    }
 
-  const ambient = new THREE.AmbientLight(0x404060, 0.4);
-  scene.add(ambient);
+    sparksGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
-  // анимация
-  let lastTime = 0;
+    const sparksMat = new THREE.PointsMaterial({
+        color: 0x38e0ff,
+        size: 0.012,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.9,
+    });
 
-  function animate(time) {
-    requestAnimationFrame(animate);
+    const sparks = new THREE.Points(sparksGeo, sparksMat);
+    globeGroup.add(sparks);
 
-    const t = time * 0.00005;
-    const dt = time - lastTime;
-    lastTime = time;
+    // ---------- РОТАЦИЯ МЫШКОЙ ----------
+    let isDragging = false;
+    let prevX = 0;
+    let rotationY = 0;
+    let targetRotY = 0;
 
-    globe.rotation.y = t * 0.75;
-    stars.rotation.y = t * 0.9;
-    glow.rotation.y = t * 0.6;
+    function onPointerDown(e) {
+        isDragging = true;
+        prevX = e.clientX || e.touches?.[0]?.clientX || 0;
+    }
 
-    renderer.render(scene, camera);
-  }
+    function onPointerMove(e) {
+        if (!isDragging) return;
+        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+        const dx = clientX - prevX;
+        prevX = clientX;
 
-  animate(0);
+        const rotSpeed = 0.005;
+        targetRotY += dx * rotSpeed;
+    }
 
-  // ресайз
-  window.addEventListener("resize", () => {
-    resizeRenderer();
-  });
+    function onPointerUp() {
+        isDragging = false;
+    }
 
+    canvas.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("touchstart", onPointerDown, { passive: true });
+    window.addEventListener("touchmove", onPointerMove, { passive: true });
+    window.addEventListener("touchend", onPointerUp);
+
+    // ---------- РЕСАЙЗ ----------
+    function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height || rect.width;
+
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+    }
+
+    resize();
+    window.addEventListener("resize", resize);
+
+    // ---------- АНИМАЦИЯ ----------
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // авто-вращение + плавное довороты от мыши
+        targetRotY += 0.0008; // лёгкое постоянное вращение
+        rotationY += (targetRotY - rotationY) * 0.08;
+        globeGroup.rotation.y = rotationY;
+
+        // лёгкое "дыхание" искр
+        const t = performance.now() * 0.001;
+        sparksMat.opacity = 0.75 + Math.sin(t * 1.1) * 0.15;
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
 })();
