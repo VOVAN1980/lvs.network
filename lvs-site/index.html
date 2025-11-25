@@ -11,19 +11,20 @@
 <!-- TOP NAVBAR -->
 <header class="lvs-navtop">
     <div class="lvs-navtop-left">
-        <a href="/lvs-site/index.html" class="lvs-logo-link">
+        <!-- главный логотип проекта из корня репы -->
+        <a href="/">
             <img class="lvs-navtop-logo"
                  src="/assets/logo/lvs-logo.png"
                  alt="LVS Logo">
         </a>
-        <span class="lvs-navtop-brand">Living Value System</span>
+        <span class="lvs-navtop-tagline">Living Value System</span>
     </div>
 
     <nav class="lvs-navtop-right">
         <a href="/lvs-site/profile.html" class="lvs-navtop-btn">Profile demo</a>
         <a href="/lvs-site/me.html" class="lvs-navtop-btn">My cabinet</a>
         <a href="#work" class="lvs-navtop-btn">Work & tasks</a>
-        <a href="#about" class="lvs-navtop-btn">About LVS</a>
+        <a href="/website" class="lvs-navtop-btn">About LVS</a>
         <a href="/website" class="lvs-navtop-btn">Docs</a>
         <a href="/lvs_browser_node.html" class="lvs-navtop-btn">Testnet</a>
     </nav>
@@ -32,14 +33,13 @@
 <div class="lvs-layout">
     <main class="lvs-main">
 
-        <!-- HERO + GLOBE ONLY -->
-        <section class="lvs-hero-globe">
-            <!-- LEFT TEXT -->
+        <!-- HERO + GLOBE -->
+        <section id="work" class="lvs-hero-globe">
             <div class="lvs-hero-left">
                 <div class="lvs-pill">LVS / Global work map</div>
 
                 <h1 class="lvs-hero-title">
-                    Walk into the LVS world..<br>
+                    Walk into the LVS world.<br>
                     Everyone is building, earning, trusted.
                 </h1>
 
@@ -65,7 +65,6 @@
                 </div>
             </div>
 
-            <!-- RIGHT: FLOATING GLOBE ONLY -->
             <div class="lvs-hero-right">
                 <div class="lvs-globe-wrapper">
                     <canvas id="lvs-globe-canvas"></canvas>
@@ -82,16 +81,14 @@
             </div>
         </section>
 
-        <!-- just anchors for top buttons -->
-        <section id="work"></section>
-        <section id="about"></section>
-
     </main>
 </div>
 
-<!-- FOOTER STRIP -->
+<!-- FOOTER -->
 <footer class="lvs-footer">
-    <div class="lvs-footer-left">© 2025 Living Value System (LVS)</div>
+    <div class="lvs-footer-left">
+        © 2025 Living Value System (LVS)
+    </div>
     <div class="lvs-footer-links">
         <a href="#">Privacy policy</a>
         <a href="#">Terms of use</a>
@@ -101,10 +98,9 @@
     </div>
 </footer>
 
-<!-- Three.js + scripts -->
+<!-- Scripts -->
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script src="assets/lvs-main.js"></script>
 <script src="assets/lvs-globe.js"></script>
 </body>
 </html>
-
