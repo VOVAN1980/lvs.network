@@ -1,17 +1,21 @@
-/* ========== ТЕМА ========== */
+/* ========= THEME ========= */
 
 :root {
-    --bg-main: #05060d;
-    --bg-card: #101321;
+    --bg-main: #03040a;
     --accent: #3ea6ff;
     --accent-green: #48e09b;
-    --border-subtle: rgba(255,255,255,0.1);
+
+    --border-subtle: rgba(255, 255, 255, 0.08);
+
     --text-main: #f5f7ff;
     --text-soft: #9ca3c7;
     --text-muted: #6b738f;
+
+    --card-bg: rgba(8, 11, 22, 0.96);
+    --card-bg-soft: rgba(10, 14, 28, 0.96);
 }
 
-/* ========== ГЛОБАЛ ========== */
+/* ========= GLOBAL ========= */
 
 *,
 *::before,
@@ -28,37 +32,40 @@ body {
 body {
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
-                 Roboto, system-ui, sans-serif;
+        Roboto, system-ui, sans-serif;
     color: var(--text-main);
-    background:
-        radial-gradient(circle at 10% 0%, rgba(60,114,255,0.35), transparent 55%),
-        radial-gradient(circle at 90% 100%, rgba(72,224,155,0.35), transparent 55%),
-        radial-gradient(circle at 50% 120%, #05060d, #02030a);
     background-color: var(--bg-main);
     position: relative;
     overflow-x: hidden;
 }
 
-/* живой космос — мягкий слой звёзд */
-
+/* космос-фон: gradient + текстура stars.png из assets/space */
 body::before {
     content: "";
     position: fixed;
-    inset: -40px;
-    pointer-events: none;
-    background-image: url("space/stars.png");
-    background-size: cover;
-    background-position: center;
-    opacity: 0.35;
-    filter: blur(0.4px);
-    animation: lvs-stars-move 60s linear infinite;
+    inset: 0;
     z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 20% 0%, rgba(62, 166, 255, 0.28), transparent 55%),
+        radial-gradient(circle at 80% 100%, rgba(72, 224, 155, 0.26), transparent 55%),
+        radial-gradient(circle at 50% 120%, #02030a, #000000),
+        url("space/stars.png") repeat;
+    opacity: 0.9;
+    animation: lvs-stars-move 80s linear infinite;
+    background-size: auto, auto, auto, 800px 800px;
 }
 
 @keyframes lvs-stars-move {
-    0%   { transform: translate3d(0, 0, 0); }
-    50%  { transform: translate3d(-45px, -30px, 0); }
-    100% { transform: translate3d(0, 0, 0); }
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    50% {
+        transform: translate3d(-40px, -30px, 0);
+    }
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
 }
 
 a {
@@ -71,20 +78,21 @@ button {
     border: none;
 }
 
-/* ========== ВЕРХНЯЯ ПАНЕЛЬ ========== */
+/* ========= TOP NAVBAR ========= */
 
 .lvs-navtop {
     position: sticky;
     top: 0;
-    z-index: 20;
-    height: 60px;
+    z-index: 1000;
+    height: 64px;
     padding: 0 32px;
-    background: rgba(5, 6, 14, 0.94);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
     justify-content: space-between;
+
+    background: rgba(3, 4, 12, 0.95);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .lvs-navtop-left {
@@ -99,22 +107,21 @@ button {
     height: 30px;
     width: auto;
     display: block;
-    filter: drop-shadow(0 0 10px rgba(0,0,0,0.9));
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.8));
 }
 
-.lvs-navtop-title {
-    font-size: 13px;
-    color: var(--text-soft);
+.lvs-navtop-project {
+    white-space: nowrap;
 }
 
 .lvs-navtop-right {
     display: flex;
-    gap: 12px;
     align-items: center;
+    gap: 12px;
 }
 
 .lvs-navtop-btn {
-    padding: 7px 14px;
+    padding: 7px 13px;
     border-radius: 999px;
     font-size: 13px;
     color: var(--text-soft);
@@ -127,10 +134,10 @@ button {
 .lvs-navtop-btn:hover {
     color: var(--text-main);
     border-color: var(--border-subtle);
-    background: rgba(255,255,255,0.03);
+    background: rgba(255, 255, 255, 0.03);
 }
 
-/* ========== ЛЕЙАУТ ========== */
+/* ========= LAYOUT ========= */
 
 .lvs-layout {
     max-width: 1240px;
@@ -142,12 +149,12 @@ button {
     width: 100%;
 }
 
-/* ========== HERO + ГЛОБУС ========== */
+/* ========= HERO ========= */
 
 .lvs-hero-globe {
     display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.5fr);
-    gap: 36px;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.4fr);
+    gap: 40px;
     align-items: center;
     margin-bottom: 40px;
 }
@@ -165,14 +172,14 @@ button {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     background: rgba(15, 21, 40, 0.9);
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     color: var(--text-muted);
 }
 
 .lvs-hero-title {
-    margin: 14px 0 10px;
+    margin: 16px 0 10px;
     font-size: 30px;
-    line-height: 1.18;
+    line-height: 1.15;
     letter-spacing: -0.02em;
 }
 
@@ -184,10 +191,10 @@ button {
 }
 
 .lvs-hero-actions {
-    margin-top: 24px;
+    margin-top: 22px;
     display: flex;
-    gap: 10px;
     flex-wrap: wrap;
+    gap: 10px;
 }
 
 .lvs-btn {
@@ -203,7 +210,7 @@ button {
     background: linear-gradient(120deg, #3ea6ff, #48e09b);
     color: #02030a;
     font-weight: 600;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.75);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65);
 }
 
 .lvs-btn-primary:hover {
@@ -213,14 +220,16 @@ button {
 
 .lvs-btn-ghost {
     background: rgba(15, 20, 40, 0.78);
-    border-color: rgba(255,255,255,0.10);
+    border-color: rgba(255, 255, 255, 0.1);
     color: var(--text-soft);
 }
 
 .lvs-btn-ghost:hover {
-    border-color: rgba(255,255,255,0.25);
+    border-color: rgba(255, 255, 255, 0.24);
     color: var(--text-main);
 }
+
+/* hero stats */
 
 .lvs-hero-stats {
     margin-top: 18px;
@@ -234,75 +243,89 @@ button {
 .lvs-hero-stat {
     padding: 6px 10px;
     border-radius: 999px;
-    background: rgba(12, 17, 32, 0.9);
-    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(12, 17, 32, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-/* ========== ГЛОБУС ========== */
+/* ========= GLOBE ========= */
 
 .lvs-hero-right {
     min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    align-items: center;
 }
 
-/* оболочка, чтобы за ней не было квадрата */
-.lvs-globe-shell {
-    padding: 26px;
-    border-radius: 32px;
-    background: radial-gradient(circle at 20% 0%, #172445, transparent 60%),
-                radial-gradient(circle at 80% 100%, rgba(0,0,0,0.9), #02030a);
-    box-shadow: 0 28px 80px rgba(0,0,0,0.95);
-}
-
-/* сам круглый холст */
 .lvs-globe-wrapper {
     position: relative;
     width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
     aspect-ratio: 1 / 1;
     border-radius: 50%;
     overflow: hidden;
-}
 
-/* мягкое сияние вокруг планеты */
-.lvs-globe-wrapper::before {
-    content: "";
-    position: absolute;
-    inset: -8%;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(62,166,255,0.3), transparent 65%);
-    pointer-events: none;
-    z-index: 0;
+    /* чуть-чуть подсветка, но БЕЗ квадрата */
+    background: radial-gradient(circle at 50% 40%, #0a1222, #03040a);
+    box-shadow:
+        0 0 60px rgba(0, 0, 0, 0.9),
+        0 0 80px rgba(62, 166, 255, 0.45);
 }
 
 #lvs-globe-canvas {
     width: 100%;
     height: 100%;
     display: block;
-    position: relative;
-    z-index: 1;
+}
+
+/* всплывающий тултип над глобусом */
+.lvs-globe-tooltip {
+    position: fixed;
+    max-width: 260px;
+    padding: 9px 11px;
+    background: rgba(5, 7, 16, 0.98);
+    border-radius: 10px;
+    border: 1px solid rgba(62, 166, 255, 0.8);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.9);
+    font-size: 12px;
+    color: var(--text-main);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+    z-index: 999;
+}
+
+.lvs-globe-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .lvs-card-globe-note {
     font-size: 12px;
+    background: var(--card-bg-soft);
 }
 
-/* ========== КАРТОЧКИ / ФИДЫ ========== */
+/* ========= CARDS / FEEDS ========= */
 
-.lvs-hero {
+.lvs-hero.lvs-bottom {
     display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.1fr);
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.1fr);
     gap: 24px;
     align-items: flex-start;
+}
+
+.lvs-column {
+    min-width: 0;
 }
 
 .lvs-card {
     padding: 16px 16px 14px;
     border-radius: 18px;
-    background: rgba(12, 15, 30, 0.96);
+    background: var(--card-bg);
     border: 1px solid var(--border-subtle);
-    box-shadow: 0 14px 40px rgba(0,0,0,0.75);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
 }
 
 .lvs-card-header {
@@ -333,8 +356,8 @@ button {
 .lvs-feed-item {
     padding: 8px 9px;
     border-radius: 12px;
-    background: rgba(13, 17, 30, 0.92);
-    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(13, 17, 30, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.04);
     font-size: 12px;
 }
 
@@ -344,12 +367,16 @@ button {
     font-size: 11px;
 }
 
-/* ========== ФУТЕР ========== */
+.lvs-spacer16 {
+    height: 16px;
+}
+
+/* ========= FOOTER ========= */
 
 .lvs-footer {
-    margin-top: 8px;
+    margin-top: 24px;
     padding: 14px 32px 18px;
-    background: rgba(5, 6, 14, 0.96);
+    background: rgba(3, 4, 12, 0.96);
     border-top: 1px solid var(--border-subtle);
     display: flex;
     flex-wrap: wrap;
@@ -357,10 +384,6 @@ button {
     align-items: center;
     font-size: 12px;
     color: var(--text-muted);
-}
-
-.lvs-footer-left {
-    margin-bottom: 6px;
 }
 
 .lvs-footer-links {
@@ -379,7 +402,7 @@ button {
     opacity: 1;
 }
 
-/* ========== ADAPTIVE ========== */
+/* ========= RESPONSIVE ========= */
 
 @media (max-width: 1024px) {
     .lvs-layout {
@@ -390,8 +413,12 @@ button {
         grid-template-columns: 1fr;
     }
 
-    .lvs-hero {
+    .lvs-hero.lvs-bottom {
         grid-template-columns: 1fr;
+    }
+
+    .lvs-hero-right {
+        order: -1;
     }
 }
 
@@ -402,6 +429,7 @@ button {
 
     .lvs-navtop-right {
         gap: 8px;
+        font-size: 12px;
     }
 
     .lvs-hero-title {
