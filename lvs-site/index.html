@@ -7,60 +7,51 @@
     <link rel="stylesheet" href="assets/lvs.css">
 </head>
 <body>
-    <header class="lvs-navtop">
+
+<!-- TOP NAVBAR WITH LOGO -->
+<header class="lvs-navtop">
     <div class="lvs-navtop-left">
         <a href="/lvs-site/index.html">
             <img class="lvs-navtop-logo"
                  src="https://raw.githubusercontent.com/VOVAN1980/lvs.network/main/assets/logo/lvs-logo.png"
                  alt="LVS Logo">
         </a>
+        <span style="font-size:13px; color:var(--text-soft);">Living Value System</span>
     </div>
 
     <div class="lvs-navtop-right">
-        <a href="/lvs-site/profile.html" class="lvs-navtop-btn">Profile</a>
-        <a href="/lvs-site/me.html" class="lvs-navtop-btn">Cabinet</a>
+        <a href="/lvs-site/profile.html" class="lvs-navtop-btn">Profile demo</a>
+        <a href="/lvs-site/me.html" class="lvs-navtop-btn">My cabinet</a>
         <a href="/website" class="lvs-navtop-btn">Docs</a>
-        <a href="/lvs-browser-node.html" class="lvs-navtop-btn">Testnet</a>
+        <a href="/lvs_browser_node.html" class="lvs-navtop-btn">Testnet</a>
     </div>
 </header>
 
 <div class="lvs-layout">
 
-    <!-- "Улица" здесь без левового сайдбара, просто главный экран -->
     <main class="lvs-main" style="width: 100%; max-width: 1180px; margin: 0 auto;">
 
-        <header class="lvs-topbar">
-            <div>
-                <div class="lvs-pill">LVS / Public Network</div>
-                <div class="lvs-title">Living Value System</div>
-                <div class="lvs-subtitle">
-                    Digital city where every human, company and service has transparent value, reputation and incentives.
-                </div>
-            </div>
-            <div style="display:flex; gap:10px;">
-                <button class="lvs-btn lvs-btn-ghost" onclick="location.href='profile.html'">View profile demo</button>
-                <button class="lvs-btn lvs-btn-primary" onclick="location.href='me.html'">Enter my cabinet</button>
-            </div>
-        </header>
+        <!-- HERO WITH GLOBE -->
+        <section class="lvs-hero-globe">
 
-        <!-- HERO -->
-        <section class="lvs-hero">
-            <div>
+            <div class="lvs-hero-left">
+                <div class="lvs-pill">LVS / Global work map</div>
                 <h1 class="lvs-hero-title">
                     Walk out to the LVS street.<br>
                     Everyone is building, earning, trusted.
                 </h1>
                 <p class="lvs-hero-text">
-                    LVS is not a blockchain, not just a token. It’s an Autonomous Value Layer where TC (trust coefficient)
-                    and VU (value units) turn your actions into measurable, protected and portable reputation.
+                    LVS is an Autonomous Value Layer. Choose any point on the globe and see where people
+                    are working, creating and getting paid. TC (trust coefficient) and VU (value units)
+                    turn real actions into measurable, portable reputation.
                 </p>
 
-                <div style="margin-top:24px; display:flex; gap:10px;">
+                <div style="margin-top:24px; display:flex; gap:10px; flex-wrap:wrap;">
                     <button class="lvs-btn lvs-btn-primary" onclick="location.href='me.html'">
                         Start as participant
                     </button>
-                    <button class="lvs-btn lvs-btn-ghost">
-                        Explore docs
+                    <button class="lvs-btn lvs-btn-ghost" id="btn-focus-my-region">
+                        Find work near me
                     </button>
                 </div>
 
@@ -76,6 +67,27 @@
                     </div>
                 </div>
             </div>
+
+            <div class="lvs-hero-right">
+                <div class="lvs-globe-wrapper">
+                    <canvas id="lvs-globe-canvas"></canvas>
+                    <div id="lvs-globe-tooltip" class="lvs-globe-tooltip" style="display:none;"></div>
+                </div>
+                <div class="lvs-card lvs-card-globe-note">
+                    <div class="lvs-card-title" style="font-size:14px; margin-bottom:6px;">
+                        Interactive world map
+                    </div>
+                    <div class="lvs-card-subtitle">
+                        Rotate the AI globe and click on any region to preview example work opportunities
+                        (test data for now). Later this will be synced with live LVS marketplace.
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- LIVE VALUE PULSE + MARKETPLACE (как было) -->
+        <section class="lvs-hero">
 
             <div>
                 <div class="lvs-card">
@@ -109,10 +121,52 @@
                     </div>
                 </div>
             </div>
+
+            <div>
+                <div class="lvs-card">
+                    <div class="lvs-card-header">
+                        <div class="lvs-card-title">Who are you in LVS?</div>
+                    </div>
+                    <div class="lvs-feed-list">
+                        <div class="lvs-feed-item">
+                            <strong>Human / Earner</strong>
+                            <div class="lvs-feed-meta">
+                                Create your profile, connect nodes or complete tasks and grow TC & VU.
+                            </div>
+                        </div>
+                        <div class="lvs-feed-item">
+                            <strong>Company / Service</strong>
+                            <div class="lvs-feed-meta">
+                                Post work, hire people and track real reputation instead of fake ratings.
+                            </div>
+                        </div>
+                        <div class="lvs-feed-item">
+                            <strong>Developer / Builder</strong>
+                            <div class="lvs-feed-meta">
+                                Run nodes, build tools and integrate your products on top of LVS.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="height:18px;"></div>
+
+                <div class="lvs-card">
+                    <div class="lvs-card-header">
+                        <div class="lvs-card-title">For humans · For companies · For AI agents</div>
+                    </div>
+                    <div class="lvs-card-subtitle">
+                        LVS is a neutral value layer. No ads, no selling of personal data, no central
+                        platform extracting all the value. Only people, services and autonomous agents
+                        cooperating through transparent TC & VU.
+                    </div>
+                </div>
+            </div>
+
         </section>
 
-        <!-- BOTTOM BLOCKS -->
-        <section class="lvs-grid-3">
+        <!-- BOTTOM INFO BLOCKS -->
+        <section class="lvs-grid-3" style="margin-top:20px;">
             <div class="lvs-card">
                 <div class="lvs-card-header">
                     <div class="lvs-card-title">For humans</div>
@@ -144,7 +198,10 @@
     </main>
 </div>
 
+<!-- Three.js для глобуса -->
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
 <script src="assets/lvs-main.js"></script>
+<script src="assets/lvs-globe.js"></script>
 </body>
 </html>
-
