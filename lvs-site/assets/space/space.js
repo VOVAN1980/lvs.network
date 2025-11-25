@@ -65,18 +65,19 @@
     const earthMesh = new THREE.Mesh(sphereGeo, earthMat);
     globeGroup.add(earthMesh);
 
-    // атмосфера
-    const atmGeo = new THREE.SphereGeometry(RADIUS * 1.01, SEGMENTS, SEGMENTS);
-
+    // <<< ЭТОТ БЛОК УБРАТЬ >>>
+/*
+// атмосфера
+const atmGeo = new THREE.SphereGeometry(RADIUS * 1.03, SEGMENTS, SEGMENTS);
 const atmMat = new THREE.MeshBasicMaterial({
     color: 0x3ea6ff,
     transparent: true,
     opacity: 0.12,
     side: THREE.BackSide,
 });
-
-    const atmosphere = new THREE.Mesh(atmGeo, atmMat);
-    globeGroup.add(atmosphere);
+const atmosphere = new THREE.Mesh(atmGeo, atmMat);
+globeGroup.add(atmosphere);
+*/
 
     // огоньки на поверхности
     const sparksGeo = new THREE.BufferGeometry();
@@ -288,4 +289,5 @@ const atmMat = new THREE.MeshBasicMaterial({
 
     animate();
 })();
+
 
