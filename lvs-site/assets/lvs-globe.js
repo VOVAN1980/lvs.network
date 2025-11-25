@@ -1,253 +1,194 @@
-// Simple AI-style 3D globe for LVS main page
-// No backend yet – only demo points & click handler.
+// lvs-globe.js – детализированный глобус без облаков + искорки жизни
 
-document.addEventListener("DOMContentLoaded", () => {
+(function () {
     const canvas = document.getElementById("lvs-globe-canvas");
     if (!canvas || !window.THREE) return;
 
-    const tooltip = document.getElementById("lvs-globe-tooltip");
-    const btnFocus = document.getElementById("btn-focus-my-region");
-
-    const width = canvas.clientWidth || 420;
-    const height = canvas.clientHeight || 420;
-
-    const renderer = new THREE.WebGLRenderer({canvas, antialias: true, alpha: true});
-    renderer.setPixelRatio(window.devicePixelRatio || 1);
-    renderer.setSize(width, height);
-
+    // ---------- БАЗА THREE ----------
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 0, 3.2);
 
-    // Lights
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambient);
-    const dir = new THREE.DirectionalLight(0xffffff, 1.0);
-    dir.position.set(3, 2, 1);
-    scene.add(dir);
+    const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true
+    });
 
-    // Earth
-    const radius = 1;
-    const geometry = new THREE.SphereGeometry(radius, 64, 64);
-    const textureLoader = new THREE.TextureLoader();
-    const earthTexture = textureLoader.load(
-        "https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg"
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const camera = new THREE.PerspectiveCamera(
+        35,
+        canvas.clientWidth / canvas.clientHeight,
+        0.1,
+        100
     );
-    const material = new THREE.MeshPhongMaterial({
-        map: earthTexture,
-        shininess: 8
-    });
-    const earth = new THREE.Mesh(geometry, material);
-    scene.add(earth);
+    camera.position.set(0, 0, 3.2);
+    scene.add(camera);
 
-    // Simple glow halo
-    const glowGeom = new THREE.SphereGeometry(radius * 1.06, 64, 64);
-    const glowMat = new THREE.MeshBasicMaterial({
-        color: 0x4fb3ff,
-        transparent: true,
-        opacity: 0.18
-    });
-    const glow = new THREE.Mesh(glowGeom, glowMat);
-    scene.add(glow);
+    function resize() {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight || width;
 
-    // Demo city points (lat, lon, label, tasks)
-    const cities = [
-        {
-            name: "Berlin",
-            country: "Germany",
-            lat: 52.52,
-            lon: 13.405,
-            tasks: [
-                "LVS gateway node monitoring · +45 VU",
-                "Rust micro-service fix · +70 VU"
-            ]
-        },
-        {
-            name: "Warsaw",
-            country: "Poland",
-            lat: 52.2297,
-            lon: 21.0122,
-            tasks: [
-                "Frontend improvements for cabinet UI · +55 VU",
-                "Local onboarding support · +30 VU"
-            ]
-        },
-        {
-            name: "Kyiv",
-            country: "Ukraine",
-            lat: 50.4501,
-            lon: 30.5234,
-            tasks: [
-                "Design concepts for LVS marketplace · +80 VU",
-                "Content localization (UA/RU/EN) · +40 VU"
-            ]
-        },
-        {
-            name: "London",
-            country: "UK",
-            lat: 51.5074,
-            lon: -0.1278,
-            tasks: [
-                "Legal research about reputation systems · +60 VU"
-            ]
-        },
-        {
-            name: "New York",
-            country: "USA",
-            lat: 40.7128,
-            lon: -74.0060,
-            tasks: [
-                "LVS integration with existing SaaS · +150 VU"
-            ]
-        }
-    ];
-
-    const cityGroup = new THREE.Group();
-    const cityMaterial = new THREE.MeshBasicMaterial({color: 0x4fe39a});
-    cities.forEach(c => {
-        const phi = (90 - c.lat) * (Math.PI / 180);
-        const theta = (c.lon + 180) * (Math.PI / 180);
-
-        const x = -radius * Math.sin(phi) * Math.cos(theta);
-        const y = radius * Math.cos(phi);
-        const z = radius * Math.sin(phi) * Math.sin(theta);
-
-        const cityGeom = new THREE.SphereGeometry(0.02, 12, 12);
-        const cityMesh = new THREE.Mesh(cityGeom, cityMaterial);
-        cityMesh.position.set(x, y, z);
-        cityMesh.userData.city = c;
-        cityGroup.add(cityMesh);
-    });
-    scene.add(cityGroup);
-
-    // Raycaster for clicks
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    function onClick(event) {
-        const rect = canvas.getBoundingClientRect();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-        raycaster.setFromCamera(mouse, camera);
-
-        // First try cities
-        const cityHits = raycaster.intersectObjects(cityGroup.children, true);
-        if (cityHits.length > 0) {
-            const city = cityHits[0].object.userData.city;
-            showTooltip(event.clientX, event.clientY, city);
-            return;
-        }
-
-        // If no city clicked – just show generic region info
-        const hits = raycaster.intersectObject(earth);
-        if (hits.length > 0) {
-            const p = hits[0].point.clone().normalize();
-            const lat = Math.asin(p.y) * 180 / Math.PI;
-            const lon = Math.atan2(p.z, p.x) * 180 / Math.PI;
-            const generic = regionFromLatLon(lat, lon);
-            showTooltip(event.clientX, event.clientY, generic);
-        }
-    }
-
-    function regionFromLatLon(lat, lon) {
-        // Very rough mapping – just to give feeling.
-        if (lat > 35 && lat < 70 && lon > -10 && lon < 40) {
-            return {
-                name: "Europe (example)",
-                country: "",
-                tasks: [
-                    "Remote Rust/LVS task · +80 VU",
-                    "Customer support / onboarding · +35 VU"
-                ]
-            };
-        }
-        if (lat > 10 && lat < 55 && lon < -30) {
-            return {
-                name: "Americas (example)",
-                country: "",
-                tasks: [
-                    "Business integration pilot · +120 VU",
-                    "Design sprint for marketplace UI · +60 VU"
-                ]
-            };
-        }
-        if (lat < 35 && lat > -40 && lon > 60 && lon < 150) {
-            return {
-                name: "Asia-Pacific (example)",
-                country: "",
-                tasks: [
-                    "Localization & outreach · +50 VU",
-                    "LVS education / workshops · +40 VU"
-                ]
-            };
-        }
-        return {
-            name: "Global remote",
-            country: "",
-            tasks: [
-                "Documentation & community work · +30 VU",
-                "Node reliability monitoring · +45 VU"
-            ]
-        };
-    }
-
-    function showTooltip(clientX, clientY, city) {
-        if (!tooltip || !city) return;
-        const name = city.country ? `${city.name}, ${city.country}` : city.name;
-
-        tooltip.innerHTML = `
-            <div style="font-weight:600; margin-bottom:4px;">${name}</div>
-            <div style="font-size:12px; opacity:0.8; margin-bottom:6px;">Example work opportunities:</div>
-            <ul style="margin:0; padding-left:16px; font-size:12px;">
-                ${city.tasks.map(t => `<li>${t}</li>`).join("")}
-            </ul>
-        `;
-        tooltip.style.left = clientX + 12 + "px";
-        tooltip.style.top = clientY + 12 + "px";
-        tooltip.style.display = "block";
-    }
-
-    document.addEventListener("click", (e) => {
-        // hide tooltip if clicked outside canvas
-        if (!canvas.contains(e.target)) {
-            if (tooltip) tooltip.style.display = "none";
-        }
-    });
-
-    canvas.addEventListener("click", onClick);
-
-    // "Find work near me" – просто автофокус на Европе/Берлине
-    if (btnFocus) {
-        btnFocus.addEventListener("click", () => {
-            // поворачиваем землю так, чтобы Европа была по центру
-            targetRotationY = Math.PI * 0.2;
-        });
-    }
-
-    // Rotation / animation
-    let targetRotationY = 0;
-    let rotationY = 0;
-
-    function animate() {
-        requestAnimationFrame(animate);
-        rotationY += (targetRotationY - rotationY) * 0.05;
-        earth.rotation.y += 0.002 + (rotationY * 0.0005);
-        cityGroup.rotation.y = earth.rotation.y;
-        glow.rotation.y = earth.rotation.y * 0.95;
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    // Resize handler
-    function onResize() {
-        const w = canvas.clientWidth || canvas.parentElement.clientWidth || 420;
-        const h = canvas.clientHeight || w;
-        renderer.setSize(w, h);
-        camera.aspect = w / h;
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
         camera.updateProjectionMatrix();
     }
 
-    window.addEventListener("resize", onResize);
-    onResize();
-});
+    resize();
+    window.addEventListener("resize", resize);
+
+    // ---------- СВЕТ ----------
+    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    dir.position.set(3, 2, 1.5);
+    scene.add(ambient, dir);
+
+    // ---------- ГЛОБУС ----------
+    const globeGroup = new THREE.Group();
+    scene.add(globeGroup);
+
+    const loader = new THREE.TextureLoader();
+
+    // ВАЖНО: закинь текстуру Земли без облаков в /img и назови earth_noclouds_4k.jpg
+    // путь относительно index.html → ../img/earth_noclouds_4k.jpg
+    const earthTexture = loader.load("../img/earth_noclouds_4k.jpg");
+
+    const earthGeometry = new THREE.SphereGeometry(1, 96, 96);
+    const earthMaterial = new THREE.MeshPhongMaterial({
+        map: earthTexture,
+        shininess: 6
+    });
+
+    const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+    globeGroup.add(earthMesh);
+
+    // ---------- ИСКОРКИ ЖИЗНИ ----------
+    const sparklesCount = 900;
+    const sparklesGeometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(sparklesCount * 3);
+    const colors = new Float32Array(sparklesCount * 3);
+
+    for (let i = 0; i < sparklesCount; i++) {
+        // равномерно по сфере
+        const u = Math.random();
+        const v = Math.random();
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+
+        const r = 1.03; // чуть выше поверхности Земли
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.cos(phi);
+        const z = r * Math.sin(phi) * Math.sin(theta);
+
+        positions[3 * i] = x;
+        positions[3 * i + 1] = y;
+        positions[3 * i + 2] = z;
+
+        // цвет: тёплый голубовато-зеленый, лёгкий рандом по яркости
+        const intensity = 0.6 + 0.4 * Math.random();
+        colors[3 * i] = 0.3 * intensity;       // R
+        colors[3 * i + 1] = 0.9 * intensity;   // G
+        colors[3 * i + 2] = 1.0 * intensity;   // B
+    }
+
+    sparklesGeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3)
+    );
+    sparklesGeometry.setAttribute(
+        "color",
+        new THREE.BufferAttribute(colors, 3)
+    );
+
+    const sparklesMaterial = new THREE.PointsMaterial({
+        size: 0.015,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+    });
+
+    const sparkles = new THREE.Points(sparklesGeometry, sparklesMaterial);
+    globeGroup.add(sparkles);
+
+    // ---------- УПРАВЛЕНИЕ МЫШКОЙ ----------
+    let isDragging = false;
+    let prevX = 0;
+    let prevY = 0;
+    let targetRotY = 0;
+    let targetRotX = 0;
+
+    canvas.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        prevX = e.clientX;
+        prevY = e.clientY;
+    });
+
+    window.addEventListener("mouseup", () => {
+        isDragging = false;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - prevX;
+        const dy = e.clientY - prevY;
+        prevX = e.clientX;
+        prevY = e.clientY;
+
+        targetRotY += dx * 0.005;
+        targetRotX += dy * 0.005;
+
+        // ограничиваем наклон по вертикали
+        const maxTilt = Math.PI / 3;
+        targetRotX = Math.max(-maxTilt, Math.min(maxTilt, targetRotX));
+    });
+
+    // для тач-устройств
+    canvas.addEventListener("touchstart", (e) => {
+        if (!e.touches.length) return;
+        isDragging = true;
+        prevX = e.touches[0].clientX;
+        prevY = e.touches[0].clientY;
+    });
+
+    window.addEventListener("touchend", () => {
+        isDragging = false;
+    });
+
+    window.addEventListener("touchmove", (e) => {
+        if (!isDragging || !e.touches.length) return;
+        const touch = e.touches[0];
+        const dx = touch.clientX - prevX;
+        const dy = touch.clientY - prevY;
+        prevX = touch.clientX;
+        prevY = touch.clientY;
+
+        targetRotY += dx * 0.005;
+        targetRotX += dy * 0.005;
+
+        const maxTilt = Math.PI / 3;
+        targetRotX = Math.max(-maxTilt, Math.min(maxTilt, targetRotX));
+    });
+
+    // ---------- АНИМАЦИЯ ----------
+    let autoSpin = 0.002;
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // лёгкое автокручение
+        targetRotY += autoSpin;
+
+        // плавно тянем глобус к целевому вращению
+        globeGroup.rotation.y += (targetRotY - globeGroup.rotation.y) * 0.08;
+        globeGroup.rotation.x += (targetRotX - globeGroup.rotation.x) * 0.08;
+
+        // дыхание искорок (размер)
+        const t = performance.now() * 0.001;
+        sparklesMaterial.size = 0.012 + Math.sin(t * 2.0) * 0.004;
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+})();
