@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LVS – Autonomous Value Layer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/lvs.css">
+</head>
+<body>
+
+<div class="lvs-layout">
+
+    <!-- "Улица" здесь без левового сайдбара, просто главный экран -->
+    <main class="lvs-main" style="width: 100%; max-width: 1180px; margin: 0 auto;">
+
+        <header class="lvs-topbar">
+            <div>
+                <div class="lvs-pill">LVS / Public Network</div>
+                <div class="lvs-title">Living Value System</div>
+                <div class="lvs-subtitle">
+                    Digital city where every human, company and service has transparent value, reputation and incentives.
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="lvs-btn lvs-btn-ghost" onclick="location.href='profile.html'">View profile demo</button>
+                <button class="lvs-btn lvs-btn-primary" onclick="location.href='me.html'">Enter my cabinet</button>
+            </div>
+        </header>
+
+        <!-- HERO -->
+        <section class="lvs-hero">
+            <div>
+                <h1 class="lvs-hero-title">
+                    Walk out to the LVS street.<br>
+                    Everyone is building, earning, trusted.
+                </h1>
+                <p class="lvs-hero-text">
+                    LVS is not a blockchain, not just a token. It’s an Autonomous Value Layer where TC (trust coefficient)
+                    and VU (value units) turn your actions into measurable, protected and portable reputation.
+                </p>
+
+                <div style="margin-top:24px; display:flex; gap:10px;">
+                    <button class="lvs-btn lvs-btn-primary" onclick="location.href='me.html'">
+                        Start as participant
+                    </button>
+                    <button class="lvs-btn lvs-btn-ghost">
+                        Explore docs
+                    </button>
+                </div>
+
+                <div class="lvs-hero-stats">
+                    <div class="lvs-hero-stat" id="stat-users">
+                        0 active participants
+                    </div>
+                    <div class="lvs-hero-stat" id="stat-tasks">
+                        0 open tasks
+                    </div>
+                    <div class="lvs-hero-stat" id="stat-companies">
+                        0 companies online
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="lvs-card">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">Live value pulse</div>
+                            <div class="lvs-card-subtitle">Latest events from the LVS network</div>
+                        </div>
+                    </div>
+
+                    <div id="feed-events" class="lvs-feed-list">
+                        <!-- JS заполнит -->
+                    </div>
+                </div>
+
+                <div style="height:18px;"></div>
+
+                <div class="lvs-card">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">Marketplace snapshot</div>
+                            <div class="lvs-card-subtitle">Work, services and collaborations</div>
+                        </div>
+                        <button class="lvs-btn lvs-btn-ghost" style="font-size:11px;">
+                            View all
+                        </button>
+                    </div>
+
+                    <div id="feed-marketplace" class="lvs-feed-list">
+                        <!-- JS заполнит -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BOTTOM BLOCKS -->
+        <section class="lvs-grid-3">
+            <div class="lvs-card">
+                <div class="lvs-card-header">
+                    <div class="lvs-card-title">For humans</div>
+                </div>
+                <div class="lvs-card-subtitle">
+                    Transparent profile, reputation and earnings without central platforms.
+                </div>
+            </div>
+
+            <div class="lvs-card">
+                <div class="lvs-card-header">
+                    <div class="lvs-card-title">For companies & services</div>
+                </div>
+                <div class="lvs-card-subtitle">
+                    Hire, rate and collaborate based on real TC & VU metrics, not marketing noise.
+                </div>
+            </div>
+
+            <div class="lvs-card">
+                <div class="lvs-card-header">
+                    <div class="lvs-card-title">For AI & agents</div>
+                </div>
+                <div class="lvs-card-subtitle">
+                    Connect autonomous agents to a value layer with human-aligned incentives.
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script src="assets/lvs-main.js"></script>
+</body>
+</html>

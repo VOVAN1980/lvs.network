@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LVS – Public Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/lvs.css">
+</head>
+<body>
+
+<div class="lvs-layout">
+
+    <!-- Публичный профиль без полного сайдбара, только компактный левый блок -->
+    <aside class="lvs-sidebar">
+        <div class="lvs-sidebar-title">LVS Profile</div>
+        <div class="lvs-sidebar-subtitle">Viewing</div>
+        <div class="lvs-nav">
+            <div class="lvs-nav-item active">Overview</div>
+            <div class="lvs-nav-item">Activity</div>
+            <div class="lvs-nav-item">Feedback</div>
+        </div>
+    </aside>
+
+    <main class="lvs-main">
+
+        <header class="lvs-topbar">
+            <div>
+                <div class="lvs-pill">LVS / Public</div>
+                <div class="lvs-title" id="public-name">Profile</div>
+                <div class="lvs-subtitle" id="public-headline">Role / headline</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="lvs-btn lvs-btn-ghost" onclick="location.href='index.html'">Back to main</button>
+            </div>
+        </header>
+
+        <section class="lvs-profile-header">
+            <div class="lvs-avatar">
+                <img id="public-avatar" src="https://via.placeholder.com/160" alt="avatar">
+            </div>
+            <div class="lvs-profile-meta">
+                <div class="lvs-profile-name" id="public-display-name">User Name</div>
+                <div class="lvs-profile-status" id="public-location">Location</div>
+                <div class="lvs-profile-tags" id="public-tags">
+                    <!-- tags -->
+                </div>
+            </div>
+        </section>
+
+        <section class="lvs-grid-2">
+
+            <!-- LEFT: BIO + ACTIVITY -->
+            <div>
+                <div class="lvs-card">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">About</div>
+                            <div class="lvs-card-subtitle">What this participant chose to share</div>
+                        </div>
+                    </div>
+                    <div id="public-about" style="font-size:14px; color:var(--text-muted); line-height:1.6;"></div>
+                </div>
+
+                <div class="lvs-card">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">Recent activity</div>
+                            <div class="lvs-card-subtitle">Public-facing actions and contributions</div>
+                        </div>
+                    </div>
+                    <div id="public-activity" class="lvs-feed-list"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT: STATS + FEEDBACK -->
+            <div>
+                <div class="lvs-card">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">Reputation snapshot</div>
+                            <div class="lvs-card-subtitle">TC, VU and behaviour quality</div>
+                        </div>
+                    </div>
+
+                    <div class="lvs-grid-3">
+                        <div class="lvs-stat">
+                            <div class="lvs-stat-label">TC</div>
+                            <div class="lvs-stat-value" id="public-tc">0.0</div>
+                            <div class="lvs-stat-chip" id="public-tc-label">–</div>
+                        </div>
+                        <div class="lvs-stat">
+                            <div class="lvs-stat-label">VU</div>
+                            <div class="lvs-stat-value" id="public-vu">0</div>
+                            <div class="lvs-stat-chip" id="public-vu-label">–</div>
+                        </div>
+                        <div class="lvs-stat">
+                            <div class="lvs-stat-label">Stability</div>
+                            <div class="lvs-stat-value" id="public-stability">0%</div>
+                            <div class="lvs-stat-chip">Consistency</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lvs-card">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">Feedback & comments</div>
+                            <div class="lvs-card-subtitle">What others say about this participant</div>
+                        </div>
+                    </div>
+
+                    <div id="public-feedback" class="lvs-feed-list"></div>
+
+                    <div style="margin-top:10px; font-size:12px; color:var(--text-soft);">
+                        Comments and feedback reflect individual experiences. LVS does not sell or reorder them for ads.
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+</div>
+
+<script src="assets/lvs-profile.js"></script>
+</body>
+</html>

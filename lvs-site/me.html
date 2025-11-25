@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LVS – My Cabinet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/lvs.css">
+</head>
+<body>
+
+<div class="lvs-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="lvs-sidebar">
+        <div class="lvs-sidebar-title">My Cabinet</div>
+        <div class="lvs-sidebar-subtitle">Account</div>
+        <div class="lvs-nav">
+            <div class="lvs-nav-item active" data-section="profile">Profile</div>
+            <div class="lvs-nav-item" data-section="data">My data</div>
+            <div class="lvs-nav-item" data-section="reputation">Reputation</div>
+            <div class="lvs-nav-item" data-section="activity">Activity</div>
+            <div class="lvs-nav-item" data-section="nodes">My nodes</div>
+        </div>
+
+        <div class="lvs-sidebar-subtitle" style="margin-top:18px;">Work & value</div>
+        <div class="lvs-nav">
+            <div class="lvs-nav-item" data-section="skills">Skills & services</div>
+            <div class="lvs-nav-item" data-section="marketplace">
+                Marketplace <span>soon</span>
+            </div>
+        </div>
+
+        <div class="lvs-sidebar-subtitle" style="margin-top:18px;">Security</div>
+        <div class="lvs-nav">
+            <div class="lvs-nav-item" data-section="security">Security</div>
+            <div class="lvs-nav-item" data-section="privacy">Privacy</div>
+            <div class="lvs-nav-item" data-section="settings">Settings</div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="lvs-main">
+
+        <header class="lvs-topbar">
+            <div>
+                <div class="lvs-pill">LVS / Account</div>
+                <div class="lvs-title">Personal cabinet</div>
+                <div class="lvs-subtitle">
+                    Private space with full control. Only you decide what becomes public.
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="lvs-btn lvs-btn-ghost" onclick="location.href='profile.html'">View public profile</button>
+                <button class="lvs-btn lvs-btn-primary" id="btn-save-profile">Save changes</button>
+            </div>
+        </header>
+
+        <!-- PROFILE HEADER -->
+        <section class="lvs-profile-header">
+            <div class="lvs-avatar">
+                <img id="cabinet-avatar" src="https://via.placeholder.com/160" alt="avatar">
+            </div>
+            <div class="lvs-profile-meta">
+                <div class="lvs-profile-name" id="cabinet-username">User Name</div>
+                <div class="lvs-profile-status" id="cabinet-status">Individual account</div>
+                <div class="lvs-profile-tags" id="cabinet-tags">
+                    <!-- tags via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIN GRID -->
+        <section class="lvs-grid-2">
+
+            <!-- LEFT COLUMN -->
+            <div>
+
+                <!-- STATS -->
+                <div class="lvs-card">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">My value metrics</div>
+                            <div class="lvs-card-subtitle">Realtime values driven by your LVS nodes</div>
+                        </div>
+                    </div>
+
+                    <div class="lvs-grid-3">
+                        <div class="lvs-stat">
+                            <div class="lvs-stat-label">Trust coefficient (TC)</div>
+                            <div class="lvs-stat-value" id="cabinet-tc">0.0</div>
+                            <div class="lvs-stat-chip" id="cabinet-tc-chip">–</div>
+                        </div>
+                        <div class="lvs-stat">
+                            <div class="lvs-stat-label">Value units (VU)</div>
+                            <div class="lvs-stat-value" id="cabinet-vu">0</div>
+                            <div class="lvs-stat-chip" id="cabinet-vu-chip">–</div>
+                        </div>
+                        <div class="lvs-stat">
+                            <div class="lvs-stat-label">Stability</div>
+                            <div class="lvs-stat-value" id="cabinet-stability">0%</div>
+                            <div class="lvs-stat-chip">Behaviour consistency</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTIVITY -->
+                <div class="lvs-card" data-section-panel="activity">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">Recent activity</div>
+                            <div class="lvs-card-subtitle">Internal log of what your account is doing in the network</div>
+                        </div>
+                    </div>
+                    <div id="cabinet-activity" class="lvs-feed-list"></div>
+                </div>
+
+                <!-- SECURITY / PRIVACY (позже можно разделить) -->
+                <div class="lvs-card" data-section-panel="security">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">Security & access</div>
+                            <div class="lvs-card-subtitle">
+                                Multi-factor, node-bound sessions, no external analytics, no ads.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lvs-field">
+                        <div class="lvs-label">Login protection</div>
+                        <select class="lvs-select">
+                            <option>Standard password + device trust</option>
+                            <option>Multi-device approval (recommended)</option>
+                            <option>Hardware key only</option>
+                        </select>
+                    </div>
+
+                    <div class="lvs-field">
+                        <div class="lvs-label">Session model</div>
+                        <select class="lvs-select">
+                            <option>Short-lived tokens (default)</option>
+                            <option>Strict: one session per device</option>
+                        </select>
+                    </div>
+
+                    <div class="lvs-card-subtitle" style="margin-top:12px;">
+                        We do not sell, share or profile your personal data. LVS is not an ad platform.
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div>
+
+                <!-- EDITABLE DATA -->
+                <div class="lvs-card" data-section-panel="profile">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">Profile data</div>
+                            <div class="lvs-card-subtitle">Only what you explicitly choose becomes public</div>
+                        </div>
+                    </div>
+
+                    <div class="lvs-field">
+                        <div class="lvs-label">Display name</div>
+                        <input class="lvs-input" id="input-display-name" placeholder="How you appear to others">
+                    </div>
+
+                    <div class="lvs-field">
+                        <div class="lvs-label">Headline / role</div>
+                        <input class="lvs-input" id="input-headline" placeholder="e.g. System architect, LVS node operator">
+                    </div>
+
+                    <div class="lvs-field">
+                        <div class="lvs-label">About you</div>
+                        <textarea class="lvs-textarea" id="input-about"></textarea>
+                    </div>
+
+                    <div class="lvs-field">
+                        <div class="lvs-label">Location (optional)</div>
+                        <input class="lvs-input" id="input-location" placeholder="City, Country (if you want)">
+                    </div>
+
+                    <div class="lvs-field">
+                        <div class="lvs-label">Public visibility preset</div>
+                        <select class="lvs-select" id="input-visibility">
+                            <option value="open">Open – most fields public</option>
+                            <option value="balanced">Balanced – only core identity</option>
+                            <option value="minimal">Minimal – only nickname</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- NODES -->
+                <div class="lvs-card" data-section-panel="nodes">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">My nodes</div>
+                            <div class="lvs-card-subtitle">Technical participants bound to this account</div>
+                        </div>
+                    </div>
+                    <div id="cabinet-nodes" class="lvs-feed-list"></div>
+                </div>
+
+                <!-- SKILLS -->
+                <div class="lvs-card" data-section-panel="skills">
+                    <div class="lvs-card-header">
+                        <div>
+                            <div class="lvs-card-title">Skills & services</div>
+                            <div class="lvs-card-subtitle">What the LVS world can rely on you for</div>
+                        </div>
+                    </div>
+                    <div id="cabinet-skills" class="lvs-feed-list"></div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script src="assets/lvs-cabinet.js"></script>
+</body>
+</html>
