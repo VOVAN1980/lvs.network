@@ -1,177 +1,175 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>LVS – Автономный уровень ценности</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="assets/lvs.css">
+    <meta charset="UTF-8" />
+    <title>LVS – Autonomous Value Layer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="assets/lvs.css" />
 </head>
 <body>
 
-<!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+<!-- TOP NAVBAR -->
 <header class="lvs-navtop">
     <div class="lvs-navtop-left">
-        <!-- ЛОГОТІП БЕРЁМ ИЗ КОРНЯ ПРОЕКТА -->
-        <a href="index.html">
-            <img class="lvs-navtop-logo"
-                 src="/assets/logo/lvs-logo.png"
-                 alt="LVS Logo">
+        <!-- main project logo from ROOT: /assets/logo/lvs-logo.png -->
+        <a href="/">
+            <img
+                class="lvs-navtop-logo"
+                src="/assets/logo/lvs-logo.png"
+                alt="LVS logo"
+            />
         </a>
-        <span class="lvs-navtop-title">Living Value System</span>
+        <span class="lvs-navtop-project">Living Value System</span>
     </div>
 
     <nav class="lvs-navtop-right">
-        <a href="profile.html" class="lvs-navtop-btn">Демо-профиль</a>
-        <a href="me.html" class="lvs-navtop-btn">Мой кабинет</a>
-        <a href="../website/index.html" class="lvs-navtop-btn">Документы</a>
-        <a href="/lvs_browser_node.html" class="lvs-navtop-btn">Тестовая сеть</a>
+        <a href="/lvs-site/profile.html" class="lvs-navtop-btn">Profile demo</a>
+        <a href="/lvs-site/me.html" class="lvs-navtop-btn">My cabinet</a>
+        <a href="/product" class="lvs-navtop-btn">Work &amp; tasks</a>
+        <a href="/website" class="lvs-navtop-btn">About LVS</a>
+        <a href="/website" class="lvs-navtop-btn">Docs</a>
+        <a href="/lvs_browser_node.html" class="lvs-navtop-btn">Testnet</a>
     </nav>
 </header>
 
 <div class="lvs-layout">
     <main class="lvs-main">
 
-        <!-- ХЕРО + ГЛОБУС -->
+        <!-- HERO + GLOBE -->
         <section class="lvs-hero-globe">
-
-            <!-- ЛЕВАЯ ЧАСТЬ: ТЕКСТ + КНОПКИ -->
             <div class="lvs-hero-left">
-                <div class="lvs-pill">LVS / Глобальная карта работы</div>
+                <div class="lvs-pill">LVS / Global work map</div>
 
                 <h1 class="lvs-hero-title">
-                    Выходи на улицу LVS.<br>
-                    Здесь строят, зарабатывают,<br>
-                    доверяют.
+                    Walk out to the LVS street.<br />
+                    Everyone is building, earning, trusted.
                 </h1>
 
                 <p class="lvs-hero-text">
-                    LVS — это автономный уровень ценности. Выбирай любую точку на глобусе и
-                    смотри, где есть люди, компании и задания. Показатели TC (коэффициент доверия)
-                    и VU (единицы ценности) превращают реальные действия в защищённую репутацию
-                    и доход.
+                    LVS is an Autonomous Value Layer. Choose any point on the globe and see where people
+                    are working, creating and getting paid. TC (trust coefficient) and VU (value units)
+                    turn real actions into measurable, portable reputation and income.
                 </p>
 
                 <div class="lvs-hero-actions">
-                    <button class="lvs-btn lvs-btn-primary"
-                            onclick="location.href='me.html'">
-                        Начать как участник
+                    <button class="lvs-btn lvs-btn-primary" onclick="location.href='me.html'">
+                        Start as participant
                     </button>
-
                     <button class="lvs-btn lvs-btn-ghost" id="btn-focus-my-region">
-                        Найти работу рядом со мной
+                        Find work near me
                     </button>
                 </div>
 
                 <div class="lvs-hero-stats">
-                    <div class="lvs-hero-stat" id="stat-users">1284 active participants</div>
-                    <div class="lvs-hero-stat" id="stat-tasks">47 open tasks</div>
-                    <div class="lvs-hero-stat" id="stat-companies">32 companies online</div>
+                    <div class="lvs-hero-stat" id="stat-users">
+                        1284 active participants
+                    </div>
+                    <div class="lvs-hero-stat" id="stat-tasks">
+                        47 open tasks
+                    </div>
+                    <div class="lvs-hero-stat" id="stat-companies">
+                        32 companies online
+                    </div>
                 </div>
             </div>
 
-            <!-- ПРАВАЯ ЧАСТЬ: ГЛОБУС -->
             <div class="lvs-hero-right">
-                <div class="lvs-globe-shell">
-                    <div class="lvs-globe-wrapper">
-                        <canvas id="lvs-globe-canvas"></canvas>
-                    </div>
+                <!-- ONLY CIRCLE, NO SQUARE CARD -->
+                <div class="lvs-globe-wrapper">
+                    <canvas id="lvs-globe-canvas"></canvas>
                 </div>
 
                 <div class="lvs-card lvs-card-globe-note">
-                    <div class="lvs-card-title">Интерактивная карта мира</div>
+                    <div class="lvs-card-title">Interactive world map</div>
                     <div class="lvs-card-subtitle">
-                        Вращайте глобус LVS и нажимайте на регионы, чтобы увидеть примеры задач
-                        и ролей (сейчас демо-данные). Позже здесь будет живой поток вакансий и
-                        проектов из торговой площадки LVS.
+                        Rotate the globe and click any region to preview example work
+                        opportunities (demo data for now). Later this will be synced with
+                        the live LVS marketplace.
                     </div>
                 </div>
-            </div>
 
+                <div id="lvs-globe-tooltip" class="lvs-globe-tooltip"></div>
+            </div>
         </section>
 
-        <!-- НИЖНИЙ БЛОК КАРТОЧЕК (МИНИМАЛЬНО, БЕЗ ЛИШНЕГО) -->
-        <section class="lvs-hero">
-
-            <div>
+        <!-- SECOND ROW: live feed + "who are you" -->
+        <section class="lvs-hero lvs-bottom">
+            <div class="lvs-column">
                 <div class="lvs-card">
                     <div class="lvs-card-header">
                         <div>
-                            <div class="lvs-card-title">Живой импульс ценности</div>
-                            <div class="lvs-card-subtitle">Последние события из сети LVS</div>
+                            <div class="lvs-card-title">Live value pulse</div>
+                            <div class="lvs-card-subtitle">
+                                Latest events from the LVS network
+                            </div>
                         </div>
                     </div>
-
                     <div id="feed-events" class="lvs-feed-list">
-                        <!-- демо-записи, позже можно забрать из API -->
-                        <div class="lvs-feed-item">
-                            Прямо сейчас: к тестовой сети LVS присоединился новый участник из Берлина.
-                            <div class="lvs-feed-meta">+45 VU · рост TC за стабильность ноды</div>
-                        </div>
-                        <div class="lvs-feed-item">
-                            Задание «Дизайн лендинга» выполнено с результатом +23 VU для исполнителя.
-                            <div class="lvs-feed-meta">LVS marketplace · дизайн / фронтенд</div>
-                        </div>
-                        <div class="lvs-feed-item">
-                            Компания «Nova Services» повысила TC с 0.78 до 0.82.
-                            <div class="lvs-feed-meta">Отзывы клиентов + стабильные выплаты</div>
-                        </div>
+                        <!-- lvs-main.js can fill this with mock data -->
                     </div>
                 </div>
             </div>
 
-            <div>
+            <div class="lvs-column">
                 <div class="lvs-card">
                     <div class="lvs-card-header">
-                        <div class="lvs-card-title">Кто вы в LVS?</div>
+                        <div class="lvs-card-title">Who are you in LVS?</div>
                     </div>
-
                     <div class="lvs-feed-list">
                         <div class="lvs-feed-item">
-                            <strong>Человек / добытчик</strong>
+                            <strong>Human / Earner</strong>
                             <div class="lvs-feed-meta">
-                                Создайте свой профиль, подключите узлы или выполняйте задания
-                                и растите в TC и VU.
+                                Create your profile, connect nodes or complete tasks and grow TC &amp; VU.
                             </div>
                         </div>
-
                         <div class="lvs-feed-item">
-                            <strong>Компания / сервис</strong>
+                            <strong>Company / Service</strong>
                             <div class="lvs-feed-meta">
-                                Публикуйте работу, нанимайте людей и отслеживайте настоящую репутацию,
-                                а не накрученные рейтинги.
+                                Post work, hire people and track real reputation instead of fake ratings.
                             </div>
                         </div>
-
                         <div class="lvs-feed-item">
-                            <strong>Разработчик / строитель</strong>
+                            <strong>Developer / Builder</strong>
                             <div class="lvs-feed-meta">
-                                Запускайте узлы, пишите интеграции и стройте продукты поверх LVS.
+                                Run nodes, build tools and integrate your products on top of LVS.
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
+                <div class="lvs-spacer16"></div>
+
+                <div class="lvs-card">
+                    <div class="lvs-card-title">
+                        For humans · companies · AI agents
+                    </div>
+                    <div class="lvs-card-subtitle">
+                        LVS is a neutral value layer. No ads, no selling of personal data,
+                        no central platform extracting all the value – only people, services
+                        and autonomous agents cooperating through transparent TC &amp; VU.
+                    </div>
+                </div>
+            </div>
         </section>
 
     </main>
 </div>
 
-<!-- НИЖНЯЯ ПОЛОСА / ФУТЕР -->
+<!-- FOOTER STRIP -->
 <footer class="lvs-footer">
-    <div class="lvs-footer-left">
-        © 2025 Living Value System (LVS)
-    </div>
+    <div class="lvs-footer-left">© 2025 Living Value System (LVS)</div>
     <div class="lvs-footer-links">
-        <a href="../privacy.html">Политика конфиденциальности</a>
-        <a href="../terms.html">Условия использования</a>
-        <a href="../legal.html">Правовая информация</a>
-        <a href="../website/index.html#contacts">Контакты</a>
-        <a href="https://github.com/VOVAN1980/lvs.network" target="_blank">GitHub</a>
+        <a href="/privacy.html">Privacy policy</a>
+        <a href="/terms.html">Terms of use</a>
+        <a href="/legal.html">Legal information</a>
+        <a href="mailto:info@lvs.network">Contacts</a>
+        <a href="https://github.com/VOVAN1980/lvs.network" target="_blank" rel="noopener">
+            GitHub
+        </a>
     </div>
 </footer>
 
-<!-- Three.js и скрипты сайта -->
+<!-- SCRIPTS -->
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script src="assets/lvs-main.js"></script>
 <script src="assets/lvs-globe.js"></script>
