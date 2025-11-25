@@ -56,7 +56,7 @@ body {
     position: fixed;
     inset: 0;
     z-index: -2;
-    background-image: url("https://raw.githubusercontent.com/VOVAN1980/lvs.network/assets/space/stars.png");
+    background-image: url("https://raw.githubusercontent.com/VOVAN1980/lvs.network/lvs-site/assets/space/stars.png");
     background-size: cover;
     opacity: 0.35;
     animation: stars-move 120s linear infinite;
@@ -425,6 +425,7 @@ button {
         gap: 6px;
     }
   }
+
 
 
 
