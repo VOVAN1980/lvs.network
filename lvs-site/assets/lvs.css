@@ -43,30 +43,29 @@ body {
 
 /* ===== Космический фон со звездами ===== */
 
-body::before {
-    content: "";
+/* глубокий космос */
+.lvs-space {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background-image:
-        radial-gradient(1px 1px at 14% 22%, rgba(255,255,255,0.55), transparent),
-        radial-gradient(1px 1px at 80% 30%, rgba(255,255,255,0.70), transparent),
-        radial-gradient(1px 1px at 30% 78%, rgba(255,255,255,0.40), transparent),
-        radial-gradient(2px 2px at 60% 60%, rgba(255,255,255,0.50), transparent),
-        radial-gradient(1px 1px at 92% 70%, rgba(255,255,255,0.85), transparent),
-        radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.25), transparent);
-    opacity: 0.45;
-    animation: lvs-stars-move 68s linear infinite;
-    z-index: -1;
+    inset: 0;
+    z-index: -3;
+    background: radial-gradient(circle at 50% 120%, #02030a, #000 80%);
 }
 
-@keyframes lvs-stars-move {
-    0%   { transform: translate3d(0, 0, 0); }
-    50%  { transform: translate3d(-40px, -28px, 0); }
-    100% { transform: translate3d(0, 0, 0); }
+/* звезды */
+.lvs-stars {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-image: url("https://raw.githubusercontent.com/VOVAN1980/lvs.network/assets/space/stars.png");
+    background-size: cover;
+    opacity: 0.35;
+    animation: stars-move 120s linear infinite;
+}
+
+@keyframes stars-move {
+    0% { transform: translate3d(0,0,0) scale(1); }
+    50% { transform: translate3d(-50px,-40px,0) scale(1.04); }
+    100% { transform: translate3d(0,0,0) scale(1); }
 }
 
 /* ===== Универсальные ссылки и кнопки ===== */
@@ -426,6 +425,7 @@ button {
         gap: 6px;
     }
   }
+
 
 
 
