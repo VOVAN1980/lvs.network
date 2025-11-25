@@ -39,15 +39,8 @@ body::before {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background-image:
-        radial-gradient(1px 1px at 14% 22%, rgba(255,255,255,0.55), transparent),
-        radial-gradient(1px 1px at 80% 30%, rgba(255,255,255,0.65), transparent),
-        radial-gradient(1px 1px at 30% 78%, rgba(255,255,255,0.40), transparent),
-        radial-gradient(2px 2px at 60% 60%, rgba(255,255,255,0.45), transparent),
-        radial-gradient(1px 1px at 92% 70%, rgba(255,255,255,0.80), transparent),
-        radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.25), transparent);
-    opacity: 0.5;
-    animation: space-stars 80s linear infinite;
+    background: url("stars.png") center/cover no-repeat;
+    opacity: 1;
     z-index: -1;
 }
 
@@ -198,3 +191,4 @@ body::before {
         max-width: calc(100% - 24px);
     }
 }
+
