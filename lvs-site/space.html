@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LVS Space – Global work map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/space/space.css">
+</head>
+<body>
+<div class="space-root">
+    <header class="space-topbar">
+        <div class="space-logo">
+            <span class="space-logo-dot"></span>
+            <span>LVS / Space view</span>
+        </div>
+        <button class="space-back-btn" id="space-back-btn">
+            ← Back to main map
+        </button>
+    </header>
+
+    <main class="space-main">
+        <div class="space-canvas-wrap">
+            <canvas id="lvs-space-canvas"></canvas>
+            <div id="lvs-space-tooltip" class="space-tooltip" style="display:none;"></div>
+        </div>
+
+        <div class="space-help">
+            <div>🖱 Mouse controls</div>
+            <ul>
+                <li>Wheel – zoom planet in / out</li>
+                <li>Left button – rotate Earth</li>
+                <li>Double click – open region info</li>
+                <li>Right button – back to main page</li>
+            </ul>
+        </div>
+    </main>
+</div>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script src="assets/space/space.js"></script>
+</body>
+</html>
