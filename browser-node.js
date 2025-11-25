@@ -3,6 +3,9 @@ class LVSBrowserNode {
     this.nodeId = nodeId;
     this.gatewayUrl = gatewayUrl;
 
+    // аккаунт пользователя (может быть null)
+    this.accountId = null;
+
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext("2d");
 
@@ -47,27 +50,47 @@ class LVSBrowserNode {
     // таймер цикла
     this.loopTimer = null;
 
+    // флаг ручной остановки (чтобы не было автореконнекта после logout)
+    this.manualStop = false;
+
+    // флаг живого WebSocket для этой ноды
+    this.isConnected = false;
+
     // колбэки для UI
     this.onStatus = () => {};
     this.onPeers  = () => {};
     this.onCycle  = () => {};
     this.onHello  = () => {};
     this.onSDM    = () => {};
+
+    // антиспам для логов
+    this.seenHelloFrom = new Set(); // node_id, от кого уже был hello
+    this.lastPeersSet  = new Set(); // текущий состав peers (node_id)
   }
 
   // ===========================
-  //   WebSocket lifecycle
+  //   Публичные методы
   // ===========================
 
   start() {
     this.onStatus("connecting...");
     console.log("[LVS] connecting:", this.gatewayUrl);
 
+    this.manualStop  = false;
+    this.isConnected = false;
+
+    // если вдруг что-то уже открыто — аккуратно закрываем
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      try { this.ws.close(); } catch (e) {}
+    }
+
     this.ws = new WebSocket(this.gatewayUrl);
 
     this.ws.onopen = () => {
+      this.isConnected = true;
       this.onStatus("connected");
       console.log("[LVS] connected");
+
       this.sendHello();
       this.requestPeers();
 
@@ -77,9 +100,20 @@ class LVSBrowserNode {
     };
 
     this.ws.onclose = () => {
+      this.isConnected = false;
       this.onStatus("disconnected");
       console.log("[LVS] disconnected");
-      setTimeout(() => this.start(), 1500);
+
+      // при дисконнекте чистим визуал
+      this.peers     = [];
+      this.selfTrail = [];
+      this.corePulse = 0;
+      this.redraw();
+
+      // если нас не остановили вручную — пробуем переподключиться
+      if (!this.manualStop) {
+        setTimeout(() => this.start(), 1500);
+      }
     };
 
     this.ws.onerror = (err) => {
@@ -89,6 +123,35 @@ class LVSBrowserNode {
 
     this.ws.onmessage = (ev) => this.handleMessage(ev.data);
   }
+
+  stop() {
+    // ручная остановка: больше не автореконнектимся
+    this.manualStop  = true;
+    this.isConnected = false;
+
+    if (this.loopTimer) {
+      clearInterval(this.loopTimer);
+      this.loopTimer = null;
+    }
+
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      try {
+        this.ws.close();
+      } catch (e) {
+        console.warn("[LVS] stop(): ws close error", e);
+      }
+    }
+
+    // оффлайн-визуал
+    this.peers     = [];
+    this.selfTrail = [];
+    this.corePulse = 0;
+    this.redraw();
+  }
+
+  // ===========================
+  //   Вспомогательные send
+  // ===========================
 
   send(msg) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -100,6 +163,7 @@ class LVSBrowserNode {
     const msg = {
       type: "hello",
       node_id: this.nodeId,
+      account_id: this.accountId || null,
       payload: {
         kind: "browser",
         version: "0.5.0",
@@ -145,14 +209,32 @@ class LVSBrowserNode {
       return;
     }
 
-    if (msg.type === "hello" && msg.node_id !== this.nodeId) {
-      this.onHello(msg.node_id);
+    // HELLO: в лог (onHello) только ПЕРВЫЙ раз от каждой ноды
+    if (msg.type === "hello" && msg.node_id && msg.node_id !== this.nodeId) {
+      if (!this.seenHelloFrom.has(msg.node_id)) {
+        this.seenHelloFrom.add(msg.node_id);
+        this.onHello(msg.node_id);
+      }
     }
 
     if (msg.type === "peers" || msg.type === "peers_response") {
       const peersRaw = (msg.payload && msg.payload.peers) || [];
+
+      // состав peers как набор node_id (без себя)
+      const ids = peersRaw
+        .map((p) => (typeof p === "string" ? p : (p.node_id || p.id || "")))
+        .filter((id) => id && id !== this.nodeId);
+
+      const newSet = new Set(ids);
+
+      // UI вызываем только если peers действительно поменялись
+      const changed = !this._setsEqual(this.lastPeersSet, newSet);
+      this.lastPeersSet = newSet;
+
       this.updatePeers(peersRaw);
-      this.onPeers(peersRaw);
+      if (changed) {
+        this.onPeers(peersRaw);
+      }
       return;
     }
 
@@ -168,6 +250,14 @@ class LVSBrowserNode {
 
       this.registerSdmVisual(msg.node_id, diff, weight);
     }
+  }
+
+  _setsEqual(a, b) {
+    if (a.size !== b.size) return false;
+    for (const v of a) {
+      if (!b.has(v)) return false;
+    }
+    return true;
   }
 
   // ===========================
@@ -353,6 +443,26 @@ class LVSBrowserNode {
     this.corePulse *= 0.92;
     const pulseLevel = this.corePulse;
 
+    // если нода оффлайн — маленькое тусклое ядро
+    if (!this.isConnected) {
+      const size = 6;
+
+      ctx.beginPath();
+      ctx.arc(this.centerX, this.centerY, size, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(30,64,175,0.5)";
+      ctx.shadowColor = "rgba(15,23,42,0.9)";
+      ctx.shadowBlur = 4;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.beginPath();
+      ctx.arc(this.centerX - 1, this.centerY - 1, 2, 0, Math.PI * 2);
+      ctx.fillStyle = "#93c5fd";
+      ctx.fill();
+      return;
+    }
+
+    // онлайн — как раньше
     const size =
       9 +
       baseBreath * 3 +
@@ -443,6 +553,9 @@ class LVSBrowserNode {
   drawSelf() {
     const ctx = this.ctx;
 
+    // если оффлайн — свою ноду не рисуем вообще
+    if (!this.isConnected) return;
+
     // хвост движения browser-ноды
     if (this.selfTrail.length > 1) {
       ctx.beginPath();
@@ -497,9 +610,12 @@ class LVSBrowserNode {
       let drift = [d1[0] + d2[0], d1[1] + d2[1]];
       drift = this.vaultGuard(drift);
       this.applyDrift(drift);
-      this.sendSDM(drift);
-      this.redraw();
 
+      if (this.isConnected) {
+        this.sendSDM(drift);
+      }
+
+      this.redraw();
       this.onCycle(this.cycle, this.vu, this.tc);
     }, 90); // ~11 FPS
   }
