@@ -1,176 +1,117 @@
-// assets/lvs-globe.js
+// lvs-globe.js — вариант C: чёрный шар + бирюзовые искры
 
-(function () {
-    const canvas = document.getElementById("lvs-globe-canvas");
-    if (!canvas) return;
+(() => {
+  const canvas = document.getElementById("lvs-globe-canvas");
+  if (!canvas) return;
 
-    // --- Базовая сцена ---
-    const scene = new THREE.Scene();
+  const scene = new THREE.Scene();
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: true
+  });
 
-    const renderer = new THREE.WebGLRenderer({
-        canvas,
-        antialias: true,
-        alpha: true,         // фон берём из CSS, не из WebGL
-    });
-    renderer.setPixelRatio(window.devicePixelRatio || 1);
+  function resizeRenderer() {
+    const { clientWidth, clientHeight } = canvas;
+    const size = Math.min(clientWidth, clientHeight || clientWidth);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(size, size, false);
+  }
 
-    function resizeRenderer() {
-        const { clientWidth, clientHeight } = canvas;
-        if (clientWidth === 0 || clientHeight === 0) return;
-        renderer.setSize(clientWidth, clientHeight, false);
-        camera.aspect = clientWidth / clientHeight;
-        camera.updateProjectionMatrix();
-    }
+  resizeRenderer();
 
-    const camera = new THREE.PerspectiveCamera(
-        32,
-        canvas.clientWidth / canvas.clientHeight || 1,
-        0.1,
-        100
-    );
-    camera.position.set(0, 0, 2.4);
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+  camera.position.set(0, 0, 6);
+  scene.add(camera);
 
-    // --- Свет ---
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  // чёрный шар — сама "Земля"
+  const globeGeom = new THREE.SphereGeometry(2, 64, 64);
+  const globeMat = new THREE.MeshStandardMaterial({
+    color: 0x020204,
+    roughness: 0.4,
+    metalness: 0.2
+  });
+  const globe = new THREE.Mesh(globeGeom, globeMat);
+  scene.add(globe);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
-    dirLight.position.set(2, 1, 1.5);
-    scene.add(dirLight);
+  // бирюзовый ореол (немного glow)
+  const glowGeom = new THREE.SphereGeometry(2.05, 64, 64);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0x2fd3ff,
+    transparent: true,
+    opacity: 0.18
+  });
+  const glow = new THREE.Mesh(glowGeom, glowMat);
+  scene.add(glow);
 
-    // --- Земля с текстурой ---
-    const earthRadius = 1.0;
-    const earthGeometry = new THREE.SphereGeometry(earthRadius, 80, 80);
-    const earthMaterial = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        roughness: 0.85,
-        metalness: 0.0,
-    });
+  // точки-искорки жизни по поверхности
+  const starCount = 600;
+  const starGeom = new THREE.BufferGeometry();
+  const positions = new Float32Array(starCount * 3);
 
-    const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
-    scene.add(earthMesh);
+  for (let i = 0; i < starCount; i++) {
+    // случайная точка на сфере радиуса ~2
+    const u = Math.random();
+    const v = Math.random();
+    const theta = 2 * Math.PI * u;
+    const phi = Math.acos(2 * v - 1);
+    const r = 2.02;
 
-    // грузим текстуру карты Земли (ПУТЬ — ОТНОСИТЕЛЬНО index.html)
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.load(
-        "assets/space/earth-map.png",          // <--- тут твой файл
-        function (texture) {
-            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-            earthMaterial.map = texture;
-            earthMaterial.needsUpdate = true;
-        },
-        undefined,
-        function (err) {
-            console.warn("Failed to load earth texture", err);
-        }
-    );
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
 
-    // --- "Искорки жизни" по поверхности Земли ---
-    const sparksCount = 450;
-    const sparksGeometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(sparksCount * 3);
+    positions[i * 3 + 0] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+  }
 
-    for (let i = 0; i < sparksCount; i++) {
-        // случайная точка на сфере чуть выше поверхности
-        const u = Math.random();
-        const v = Math.random();
+  starGeom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
-        const theta = 2 * Math.PI * u;           // долгота
-        const phi   = Math.acos(2 * v - 1);      // широта
+  const starMat = new THREE.PointsMaterial({
+    color: 0x48e0b0,
+    size: 0.035,
+    transparent: true,
+    opacity: 0.95
+  });
 
-        const r = earthRadius * 1.01;            // чуть над поверхностью
+  const stars = new THREE.Points(starGeom, starMat);
+  scene.add(stars);
 
-        const x = r * Math.sin(phi) * Math.cos(theta);
-        const y = r * Math.cos(phi);
-        const z = r * Math.sin(phi) * Math.sin(theta);
+  // освещение
+  const light1 = new THREE.DirectionalLight(0xffffff, 1.0);
+  light1.position.set(3, 2, 4);
+  scene.add(light1);
 
-        positions[i * 3 + 0] = x;
-        positions[i * 3 + 1] = y;
-        positions[i * 3 + 2] = z;
-    }
+  const light2 = new THREE.DirectionalLight(0x48e09b, 0.6);
+  light2.position.set(-4, -3, -2);
+  scene.add(light2);
 
-    sparksGeometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3)
-    );
+  const ambient = new THREE.AmbientLight(0x404060, 0.4);
+  scene.add(ambient);
 
-    const sparksMaterial = new THREE.PointsMaterial({
-        color: 0x65f0ff,
-        size: 0.015,
-        transparent: true,
-        opacity: 0.95,
-        depthWrite: false,
-    });
+  // анимация
+  let lastTime = 0;
 
-    const sparks = new THREE.Points(sparksGeometry, sparksMaterial);
-    scene.add(sparks);
+  function animate(time) {
+    requestAnimationFrame(animate);
 
-    // --- лёгкая аура вокруг шара (чисто визуал) ---
-    const auraGeometry = new THREE.SphereGeometry(earthRadius * 1.03, 60, 60);
-    const auraMaterial = new THREE.MeshBasicMaterial({
-        color: 0x1fb5ff,
-        transparent: true,
-        opacity: 0.18,
-        side: THREE.BackSide,
-    });
-    const aura = new THREE.Mesh(auraGeometry, auraMaterial);
-    scene.add(aura);
+    const t = time * 0.00005;
+    const dt = time - lastTime;
+    lastTime = time;
 
-    // --- простое вращение + drag мышью ---
-    let autoRotateSpeed = 0.003;
-    let isDragging = false;
-    let prevX = 0;
-    let prevY = 0;
+    globe.rotation.y = t * 0.75;
+    stars.rotation.y = t * 0.9;
+    glow.rotation.y = t * 0.6;
 
-    function onPointerDown(e) {
-        isDragging = true;
-        const p = e.touches ? e.touches[0] : e;
-        prevX = p.clientX;
-        prevY = p.clientY;
-    }
+    renderer.render(scene, camera);
+  }
 
-    function onPointerMove(e) {
-        if (!isDragging) return;
-        const p = e.touches ? e.touches[0] : e;
-        const dx = p.clientX - prevX;
-        const dy = p.clientY - prevY;
-        prevX = p.clientX;
-        prevY = p.clientY;
+  animate(0);
 
-        const rotSpeed = 0.005;
-        earthMesh.rotation.y += dx * rotSpeed;
-        earthMesh.rotation.x += dy * rotSpeed * 0.6;
-        sparks.rotation.copy(earthMesh.rotation);
-        aura.rotation.copy(earthMesh.rotation);
-    }
-
-    function onPointerUp() {
-        isDragging = false;
-    }
-
-    canvas.addEventListener("mousedown", onPointerDown);
-    canvas.addEventListener("mousemove", onPointerMove);
-    window.addEventListener("mouseup", onPointerUp);
-
-    canvas.addEventListener("touchstart", onPointerDown, { passive: true });
-    canvas.addEventListener("touchmove", onPointerMove, { passive: true });
-    window.addEventListener("touchend", onPointerUp);
-
-    // resize
-    window.addEventListener("resize", resizeRenderer);
+  // ресайз
+  window.addEventListener("resize", () => {
     resizeRenderer();
+  });
 
-    // --- рендер-цикл ---
-    function animate() {
-        requestAnimationFrame(animate);
-
-        if (!isDragging) {
-            earthMesh.rotation.y += autoRotateSpeed;
-            sparks.rotation.y += autoRotateSpeed;
-            aura.rotation.y += autoRotateSpeed;
-        }
-
-        renderer.render(scene, camera);
-    }
-
-    animate();
 })();
