@@ -33,6 +33,7 @@ body {
     position: relative;
 }
 
+/* звёзды поверх бэкграунда — весь экран */
 body::before {
     content: "";
     position: fixed;
@@ -63,6 +64,8 @@ body::before {
     flex-direction: column;
 }
 
+/* верхняя панель остаётся, всё остальное — космос */
+
 .space-topbar {
     height: 52px;
     padding: 0 20px;
@@ -72,6 +75,7 @@ body::before {
     background: rgba(2, 3, 12, 0.95);
     border-bottom: 1px solid rgba(255,255,255,0.1);
     backdrop-filter: blur(14px);
+    z-index: 10;
 }
 
 .space-logo {
@@ -107,22 +111,90 @@ body::before {
     background: rgba(0,0,0,0.65);
 }
 
+/* главный контейнер: канвас под шапкой на весь экран */
+
 .space-main {
+    position: relative;
     flex: 1;
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.7fr);
-    align-items: center;
-    padding: 18px 24px 22px;
-    gap: 20px;
+    width: 100%;
+    height: calc(100% - 52px);
+    overflow: hidden;
 }
 
 .space-canvas-wrap {
-    position: relative;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
 }
 
-#l
+/* канвас на всю область, без "окна" вокруг */
+
+#lvs-space-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* tooltip и подсказка поверх канваса */
+
+.space-tooltip {
+    position: fixed;
+    max-width: 260px;
+    padding: 9px 12px 10px;
+    background: rgba(5, 6, 18, 0.98);
+    border-radius: 12px;
+    border: 1px solid rgba(62, 166, 255, 0.8);
+    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.95);
+    font-size: 12px;
+    color: var(--text-main);
+    pointer-events: none;
+    z-index: 20;
+}
+
+.space-tooltip a {
+    color: var(--accent);
+}
+
+/* Help-блок как overlay в правом нижнем углу */
+
+.space-help {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(4, 6, 20, 0.96);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+    font-size: 13px;
+    color: var(--text-soft);
+    z-index: 15;
+}
+
+.space-help > div {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-main);
+}
+
+.space-help ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.space-help li {
+    margin-bottom: 4px;
+}
+
+@media (max-width: 600px) {
+    .space-topbar {
+        padding: 0 12px;
+    }
+    .space-help {
+        right: 12px;
+        bottom: 12px;
+        max-width: calc(100% - 24px);
+    }
+}
