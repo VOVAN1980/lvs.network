@@ -22,6 +22,8 @@
     <div class="lvs-navtop-right">
         <a href="/lvs-site/profile.html" class="lvs-navtop-btn">Демо-профиль</a>
         <a href="/lvs-site/me.html" class="lvs-navtop-btn">Мой кабинет</a>
+        <a href="/lvs_browser_node.html" class="lvs-navtop-btn">Работа и задания</a>
+        <a href="/website" class="lvs-navtop-btn">О LVS</a>
         <a href="/website" class="lvs-navtop-btn">Документы</a>
         <a href="/lvs_browser_node.html" class="lvs-navtop-btn">Тестовая сеть</a>
     </div>
@@ -58,13 +60,13 @@
 
                 <div class="lvs-hero-stats">
                     <div class="lvs-hero-stat" id="stat-users">
-                        1284 активных участника
+                        1284 active participants
                     </div>
                     <div class="lvs-hero-stat" id="stat-tasks">
-                        47 открытых задач
+                        47 open tasks
                     </div>
                     <div class="lvs-hero-stat" id="stat-companies">
-                        32 компании онлайн
+                        32 companies online
                     </div>
                 </div>
             </div>
@@ -79,8 +81,8 @@
                         Интерактивная карта мира
                     </div>
                     <div class="lvs-card-subtitle">
-                        Вращайте глобус LVS и нажимайте на регионы, чтобы увидеть примеры задач и
-                        ролей (сейчас демо-данные). Позже здесь будет живой поток вакансий и проектов
+                        Вращайте глобус LVS и нажимайте на регионы, чтобы увидеть примеры задач и ролей
+                        (сейчас демо-данные). Позже здесь будет живой поток вакансий и проектов
                         из торговой площадки LVS.
                     </div>
                 </div>
@@ -88,69 +90,25 @@
 
         </section>
 
-        <!-- МИНИМАЛЬНЫЙ ВТОРОЙ ЭКРАН: 3 КАРТОЧКИ -->
-        <section class="lvs-grid-3" style="margin-top:10px;">
-
-            <!-- Что такое LVS -->
-            <div class="lvs-card">
-                <div class="lvs-card-header">
-                    <div class="lvs-card-title">Что такое LVS?</div>
-                </div>
-                <div class="lvs-card-subtitle" style="margin-bottom:10px;">
-                    Кратко о системе живой ценности: почему это не блокчейн и не обычная платформа,
-                    как устроены TC и VU, и как LVS защищает репутацию и данные участников.
-                </div>
-                <button class="lvs-btn lvs-btn-ghost" style="font-size:12px;"
-                        onclick="location.href='/website'">
-                    Читать о протоколе
-                </button>
-            </div>
-
-            <!-- Профиль и кабинет -->
-            <div class="lvs-card">
-                <div class="lvs-card-header">
-                    <div class="lvs-card-title">Профиль и личный кабинет</div>
-                </div>
-                <div class="lvs-card-subtitle" style="margin-bottom:10px;">
-                    Личный кабинет показывает ваши TC, VU, стабильность, историю действий и привязанные
-                    узлы LVS. Публичный профиль — это визитка для людей, компаний и сервисов.
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="lvs-btn lvs-btn-ghost" style="font-size:12px;"
-                            onclick="location.href='profile.html'">
-                        Посмотреть демо-профиль
-                    </button>
-                    <button class="lvs-btn lvs-btn-primary" style="font-size:12px;"
-                            onclick="location.href='me.html'">
-                        Войти в мой кабинет
-                    </button>
-                </div>
-            </div>
-
-            <!-- Работа и задания -->
-            <div class="lvs-card">
-                <div class="lvs-card-header">
-                    <div class="lvs-card-title">Работа, задания и бизнес</div>
-                </div>
-                <div class="lvs-card-subtitle" style="margin-bottom:10px;">
-                    Мир задач LVS: технические задания, консалтинг, дизайн, локализация, онбординг
-                    компаний и работа с ИИ-агентами. Всё завязано на TC и VU, а не на лайках и рекламе.
-                </div>
-                <button class="lvs-btn lvs-btn-primary" style="font-size:12px;"
-                        onclick="location.href='/lvs_browser_node.html'">
-                    Перейти в мир заданий (demo)
-                </button>
-            </div>
-
-        </section>
-
     </main>
 </div>
 
+<!-- НИЖНЯЯ ПОЛОСА / ФУТЕР -->
+<footer class="lvs-footer">
+    <div class="lvs-footer-left">
+        © 2025 Living Value System (LVS)
+    </div>
+    <div class="lvs-footer-links">
+        <a href="/privacy.html">Политика конфиденциальности</a>
+        <a href="/terms.html">Условия использования</a>
+        <a href="/legal.html">Правовая информация</a>
+        <a href="mailto:info@lvs.network">Контакты</a>
+        <a href="https://github.com/VOVAN1980/lvs.network" target="_blank" rel="noopener">GitHub</a>
+    </div>
+</footer>
+
 <!-- Three.js для глобуса -->
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-
-<!-- твой основной JS (если нужно) -->
 <script src="assets/lvs-main.js"></script>
 <script src="assets/lvs-globe.js"></script>
 </body>
