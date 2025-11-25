@@ -5,10 +5,13 @@
     --bg-alt: #0b0e1a;
     --bg-card: #111422;
     --bg-card-soft: #15192a;
+
     --accent: #3ea6ff;
     --accent-soft: rgba(62, 166, 255, 0.24);
     --accent-green: #48e09b;
+
     --border-subtle: rgba(255,255,255,0.07);
+
     --text-main: #f5f7ff;
     --text-soft: #9ca3c7;
     --text-muted: #6b738f;
@@ -41,34 +44,32 @@ body {
     overflow-x: hidden;
 }
 
-/* ===== Космический фон со звездами ===== */
+/* Космический слой со звёздами */
 
-/* глубокий космос */
-.lvs-space {
+body::before {
+    content: "";
     position: fixed;
     inset: 0;
-    z-index: -3;
-    background: radial-gradient(circle at 50% 120%, #02030a, #000 80%);
+    pointer-events: none;
+    background-image:
+        radial-gradient(1px 1px at 14% 22%, rgba(255,255,255,0.55), transparent),
+        radial-gradient(1px 1px at 80% 30%, rgba(255,255,255,0.70), transparent),
+        radial-gradient(1px 1px at 30% 78%, rgba(255,255,255,0.40), transparent),
+        radial-gradient(2px 2px at 60% 60%, rgba(255,255,255,0.50), transparent),
+        radial-gradient(1px 1px at 92% 70%, rgba(255,255,255,0.85), transparent),
+        radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.25), transparent);
+    opacity: 0.45;
+    animation: lvs-stars-move 68s linear infinite;
+    z-index: -1;
 }
 
-/* звезды */
-.lvs-stars {
-    position: fixed;
-    inset: 0;
-    z-index: -2;
-    background-image: url("https://raw.githubusercontent.com/VOVAN1980/lvs.network/lvs-site/assets/space/stars.png");
-    background-size: cover;
-    opacity: 0.35;
-    animation: stars-move 120s linear infinite;
+@keyframes lvs-stars-move {
+    0%   { transform: translate3d(0, 0, 0); }
+    50%  { transform: translate3d(-40px, -28px, 0); }
+    100% { transform: translate3d(0, 0, 0); }
 }
 
-@keyframes stars-move {
-    0% { transform: translate3d(0,0,0) scale(1); }
-    50% { transform: translate3d(-50px,-40px,0) scale(1.04); }
-    100% { transform: translate3d(0,0,0) scale(1); }
-}
-
-/* ===== Универсальные ссылки и кнопки ===== */
+/* Ссылки и кнопки */
 
 a {
     color: inherit;
@@ -246,27 +247,29 @@ button {
     gap: 12px;
 }
 
+/* контейнер шара — чистый круг, без квадрата */
 .lvs-globe-wrapper {
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
     border-radius: 50%;
-    overflow: visible;
     background: transparent !important;
     border: none !important;
     box-shadow:
-        0 0 140px rgba(0, 180, 255, 0.35),
-        0 0 280px rgba(0, 180, 255, 0.15);
+        0 0 60px rgba(0, 0, 0, 0.9),
+        0 0 120px rgba(62, 166, 255, 0.35);
+    overflow: visible;
 }
 
+/* сам canvas – тоже круг */
 #lvs-globe-canvas {
     width: 100%;
     height: 100%;
     display: block;
     border-radius: 50%;
-    object-fit: cover;
 }
 
+/* подсказка (если будет нужна) */
 .lvs-globe-tooltip {
     position: fixed;
     max-width: 260px;
@@ -349,6 +352,41 @@ button {
     gap: 18px;
 }
 
+/* ========= FOOTER ========= */
+
+.lvs-footer {
+    margin-top: 32px;
+    padding: 16px 32px 20px;
+    background: rgba(5, 6, 14, 0.96);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.lvs-footer-left {
+    margin-bottom: 6px;
+}
+
+.lvs-footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.lvs-footer a {
+    color: var(--text-soft);
+    opacity: 0.9;
+}
+
+.lvs-footer a:hover {
+    color: var(--text-main);
+    opacity: 1;
+}
+
 /* ========= RESPONSIVE ========= */
 
 @media (max-width: 1024px) {
@@ -382,52 +420,10 @@ button {
         grid-template-columns: 1fr;
     }
 
-    /* ========= FOOTER ========= */
-
-.lvs-footer {
-    margin-top: 40px;
-    padding: 18px 32px;
-    background: rgba(5,6,14,0.96);
-    border-top: 1px solid var(--border-subtle);
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.lvs-footer-left {
-    margin-bottom: 6px;
-}
-
-.lvs-footer-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-}
-
-.lvs-footer a {
-    color: var(--text-soft);
-    text-decoration: none;
-    opacity: 0.9;
-}
-
-.lvs-footer a:hover {
-    color: var(--text-main);
-    opacity: 1;
-}
-
-/* footer responsive */
-@media (max-width: 720px) {
     .lvs-footer {
         padding: 12px 16px 18px;
         flex-direction: column;
         align-items: flex-start;
         gap: 6px;
     }
-  }
-
-
-
-
-
-
+}
