@@ -385,4 +385,29 @@ button {
         align-items: flex-start;
         gap: 6px;
     }
+    /* ====== GLOBE FOCUS MODE ====== */
+
+body.lvs-globe-focus::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.85), rgba(0,0,0,0.97));
+    z-index: 1100;
+    pointer-events: none;
 }
+
+.lvs-globe-wrapper--focus {
+    position: fixed !important;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: min(720px, 90vw);
+    width: 90vw;
+    aspect-ratio: 1 / 1;
+    z-index: 1101;
+    box-shadow:
+        0 0 120px rgba(0, 0, 0, 1),
+        0 0 120px rgba(62, 166, 255, 0.4);
+ }
+}
+
