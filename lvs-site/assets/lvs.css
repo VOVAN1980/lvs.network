@@ -18,16 +18,19 @@
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     width: 100%;
-    overflow-x: hidden;      /* убираем горизонтальный скролл */
-    overflow-y: scroll;      /* чтобы страница не дёргалась */
+    height: 100%;
+    overflow: hidden;          /* фиксируем страницу, убираем скролл */
 }
 
 body {
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
                  Roboto, system-ui, sans-serif;
     color: var(--text-main);
@@ -138,6 +141,9 @@ button {
     max-width: 1240px;
     margin: 0 auto;
     padding: 32px 24px 40px;
+    flex: 1;                         /* занимаем всё между хедером и футером */
+    display: flex;
+    align-items: center;             /* вертикально центрируем контент */
 }
 
 .lvs-main {
@@ -282,10 +288,10 @@ button {
     pointer-events: none;
 }
 
-/* карточка под глобусом — опустил НИЖЕ */
+/* карточка под глобусом — опустили ниже */
 
 .lvs-card-globe-note {
-    margin-top: 26px;          /* <- ты просил ниже */
+    margin-top: 40px;          /* больше отступ под глобусом */
     padding: 14px 16px 12px;
     border-radius: 18px;
     background: rgba(10, 13, 25, 0.96);
@@ -309,7 +315,7 @@ button {
 /* ========= FOOTER ========= */
 
 .lvs-footer {
-    margin-top: 24px;
+    margin-top: 0;
     padding: 14px 32px 18px;
     background: rgba(5, 6, 14, 0.96);
     border-top: 1px solid var(--border-subtle);
@@ -342,6 +348,7 @@ button {
 @media (max-width: 1024px) {
     .lvs-layout {
         padding: 24px 16px 32px;
+        align-items: flex-start;
     }
 
     .lvs-hero-globe {
