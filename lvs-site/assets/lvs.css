@@ -474,4 +474,50 @@ a:hover {
         flex-direction: column;
         align-items: flex-start;
     }
+
+    /* ====== TOP NAVBAR ====== */
+
+.lvs-navtop {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    height: 64px;
+    padding: 0 28px;
+    background: rgba(5, 5, 8, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.lvs-navtop-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.lvs-navtop-logo {
+    height: 40px;
+    display: block;
+}
+
+.lvs-navtop-right {
+    display: flex;
+    gap: 14px;
+}
+
+.lvs-navtop-btn {
+    padding: 7px 14px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: 0.18s ease-out;
+}
+
+.lvs-navtop-btn:hover {
+    background: rgba(255,255,255,0.12);
+ }
 }
