@@ -21,7 +21,7 @@
     }
 
     const INIT_DIST = 3.6;
-    const MIN_DIST  = 2.4;
+    const MIN_DIST = 1.15;   // раньше 2.4
     const MAX_DIST  = 8.0;
 
     const camera = new THREE.PerspectiveCamera(
@@ -66,13 +66,15 @@
     globeGroup.add(earthMesh);
 
     // атмосфера
-    const atmGeo = new THREE.SphereGeometry(RADIUS * 1.03, SEGMENTS, SEGMENTS);
-    const atmMat = new THREE.MeshBasicMaterial({
-        color: 0x3ea6ff,
-        transparent: true,
-        opacity: 0.22,
-        side: THREE.BackSide,
-    });
+    const atmGeo = new THREE.SphereGeometry(RADIUS * 1.01, SEGMENTS, SEGMENTS);
+
+const atmMat = new THREE.MeshBasicMaterial({
+    color: 0x3ea6ff,
+    transparent: true,
+    opacity: 0.12,
+    side: THREE.BackSide,
+});
+
     const atmosphere = new THREE.Mesh(atmGeo, atmMat);
     globeGroup.add(atmosphere);
 
@@ -286,3 +288,4 @@
 
     animate();
 })();
+
