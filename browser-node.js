@@ -553,8 +553,8 @@ class LVSBrowserNode {
   drawSelf() {
     const ctx = this.ctx;
 
-    // если оффлайн — свою ноду не рисуем вообще
-    if (!this.isConnected) return;
+    // ВАЖНО: нода рисуется ВСЕГДА, даже если сокет отвалился.
+    // Оффлайн мы уже показываем через маленькое ядро, здесь не трогаем.
 
     // хвост движения browser-ноды
     if (this.selfTrail.length > 1) {
