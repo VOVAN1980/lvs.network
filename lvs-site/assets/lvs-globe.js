@@ -1,10 +1,10 @@
-// lvs-globe.js — простой 3D-глобус Земли
+// lvs-globe.js — 3D-глобус Земли
 
 (function () {
     const canvas = document.getElementById("lvs-globe-canvas");
     if (!canvas || typeof THREE === "undefined") return;
 
-    // ---------- БАЗА СЦЕНЫ ----------
+    // ---------- СЦЕНА ----------
     const scene = new THREE.Scene();
 
     const renderer = new THREE.WebGLRenderer({
@@ -16,13 +16,12 @@
 
     const camera = new THREE.PerspectiveCamera(
         35,
-        1,          // временно, дальше пересчитаем
+        1,
         0.1,
         100
     );
     camera.position.set(0, 0, 3.2);
 
-    // Мягкий свет
     const ambient = new THREE.AmbientLight(0xffffff, 0.65);
     scene.add(ambient);
 
@@ -30,7 +29,7 @@
     dirLight.position.set(3, 2, 2);
     scene.add(dirLight);
 
-    // ---------- ГЛОБУС ЗЕМЛИ ----------
+    // ---------- ГЛОБУС ----------
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
 
@@ -39,12 +38,11 @@
 
     const sphereGeo = new THREE.SphereGeometry(radius, segments, segments);
 
-    // Текстура Земли — КЛЮЧЕВОЕ МЕСТО
-    // Положи картинку (например 2048x1024) в:
-    //   lvs-site/assets/space/earth-map.jpg
-    // и пути ниже трогать не надо.
+    // Текстура Земли (CDN, без локальных картинок)
     const texLoader = new THREE.TextureLoader();
-    const earthTexture = texLoader.load("assets/space/earth-map.jpg");
+    const earthTexture = texLoader.load(
+        "https://raw.githubusercontent.com/typpo/earth-bump-map/master/images/earthmap4k.jpg"
+    );
 
     const earthMat = new THREE.MeshPhongMaterial({
         map: earthTexture,
@@ -55,13 +53,23 @@
     const earthMesh = new THREE.Mesh(sphereGeo, earthMat);
     globeGroup.add(earthMesh);
 
-    // ---------- МАЛЕНЬКИЕ "ИСКРЫ ЖИЗНИ" ----------
+    // Лёгкое свечение атмосферы
+    const atmosphereGeo = new THREE.SphereGeometry(radius * 1.02, 64, 64);
+    const atmosphereMat = new THREE.MeshBasicMaterial({
+        color: 0x3ea6ff,
+        transparent: true,
+        opacity: 0.18,
+        side: THREE.BackSide,
+    });
+    const atmosphere = new THREE.Mesh(atmosphereGeo, atmosphereMat);
+    globeGroup.add(atmosphere);
+
+    // ---------- ТОЧКИ-ОГОНЬКИ ----------
     const sparksGeo = new THREE.BufferGeometry();
     const sparksCount = 350;
     const positions = new Float32Array(sparksCount * 3);
 
     for (let i = 0; i < sparksCount; i++) {
-        // случайная точка на сфере, чуть выше поверхности
         const u = Math.random() * 2 * Math.PI;
         const v = Math.random() * Math.PI;
 
@@ -96,12 +104,12 @@
 
     function onPointerDown(e) {
         isDragging = true;
-        prevX = e.clientX || e.touches?.[0]?.clientX || 0;
+        prevX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
     }
 
     function onPointerMove(e) {
         if (!isDragging) return;
-        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
         const dx = clientX - prevX;
         prevX = clientX;
 
@@ -138,12 +146,10 @@
     function animate() {
         requestAnimationFrame(animate);
 
-        // авто-вращение + плавное довороты от мыши
-        targetRotY += 0.0008; // лёгкое постоянное вращение
+        targetRotY += 0.0008;
         rotationY += (targetRotY - rotationY) * 0.08;
         globeGroup.rotation.y = rotationY;
 
-        // лёгкое "дыхание" искр
         const t = performance.now() * 0.001;
         sparksMat.opacity = 0.75 + Math.sin(t * 1.1) * 0.15;
 
