@@ -24,7 +24,7 @@ body {
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;          /* без скролла — чистый экран */
+    overflow: hidden; /* чистый экран без прокрутки */
 }
 
 body {
@@ -108,10 +108,6 @@ button {
     filter: drop-shadow(0 0 12px rgba(0,0,0,0.85));
 }
 
-.lvs-navtop-tagline {
-    color: var(--text-soft);
-}
-
 .lvs-navtop-right {
     display: flex;
     gap: 12px;
@@ -141,13 +137,9 @@ button {
     max-width: 1240px;
     margin: 0 auto;
     padding: 32px 24px 40px;
-    flex: 1;                         /* между хедером и футером */
+    flex: 1; /* между хедером и футером */
     display: flex;
-    align-items: center;             /* вертикальное центрирование hero */
-}
-
-.lvs-main {
-    width: 100%;
+    align-items: center; /* вертикально центрируем hero */
 }
 
 /* ========= HERO ========= */
@@ -256,6 +248,7 @@ button {
     align-items: center;
 }
 
+/* круг-контейнер под глобус */
 .lvs-globe-wrapper {
     position: relative;
     width: 100%;
@@ -266,10 +259,9 @@ button {
     box-shadow:
         0 0 80px rgba(0, 0, 0, 0.95),
         0 0 80px rgba(62, 166, 255, 0.25);
-    overflow: hidden;
+    overflow: hidden; /* Cesium остаётся строго в круге */
 }
 
-/* контейнер под Cesium-viewer (мини-глобус) */
 .lvs-globe-canvas {
     width: 100%;
     height: 100%;
@@ -278,7 +270,7 @@ button {
 /* карточка под глобусом */
 
 .lvs-card-globe-note {
-    margin-top: 40px;          /* отступ под глобусом */
+    margin-top: 32px;
     padding: 14px 16px 12px;
     border-radius: 18px;
     background: rgba(10, 13, 25, 0.96);
@@ -302,7 +294,6 @@ button {
 /* ========= FOOTER ========= */
 
 .lvs-footer {
-    margin-top: 0;
     padding: 14px 32px 18px;
     background: rgba(5, 6, 14, 0.96);
     border-top: 1px solid var(--border-subtle);
@@ -332,7 +323,6 @@ button {
 
 /* ========= MINI GLOBE CESIUM UI ========= */
 
-/* убираем лишние панели у мини-глобуса */
 #miniGlobe .cesium-viewer-toolbar,
 #miniGlobe .cesium-viewer-animationContainer,
 #miniGlobe .cesium-viewer-timelineContainer,
@@ -340,7 +330,6 @@ button {
     display: none !important;
 }
 
-/* прозрачный фон внутри шарика */
 #miniGlobe .cesium-widget,
 #miniGlobe .cesium-viewer {
     background: transparent !important;
