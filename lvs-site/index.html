@@ -72,17 +72,18 @@
 
         </div>
 
-        <!-- RIGHT COLUMN → CESIUM MINI GLOBE -->
+                <!-- RIGHT COLUMN → MINI CESIUM GLOBE -->
         <div class="lvs-hero-right">
-            <div id="miniGlobe"
-                 style="width:100%; aspect-ratio:1/1; border-radius:28px; overflow:hidden; cursor:pointer;">
+            <div class="lvs-globe-wrapper" id="lvs-globe-click-area">
+                <!-- Именно ЭТОТ контейнер использует Cesium -->
+                <div id="lvs-hero-globe"></div>
             </div>
 
-            <div class="lvs-card lvs-card-globe-note">
+            <div class="lvs-card-globe-note">
                 <div class="lvs-card-title">Interactive global preview</div>
                 <div class="lvs-card-subtitle">
-                    Rotate the live Earth preview. Click the globe to open the full LVS world with cities, tasks
-                    and companies on the dedicated space page.
+                    Rotate the live Earth preview. Click the globe to open the full LVS world with cities,
+                    tasks and companies on the dedicated space page.
                 </div>
             </div>
         </div>
@@ -110,3 +111,4 @@
 
 </body>
 </html>
+
