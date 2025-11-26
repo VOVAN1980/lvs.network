@@ -18,20 +18,19 @@
 
     // ----- ИНИЦИАЛИЗАЦИЯ VIEWER -----
     const viewer = new Cesium.Viewer("cesiumContainer", {
-        animation: false,
-        timeline: false,
-        fullscreenButton: false,
-        geocoder: false,
-        homeButton: false,
-        sceneModePicker: false,
-        baseLayerPicker: false,
-        navigationHelpButton: false,
-        infoBox: false,
-        selectionIndicator: false,
-        shouldAnimate: false,
-        imageryProvider: Cesium.createWorldImagery(),
-        terrain: Cesium.Terrain.fromWorldTerrain()
-    });
+    animation: false,
+    timeline: false,
+    fullscreenButton: false,
+    geocoder: false,
+    homeButton: false,
+    sceneModePicker: false,
+    baseLayerPicker: false,
+    navigationHelpButton: false,
+    infoBox: false,
+    selectionIndicator: false,
+    shouldAnimate: false
+    // без imageryProvider и без terrain — используем дефолтные
+});
 
     const scene = viewer.scene;
     scene.globe.enableLighting = true;
@@ -154,3 +153,4 @@
         }
     });
 })();
+
