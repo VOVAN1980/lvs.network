@@ -26,7 +26,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
                  Roboto, system-ui, sans-serif;
     color: var(--text-main);
-    background: #000;              /* чистый фон, БЕЗ картинок */
+    background: #000;
     position: relative;
 }
 
@@ -96,7 +96,7 @@ body {
     overflow: hidden;
 }
 
-/* Cesium контейнер занимает весь экран под хедером */
+/* Cesium контейнер */
 
 .space-cesium-container {
     position: absolute;
