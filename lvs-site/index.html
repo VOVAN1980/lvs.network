@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <title>LVS – Autonomous Value Layer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CESIUM: один раз подгружаем движок -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/cesium@1.123.0/Build/Cesium/Widgets/widgets.css">
+    <script src="https://unpkg.com/cesium@1.123.0/Build/Cesium/Cesium.js"></script>
+
+    <!-- Твой основной стиль -->
     <link rel="stylesheet" href="assets/lvs.css">
 </head>
 <body>
@@ -25,14 +32,14 @@
         <a href="#work" class="lvs-navtop-btn">Work & tasks</a>
         <a href="/website" class="lvs-navtop-btn">About LVS</a>
         <a href="/website" class="lvs-navtop-btn">Docs</a>
-        <a href="/lvs_browser_node.html" class="lvs-navtop-btn">Testnet</a>
+        <a href="/lvs-site/space.html" class="lvs-navtop-btn">Full world map</a>
     </nav>
 </header>
 
 <div class="lvs-layout">
     <main class="lvs-main">
 
-        <!-- HERO + GLOBE -->
+        <!-- HERO + PROD-GLOBE (MINI) -->
         <section id="work" class="lvs-hero-globe">
             <div class="lvs-hero-left">
                 <div class="lvs-pill">LVS / Global work map</div>
@@ -52,8 +59,8 @@
                     <button class="lvs-btn lvs-btn-primary" onclick="location.href='me.html'">
                         Start as participant
                     </button>
-                    <button class="lvs-btn lvs-btn-ghost" id="btn-focus-my-region">
-                        Find work near me
+                    <button class="lvs-btn lvs-btn-ghost" onclick="location.href='space.html'">
+                        Open global work map
                     </button>
                 </div>
 
@@ -66,15 +73,15 @@
 
             <div class="lvs-hero-right">
                 <div class="lvs-globe-wrapper">
-                    <canvas id="lvs-globe-canvas"></canvas>
-                    <div id="lvs-globe-tooltip" class="lvs-globe-tooltip" style="display:none;"></div>
+                    <!-- ВАЖНО: сюда рендерится МИНИ-CESIUM -->
+                    <div id="lvs-hero-globe"></div>
                 </div>
 
                 <div class="lvs-card lvs-card-globe-note">
-                    <div class="lvs-card-title">Interactive world map</div>
+                    <div class="lvs-card-title">Interactive global preview</div>
                     <div class="lvs-card-subtitle">
-                        Rotate the AI globe and click any region to preview example work opportunities
-                        (demo data for now). Later this will be synced with the live LVS marketplace.
+                        Rotate the live Earth preview. Click the globe to open the full LVS world
+                        with cities, tasks and companies on the dedicated space page.
                     </div>
                 </div>
             </div>
@@ -83,6 +90,7 @@
     </main>
 </div>
 
+<!-- FOOTER -->
 <footer class="lvs-footer">
     <div class="lvs-footer-left">
         © 2025 Living Value System (LVS)
@@ -96,8 +104,8 @@
     </div>
 </footer>
 
-<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<!-- Скрипты проекта -->
 <script src="assets/lvs-main.js"></script>
-<script src="assets/lvs-globe.js"></script>
+<script src="assets/lvs-hero-globe.js"></script>
 </body>
 </html>
