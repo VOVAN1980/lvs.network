@@ -249,8 +249,6 @@ button {
 
 /* ========= GLOBE ========= */
 
-/* ========= GLOBE ========= */
-
 .lvs-hero-right {
     min-width: 0;
     display: flex;
@@ -263,16 +261,16 @@ button {
     width: 100%;
     max-width: 520px;
     aspect-ratio: 1 / 1;
-    border-radius: 999px;  /* круг */
+    border-radius: 999px;
     background: radial-gradient(circle at 50% 35%, rgba(0,0,0,0.3), rgba(0,0,0,1));
     box-shadow:
         0 0 80px rgba(0, 0, 0, 0.95),
         0 0 80px rgba(62, 166, 255, 0.25);
-    overflow: hidden;      /* обрезаем по кругу всё внутри */
+    overflow: hidden;      /* режем по кругу всё внутри */
     cursor: pointer;
 }
 
-/* контейнер под Cesium-viewer – тоже круг */
+/* контейнер под Cesium-viewer – круг, без scale */
 
 #lvs-hero-globe {
     width: 100%;
@@ -281,6 +279,13 @@ button {
     overflow: hidden;
     clip-path: circle(50% at 50% 50%);
     position: relative;
+}
+
+#lvs-hero-globe canvas {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50%;
+    /* НИКАКОГО transform: scale(...) */
 }
 
 /* канвас Cesium: вписан без масштабирования */
@@ -389,5 +394,6 @@ button {
         gap: 6px;
     }
 }
+
 
 
