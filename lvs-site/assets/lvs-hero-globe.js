@@ -1,18 +1,21 @@
 // assets/lvs-hero-globe.js
 (function () {
-    // Если Cesium не подгрузился - тихо выходим
-    if (typeof Cesium === "undefined") return;
+    if (typeof Cesium === "undefined") {
+        return;
+    }
 
-    const container = document.getElementById("lvs-hero-globe");
-    if (!container) return; // перестраховка, чтобы не ловить appendChild of null
+    const container = document.getElementById("miniGlobe");
+    if (!container) {
+        return;
+    }
 
-    // Твой реальный токен Cesium Ion
+    // Твой реальный токен
     Cesium.Ion.defaultAccessToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM";
 
-    // Мини-viewer для главной страницы
-    const viewer = new Cesium.Viewer(container, {
-        imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }), // глобус как в Space
+    // Создаём viewer прямо в miniGlobe
+    const viewer = new Cesium.Viewer("miniGlobe", {
+        imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }), // как на space.html
         terrain: Cesium.Terrain.fromWorldTerrain(),
 
         animation: false,
@@ -25,37 +28,49 @@
         navigationHelpButton: false,
         infoBox: false,
         selectionIndicator: false,
-        shouldAnimate: false
+        shouldAnimate: true    // нужно для onTick
     });
 
-    const scene = viewer.scene;
-    scene.globe.enableLighting = true;
+    const scene  = viewer.scene;
+    const globe  = scene.globe;
+    const camera = viewer.camera;
+
+    // Немного космической атмосферы
+    globe.enableLighting     = true;
     scene.skyAtmosphere.show = true;
-    scene.skyBox.show = true;
+    scene.skyBox.show        = false;
 
-    // Стартовая камера — Европа / Африка примерно как на скрине
-    viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(10, 20, 20000000),
-        duration: 0
-    });
-
-    // Убираем стандартный double-click zoom, нам не нужен
+    // убираем даблклик-zoom, чтобы не «улетать» при клике
     viewer.screenSpaceEventHandler.removeInputAction(
         Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
     );
 
-    // Клик по кругу → переходим на полноэкранный Space-глобус
-    const clickArea = document.getElementById("lvs-globe-click-area");
-    if (clickArea) {
-        clickArea.style.cursor = "pointer";
-        clickArea.addEventListener("click", function () {
-            window.location.href = "space.html";
-        });
-    }
-
-    // (опционально) можно чуть-чуть медленно вращать Землю
-    viewer.clock.onTick.addEventListener(function () {
-        const camera = viewer.camera;
-        camera.rotate(Cesium.Cartesian3.UNIT_Z, -0.00003); // лёгкий дрейф
+    // Стартовая позиция – как в хорошем скрине
+    camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(10, 20, 13000000),
+        orientation: {
+            heading: Cesium.Math.toRadians(0),
+            pitch:   Cesium.Math.toRadians(-20),
+            roll:    0.0
+        }
     });
+
+    // Медленное вращение Земли
+    const spinRate = Cesium.Math.toRadians(2.0); // градусов в секунду
+    viewer.clock.onTick.addEventListener(function (clock) {
+        const dt = clock.deltaSeconds;
+        camera.rotate(Cesium.Cartesian3.UNIT_Z, -spinRate * dt);
+    });
+
+    // Клик по мини-глобусу → полная карта
+    container.addEventListener("click", function () {
+        window.location.href = "space.html";
+    });
+
+    // На всякий случай: делаем контейнер круглым и без тулбаров
+    try {
+        viewer.cesiumWidget.container.style.borderRadius = "999px";
+    } catch (e) {
+        // не критично
+    }
 })();
