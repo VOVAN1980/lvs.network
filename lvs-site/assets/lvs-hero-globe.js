@@ -1,4 +1,6 @@
 // assets/lvs-hero-globe.js
+// Мини-глобус в hero: шар вплотную в круге, только горизонтальный drag, клик = space.html
+
 (function () {
     if (typeof Cesium === "undefined") return;
 
@@ -19,73 +21,95 @@
         sceneModePicker: false,
         navigationHelpButton: false,
         selectionIndicator: false,
-        shouldAnimate: true
+        shouldAnimate: false
     });
 
-    // отключаем управление, но НЕ трогаем стартовую камеру
+    // выключаем все стандартные контроли камеры
     const ctrl = viewer.scene.screenSpaceCameraController;
-    ctrl.enableZoom = false;
-    ctrl.enableTilt = false;
-    ctrl.enableLook = false;
+    ctrl.enableRotate    = false;
     ctrl.enableTranslate = false;
-    ctrl.enableRotate = false;
+    ctrl.enableZoom      = false;
+    ctrl.enableTilt      = false;
+    ctrl.enableLook      = false;
 
-    // убираем копирайт
-    viewer.cesiumWidget.creditContainer.style.display = "none";
+    // убираем копирайт Cesium
+    if (viewer.cesiumWidget && viewer.cesiumWidget.creditContainer) {
+        viewer.cesiumWidget.creditContainer.style.display = "none";
+    }
 
-    const camera = viewer.camera;
     const scene  = viewer.scene;
+    const camera = viewer.camera;
 
-    // ===== АВТО РОТАЦИЯ =====
-    let last = performance.now();
-    let dragging = false;
-    let lastX = 0;
-    let dragDist = 0;
-    let ptr = null;
+    scene.globe.enableLighting = true;
+    scene.skyAtmosphere.show   = true;
 
-    const SPEED = 0.25;  // не перебор, всё плавно
-    let auto = true;
+    // ===== КАМЕРА: шар вплотную в круге =====
+    // Делаем узкий FOV и ставим камеру ~на 2 радиуса от центра
+    camera.frustum.fov  = Cesium.Math.toRadians(25.0);
+    camera.frustum.near = 100000.0;
+    camera.frustum.far  = 50000000.0;
 
-    scene.preRender.addEventListener(() => {
-        const now = performance.now();
-        const dt = (now - last) / 1000;
-        last = now;
-        if (auto) {
-            camera.rotate(Cesium.Cartesian3.UNIT_Z, -SPEED * dt);
+    const earthRadius = 6378137.0;
+    const distance    = earthRadius * 2.1; // подогнанно, чтобы шар почти касался круга
+
+    const center = Cesium.Cartesian3.fromDegrees(0, 0, 0);
+    const offset = new Cesium.Cartesian3(0.0, 0.0, distance);
+
+    camera.lookAt(center, offset);
+
+    // ===== АВТО-ВРАЩЕНИЕ + DRAG ТОЛЬКО ВЛЕВО/ВПРАВО =====
+    let autoRotate   = true;
+    let lastTime     = performance.now();
+    let dragging     = false;
+    let lastX        = 0;
+    let dragDistance = 0;
+    let activePtr    = null;
+
+    const ROT_SPEED = 0.003;
+
+    scene.preRender.addEventListener(function () {
+        const now   = performance.now();
+        const delta = (now - lastTime) / 1000;
+        lastTime    = now;
+
+        if (autoRotate) {
+            camera.rotate(Cesium.Cartesian3.UNIT_Z, -0.08 * delta);
         }
     });
 
-    // ===== DRAG =====
-    container.addEventListener("pointerdown", e => {
-        dragging = true;
-        ptr = e.pointerId;
-        lastX = e.clientX;
-        dragDist = 0;
-        auto = false;
-        container.setPointerCapture(ptr);
+    container.addEventListener("pointerdown", function (e) {
+        dragging     = true;
+        lastX        = e.clientX;
+        dragDistance = 0;
+        activePtr    = e.pointerId;
+        autoRotate   = false;
+        container.setPointerCapture(e.pointerId);
     });
 
-    container.addEventListener("pointermove", e => {
-        if (!dragging || ptr !== e.pointerId) return;
+    container.addEventListener("pointermove", function (e) {
+        if (!dragging || e.pointerId !== activePtr) return;
         const dx = e.clientX - lastX;
-        lastX = e.clientX;
-        dragDist += Math.abs(dx);
+        lastX    = e.clientX;
+        dragDistance += Math.abs(dx);
 
-        camera.rotate(Cesium.Cartesian3.UNIT_Z, -dx * 0.002);
+        const rot = dx * ROT_SPEED;
+        camera.rotate(Cesium.Cartesian3.UNIT_Z, -rot);
     });
 
-    function stop(e) {
-        if (ptr !== e.pointerId) return;
-        dragging = false;
-        container.releasePointerCapture(ptr);
+    function endDrag(e) {
+        if (e.pointerId !== activePtr) return;
+        dragging  = false;
+        activePtr = null;
+        try { container.releasePointerCapture(e.pointerId); } catch (_) {}
 
-        if (dragDist < 5) {
+        // почти не двигали — считаем кликом
+        if (dragDistance < 5) {
             window.location.href = "space.html";
         } else {
-            setTimeout(() => auto = true, 300);
+            setTimeout(() => { autoRotate = true; }, 400);
         }
     }
 
-    container.addEventListener("pointerup", stop);
-    container.addEventListener("pointercancel", stop);
+    container.addEventListener("pointerup", endDrag);
+    container.addEventListener("pointercancel", endDrag);
 })();
