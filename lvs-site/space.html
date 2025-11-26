@@ -8,12 +8,13 @@
 </head>
 <body>
 <div class="space-root">
+
     <header class="space-topbar">
         <div class="space-logo">
             <span class="space-logo-dot"></span>
             <span>LVS / Space view</span>
         </div>
-        <button class="space-back-btn" id="space-back-btn">
+        <button id="space-back-btn" class="space-back-btn">
             ← Back to main map
         </button>
     </header>
@@ -21,15 +22,20 @@
     <main class="space-main">
         <div class="space-canvas-wrap">
             <canvas id="lvs-space-canvas"></canvas>
-            <div id="lvs-space-tooltip" class="space-tooltip" style="display:none;"></div>
         </div>
 
+        <!-- слой с подписями городов -->
+        <div id="space-label-layer" class="space-label-layer"></div>
+
+        <!-- tooltip для клика по региону/городу -->
+        <div id="lvs-space-tooltip" class="space-tooltip" style="display:none;"></div>
+
         <div class="space-help">
-            <div>🖱 Controls</div>
+            <div>⚙ Controls</div>
             <ul>
                 <li>Wheel – zoom planet in / out</li>
                 <li>Left mouse – rotate Earth (как в Google Earth)</li>
-                <li>Double click – zoom to point + region info</li>
+                <li>Double click – focus &amp; open city / region info</li>
                 <li>Right mouse / Esc / Back button – return to main page</li>
             </ul>
         </div>
