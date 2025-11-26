@@ -1,5 +1,5 @@
 // assets/lvs-hero-globe.js
-// Мини-глобус в hero: Земля целиком в круге, только горизонтальный drag, клик = space.html.
+// Мини-глобус в hero: дефолтный вид Cesium, авто-вращение, drag влево/вправо, клик -> space.html
 
 (function () {
     if (typeof Cesium === "undefined") return;
@@ -22,15 +22,16 @@
         navigationHelpButton: false,
         selectionIndicator: false,
         shouldAnimate: false
+        // ВАЖНО: imagery и terrain оставляем по умолчанию
     });
 
-    // вырубаем стандартные контролы камеры
+    // отключаем лишние контролы, но камеру не трогаем
     const ctrl = viewer.scene.screenSpaceCameraController;
-    ctrl.enableRotate    = false;
     ctrl.enableTranslate = false;
     ctrl.enableZoom      = false;
     ctrl.enableTilt      = false;
     ctrl.enableLook      = false;
+    ctrl.enableRotate    = false;   // сами крутим
 
     // убираем копирайт Cesium
     if (viewer.cesiumWidget && viewer.cesiumWidget.creditContainer) {
@@ -43,20 +44,9 @@
     scene.globe.enableLighting = true;
     scene.skyAtmosphere.show   = true;
 
-    // ===== КАМЕРА: просто далёкий космос =====
-    // Никаких радиусов. Высота 80 000 000 м даёт нормальный размер диска.
-    const destination = Cesium.Cartesian3.fromDegrees(10, 20, 80000000);
+    // НИКАКИХ setView / lookAt / frustum — пусть Cesium сам выберет стартовый вид
 
-    camera.setView({
-        destination: destination,
-        orientation: {
-            heading: 0.0,
-            pitch: -0.3,
-            roll: 0.0
-        }
-    });
-
-    // ===== АВТО-ВРАЩЕНИЕ + DRAG ТОЛЬКО ВЛЕВО/ВПРАВО =====
+    // ===== АВТО-ВРАЩЕНИЕ ВОКРУГ ОСИ Z =====
     let autoRotate   = true;
     let lastTime     = performance.now();
     let dragging     = false;
@@ -76,6 +66,7 @@
         }
     });
 
+    // drag только по горизонтали
     container.addEventListener("pointerdown", function (e) {
         dragging     = true;
         lastX        = e.clientX;
