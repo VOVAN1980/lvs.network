@@ -1,5 +1,5 @@
 // assets/lvs-hero-globe.js
-// Мини-глобус в hero: шар вплотную в круге, только горизонтальный drag, клик = space.html
+// Мини-глобус в hero: Земля целиком в круге, только горизонтальный drag, клик = space.html.
 
 (function () {
     if (typeof Cesium === "undefined") return;
@@ -24,7 +24,7 @@
         shouldAnimate: false
     });
 
-    // выключаем все стандартные контроли камеры
+    // вырубаем стандартные контролы камеры
     const ctrl = viewer.scene.screenSpaceCameraController;
     ctrl.enableRotate    = false;
     ctrl.enableTranslate = false;
@@ -43,21 +43,18 @@
     scene.globe.enableLighting = true;
     scene.skyAtmosphere.show   = true;
 
-    // ===== КАМЕРА: шар вплотную в круге =====
-    // Делаем узкий FOV и ставим камеру ~на 2 радиуса от центра
-        // ===== КАМЕРА: шар зафиксирован в круге =====
-    // Узкий FOV + расстояние ~4.7 радиуса = шар почти до края, но не режется
-    camera.frustum.fov  = Cesium.Math.toRadians(28.0);
-    camera.frustum.near = 100000.0;
-    camera.frustum.far  = 80000000.0;
+    // ===== КАМЕРА: просто далёкий космос =====
+    // Никаких радиусов. Высота 80 000 000 м даёт нормальный размер диска.
+    const destination = Cesium.Cartesian3.fromDegrees(10, 20, 80000000);
 
-    const earthRadius = 6378137.0;
-    const distance    = earthRadius * 4.7;   // БЫЛО 2.1 → делаем 4.7, шар меньше
-
-    const center = Cesium.Cartesian3.fromDegrees(0, 0, 0);
-    const offset = new Cesium.Cartesian3(0.0, 0.0, distance);
-
-    camera.lookAt(center, offset);
+    camera.setView({
+        destination: destination,
+        orientation: {
+            heading: 0.0,
+            pitch: -0.3,
+            roll: 0.0
+        }
+    });
 
     // ===== АВТО-ВРАЩЕНИЕ + DRAG ТОЛЬКО ВЛЕВО/ВПРАВО =====
     let autoRotate   = true;
