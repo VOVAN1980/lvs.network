@@ -261,12 +261,14 @@ button {
     width: 100%;
     max-width: 520px;
     aspect-ratio: 1 / 1;
-    border-radius: 999px;
-    background: radial-gradient(circle at 50% 35%, rgba(0,0,0,0.3), rgba(0,0,0,1));
+    border-radius: 999px;  /* круг жёстко */
+    background:
+        radial-gradient(circle at 50% 35%, rgba(0,0,0,0.3), rgba(0,0,0,1));
     box-shadow:
         0 0 80px rgba(0, 0, 0, 0.95),
         0 0 80px rgba(62, 166, 255, 0.25);
     overflow: hidden;
+    cursor: pointer;        /* показываем, что кликабельно */
 }
 
 /* контейнер под Cesium-viewer */
@@ -373,3 +375,4 @@ button {
         gap: 6px;
     }
 }
+
