@@ -45,12 +45,14 @@
 
     // ===== КАМЕРА: шар вплотную в круге =====
     // Делаем узкий FOV и ставим камеру ~на 2 радиуса от центра
-    camera.frustum.fov  = Cesium.Math.toRadians(25.0);
+        // ===== КАМЕРА: шар зафиксирован в круге =====
+    // Узкий FOV + расстояние ~4.7 радиуса = шар почти до края, но не режется
+    camera.frustum.fov  = Cesium.Math.toRadians(28.0);
     camera.frustum.near = 100000.0;
-    camera.frustum.far  = 50000000.0;
+    camera.frustum.far  = 80000000.0;
 
     const earthRadius = 6378137.0;
-    const distance    = earthRadius * 2.1; // подогнанно, чтобы шар почти касался круга
+    const distance    = earthRadius * 4.7;   // БЫЛО 2.1 → делаем 4.7, шар меньше
 
     const center = Cesium.Cartesian3.fromDegrees(0, 0, 0);
     const offset = new Cesium.Cartesian3(0.0, 0.0, distance);
