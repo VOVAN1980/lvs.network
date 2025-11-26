@@ -372,4 +372,18 @@ button {
         align-items: flex-start;
         gap: 6px;
     }
+    
+    /* мини-глобус Cesium на главной */
+#miniGlobe .cesium-viewer-toolbar,
+#miniGlobe .cesium-viewer-animationContainer,
+#miniGlobe .cesium-viewer-timelineContainer,
+#miniGlobe .cesium-viewer-fullscreenContainer {
+    display: none !important;
 }
+
+#miniGlobe .cesium-widget,
+#miniGlobe .cesium-viewer {
+    background: transparent !important;
+ }
+}
+
