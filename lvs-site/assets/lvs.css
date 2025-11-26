@@ -24,7 +24,7 @@ body {
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;          /* фиксируем страницу, без скролла */
+    overflow: hidden;          /* без скролла — чистый экран */
 }
 
 body {
@@ -141,9 +141,9 @@ button {
     max-width: 1240px;
     margin: 0 auto;
     padding: 32px 24px 40px;
-    flex: 1;
+    flex: 1;                         /* между хедером и футером */
     display: flex;
-    align-items: center;
+    align-items: center;             /* вертикальное центрирование hero */
 }
 
 .lvs-main {
@@ -269,7 +269,7 @@ button {
     overflow: hidden;
 }
 
-/* сам контейнер под Cesium */
+/* контейнер под Cesium-viewer (мини-глобус) */
 .lvs-globe-canvas {
     width: 100%;
     height: 100%;
@@ -278,7 +278,7 @@ button {
 /* карточка под глобусом */
 
 .lvs-card-globe-note {
-    margin-top: 40px;
+    margin-top: 40px;          /* отступ под глобусом */
     padding: 14px 16px 12px;
     border-radius: 18px;
     background: rgba(10, 13, 25, 0.96);
@@ -330,8 +330,9 @@ button {
     opacity: 1;
 }
 
-/* ========= MINI GLOBE: скрываем лишние контролы ========= */
+/* ========= MINI GLOBE CESIUM UI ========= */
 
+/* убираем лишние панели у мини-глобуса */
 #miniGlobe .cesium-viewer-toolbar,
 #miniGlobe .cesium-viewer-animationContainer,
 #miniGlobe .cesium-viewer-timelineContainer,
@@ -339,6 +340,7 @@ button {
     display: none !important;
 }
 
+/* прозрачный фон внутри шарика */
 #miniGlobe .cesium-widget,
 #miniGlobe .cesium-viewer {
     background: transparent !important;
