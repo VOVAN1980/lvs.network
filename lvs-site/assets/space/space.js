@@ -163,13 +163,10 @@
     }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
     // ----- ПРАВАЯ КНОПКА / ESC = НАЗАД -----
-    handler.setInputAction(function () {
-        goBack();
-    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-
     window.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
             goBack();
         }
     });
 })();
+
