@@ -17,19 +17,22 @@
     }
 
     // ----- ИНИЦИАЛИЗАЦИЯ VIEWER -----
-    const viewer = new Cesium.Viewer("cesiumContainer", {
+   const viewer = new Cesium.Viewer("cesiumContainer", {
+    imageryProvider: new Cesium.IonImageryProvider({
+        assetId: 2   // Blue Marble / Cesium World Imagery
+    }),
+
+    baseLayerPicker: false,
     animation: false,
     timeline: false,
     fullscreenButton: false,
     geocoder: false,
     homeButton: false,
     sceneModePicker: false,
-    baseLayerPicker: false,
     navigationHelpButton: false,
     infoBox: false,
     selectionIndicator: false,
     shouldAnimate: false
-    // без imageryProvider и без terrain — используем дефолтные
 });
 
     const scene = viewer.scene;
@@ -153,4 +156,5 @@
         }
     });
 })();
+
 
