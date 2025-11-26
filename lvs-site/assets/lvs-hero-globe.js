@@ -1,10 +1,6 @@
-// assets/lvs-hero-globe.js
-// Мини-глобус в hero. Крутится сам, по клику — переход на space.html
-
 (function () {
     if (typeof Cesium === "undefined") return;
 
-    // реальный токен (тот же, что в space.js)
     Cesium.Ion.defaultAccessToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM";
 
@@ -22,38 +18,78 @@
         sceneModePicker: false,
         navigationHelpButton: false,
         selectionIndicator: false,
-        shouldAnimate: false
-        // НИКАКИХ createOsmImagery / кастомных imageryProvider — только дефолт
+        shouldAnimate: false,
+        imageryProvider: Cesium.createWorldImagery(),
+        terrainProvider: Cesium.createWorldTerrain()
     });
 
-    // убираем копирайт Cesium
-    if (viewer.cesiumWidget && viewer.cesiumWidget.creditContainer) {
+    if (viewer.cesiumWidget.creditContainer) {
         viewer.cesiumWidget.creditContainer.style.display = "none";
     }
 
     const scene = viewer.scene;
     const camera = viewer.camera;
 
-    scene.globe.enableLighting = true;
+    scene.skyBox.show = false;
     scene.skyAtmosphere.show = true;
+    scene.globe.enableLighting = true;
 
-    // стартовая позиция — красиво видим Европу/Африку
-    camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(10, 20, 20000000)
-    });
+    // === точное вписывание шара в круг ===
+    const fov = camera.frustum.fov;
+    const earthRadius = 6378137; // метр
+    const distance = earthRadius / Math.sin(fov / 2);
 
-    // лёгкое авто-вращение
-    let lastTime = performance.now();
-    scene.preRender.addEventListener(function () {
+    camera.lookAt(
+        Cesium.Cartesian3.ZERO,
+        new Cesium.Cartesian3(0, -distance, 0)
+    );
+    camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+    // ===== авто-вращение =====
+    let auto = true;
+    let last = performance.now();
+
+    scene.preRender.addEventListener(() => {
         const now = performance.now();
-        const deltaSeconds = (now - lastTime) / 1000;
-        lastTime = now;
-
-        camera.rotate(Cesium.Cartesian3.UNIT_Z, -0.08 * deltaSeconds);
+        const dt = (now - last) / 1000;
+        last = now;
+        if (auto) camera.rotate(Cesium.Cartesian3.UNIT_Z, -0.1 * dt);
     });
 
-    // клик по шару → полная карта
-    container.addEventListener("click", function () {
-        window.location.href = "space.html";
+    // ===== drag =====
+    let drag = false;
+    let lastX = 0;
+    let moved = 0;
+    let active = null;
+
+    container.addEventListener("pointerdown", e => {
+        drag = true;
+        active = e.pointerId;
+        lastX = e.clientX;
+        moved = 0;
+        auto = false;
+        container.setPointerCapture(active);
     });
+
+    container.addEventListener("pointermove", e => {
+        if (!drag || e.pointerId !== active) return;
+        const dx = e.clientX - lastX;
+        lastX = e.clientX;
+        moved += Math.abs(dx);
+        camera.rotate(Cesium.Cartesian3.UNIT_Z, -dx * 0.003);
+    });
+
+    function endDrag(e) {
+        if (e.pointerId !== active) return;
+        drag = false;
+
+        if (moved < 4) {
+            window.location.href = "space.html";
+        }
+
+        setTimeout(() => auto = true, 300);
+    }
+
+    container.addEventListener("pointerup", endDrag);
+    container.addEventListener("pointercancel", endDrag);
 })();
