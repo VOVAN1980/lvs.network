@@ -24,7 +24,7 @@ body {
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;          /* фиксируем страницу, убираем скролл */
+    overflow: hidden;          /* фиксируем страницу, без скролла */
 }
 
 body {
@@ -141,9 +141,9 @@ button {
     max-width: 1240px;
     margin: 0 auto;
     padding: 32px 24px 40px;
-    flex: 1;                         /* между хедером и футером */
+    flex: 1;
     display: flex;
-    align-items: center;             /* вертикально центрируем блок */
+    align-items: center;
 }
 
 .lvs-main {
@@ -269,16 +269,16 @@ button {
     overflow: hidden;
 }
 
-/* контейнер под Cesium-viewer */
-#lvs-hero-globe {
+/* сам контейнер под Cesium */
+.lvs-globe-canvas {
     width: 100%;
     height: 100%;
 }
 
-/* карточка под глобусом — опущена ниже */
+/* карточка под глобусом */
 
 .lvs-card-globe-note {
-    margin-top: 40px;          /* отступ под глобусом */
+    margin-top: 40px;
     padding: 14px 16px 12px;
     border-radius: 18px;
     background: rgba(10, 13, 25, 0.96);
@@ -330,6 +330,20 @@ button {
     opacity: 1;
 }
 
+/* ========= MINI GLOBE: скрываем лишние контролы ========= */
+
+#miniGlobe .cesium-viewer-toolbar,
+#miniGlobe .cesium-viewer-animationContainer,
+#miniGlobe .cesium-viewer-timelineContainer,
+#miniGlobe .cesium-viewer-fullscreenContainer {
+    display: none !important;
+}
+
+#miniGlobe .cesium-widget,
+#miniGlobe .cesium-viewer {
+    background: transparent !important;
+}
+
 /* ========= RESPONSIVE ========= */
 
 @media (max-width: 1024px) {
@@ -372,18 +386,4 @@ button {
         align-items: flex-start;
         gap: 6px;
     }
-    
-    /* мини-глобус Cesium на главной */
-#miniGlobe .cesium-viewer-toolbar,
-#miniGlobe .cesium-viewer-animationContainer,
-#miniGlobe .cesium-viewer-timelineContainer,
-#miniGlobe .cesium-viewer-fullscreenContainer {
-    display: none !important;
 }
-
-#miniGlobe .cesium-widget,
-#miniGlobe .cesium-viewer {
-    background: transparent !important;
- }
-}
-
