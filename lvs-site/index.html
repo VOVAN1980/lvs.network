@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>LVS – Мир Работы и Репутации</title>
+    <title>LVS – Autonomous Value Layer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- CESIUM -->
@@ -14,80 +14,99 @@
 
 <body>
 
+<!-- NAVBAR -->
 <header class="lvs-navtop">
     <div class="lvs-navtop-left">
-        <img src="https://raw.githubusercontent.com/VOVAN1980/lvs.network/main/assets/logo/lvs-logo.png"
-             class="lvs-navtop-logo">
+        <img class="lvs-navtop-logo"
+             src="https://raw.githubusercontent.com/VOVAN1980/lvs.network/main/assets/logo/lvs-logo.png">
         <span>Living Value System</span>
     </div>
 
     <div class="lvs-navtop-right">
-        <a class="lvs-navtop-btn" href="profile.html">Демо-профиль</a>
-        <a class="lvs-navtop-btn" href="me.html">Мой кабинет</a>
-        <a class="lvs-navtop-btn" href="market.html">Работа и задания</a>
-        <a class="lvs-navtop-btn" href="about.html">О LVS</a>
-        <a class="lvs-navtop-btn" href="/docs">Документы</a>
+        <a href="profile.html" class="lvs-navtop-btn">Демо-профиль</a>
+        <a href="me.html" class="lvs-navtop-btn">Мой кабинет</a>
+        <a href="market.html" class="lvs-navtop-btn">Работа и задания</a>
+        <a href="about.html" class="lvs-navtop-btn">О LVS</a>
+        <a href="/docs" class="lvs-navtop-btn">Документы</a>
+        <a href="space.html" class="lvs-navtop-btn">Full world map</a>
     </div>
 </header>
 
 
 <div class="lvs-layout">
 
-    <!-- HERO -->
+    <!-- HERO SECTION -->
     <section class="lvs-hero-globe">
+
+        <!-- LEFT COLUMN -->
         <div class="lvs-hero-left">
-            <div class="lvs-pill">LVS / Глобальная карта работы</div>
+
+            <div class="lvs-pill">LVS / GLOBAL WORK MAP</div>
 
             <h1 class="lvs-hero-title">
-                Выходи на улицу LVS.<br>
-                Здесь строят, зарабатывают,<br> доверяют.
+                Walk into the LVS world.<br>
+                Everyone is building, earning, trusted.
             </h1>
 
             <p class="lvs-hero-text">
-                Выбирай любую точку на планете — смотри, где люди работают, создают
-                проекты, и какие компании нанимают. TC (доверие) и VU (ценность)
-                превращают действия в репутацию и доход.
+                LVS is an Autonomous Value Layer. Choose any point on the globe and see where people are working,
+                creating and getting paid. TC (trust coefficient) and VU (value units) turn real actions into
+                measurable, portable reputation and income.
             </p>
 
-            <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap;">
+            <div style="margin-top:24px; display:flex; gap:12px;">
                 <button class="lvs-btn lvs-btn-primary" onclick="location.href='me.html'">
-                    Начать как участник
+                    Start as participant
                 </button>
 
-                <button class="lvs-btn lvs-btn-ghost" onclick="focusMyRegion()">
-                    Найти работу рядом со мной
+                <button class="lvs-btn lvs-btn-ghost" onclick="location.href='space.html'">
+                    Open global work map
                 </button>
             </div>
 
             <div class="lvs-hero-stats">
-                <div class="lvs-hero-stat" id="stat-users">1284 активных участников</div>
-                <div class="lvs-hero-stat" id="stat-tasks">47 открытых задач</div>
-                <div class="lvs-hero-stat" id="stat-companies">32 компании онлайн</div>
+                <div class="lvs-hero-stat">1284 active participants</div>
+                <div class="lvs-hero-stat">47 open tasks</div>
+                <div class="lvs-hero-stat">32 companies online</div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN → CESIUM MINI GLOBE -->
+        <div class="lvs-hero-right">
+            <div id="miniGlobe"
+                 style="width:100%; aspect-ratio:1/1; border-radius:28px; overflow:hidden; cursor:pointer;">
+            </div>
+
+            <div class="lvs-card lvs-card-globe-note">
+                <div class="lvs-card-title">Interactive global preview</div>
+                <div class="lvs-card-subtitle">
+                    Rotate the live Earth preview. Click the globe to open the full LVS world with cities, tasks
+                    and companies on the dedicated space page.
+                </div>
             </div>
         </div>
 
-        <!-- CESIUM GLOBAL MAP -->
-        <div id="cesiumContainer"
-             style="width:100%; aspect-ratio:1/1; border-radius:28px; overflow:hidden;">
-        </div>
     </section>
+
 </div>
 
 
+<!-- FOOTER -->
 <footer class="lvs-footer">
     <div class="lvs-footer-left">© 2025 Living Value System (LVS)</div>
 
     <div class="lvs-footer-links">
-        <a href="#">Политика конфиденциальности</a>
-        <a href="#">Условия использования</a>
-        <a href="#">Контакты</a>
+        <a href="#">Privacy policy</a>
+        <a href="#">Terms of use</a>
+        <a href="#">Legal</a>
+        <a href="#">Contacts</a>
         <a href="https://github.com/VOVAN1980/lvs.network" target="_blank">GitHub</a>
     </div>
 </footer>
 
 
-<!-- OUR JS -->
-<script src="assets/lvs-cesium.js"></script>
+<script src="assets/lvs-hero-globe.js"></script>
 
 </body>
 </html>
