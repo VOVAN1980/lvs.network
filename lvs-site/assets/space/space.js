@@ -5,7 +5,7 @@
 
     // !!! СЮДА ВСТАВЬ СВОЙ CESIUM ION TOKEN !!!
     // Зарегаться: https://cesium.com
-    Cesium.Ion.defaultAccessToken = "YOUR_CESIUM_ION_TOKEN_HERE";
+    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM";
 
     const backBtn = document.getElementById("space-back-btn");
 
@@ -169,4 +169,5 @@
         }
     });
 })();
+
 
