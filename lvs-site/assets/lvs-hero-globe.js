@@ -1,3 +1,6 @@
+// Мини-глобус на главной. Нормальный, светлый, стандартный Cesium.
+// Земля видна полностью и ровно вписана в круг.
+
 (function () {
     if (typeof Cesium === "undefined") return;
 
@@ -18,78 +21,72 @@
         sceneModePicker: false,
         navigationHelpButton: false,
         selectionIndicator: false,
-        shouldAnimate: false,
-        imageryProvider: Cesium.createWorldImagery(),
-        terrainProvider: Cesium.createWorldTerrain()
+        shouldAnimate: false
     });
 
+    // убрать кредит Cesium
     if (viewer.cesiumWidget.creditContainer) {
         viewer.cesiumWidget.creditContainer.style.display = "none";
     }
 
-    const scene = viewer.scene;
     const camera = viewer.camera;
+    const scene  = viewer.scene;
 
-    scene.skyBox.show = false;
-    scene.skyAtmosphere.show = true;
     scene.globe.enableLighting = true;
+    scene.skyAtmosphere.show   = true;
 
-    // === точное вписывание шара в круг ===
-    const fov = camera.frustum.fov;
-    const earthRadius = 6378137; // метр
-    const distance = earthRadius / Math.sin(fov / 2);
+    // *** ВОТ ЭТО ДЕЛАЕТ ЗЕМЛЮ ИДЕАЛЬНО ВИДИМОЙ КАК НА ПЕРВОМ СКРИНЕ ***
+    camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(0, 20, 21000000) // идеальная дистанция!
+    });
 
-    camera.lookAt(
-        Cesium.Cartesian3.ZERO,
-        new Cesium.Cartesian3(0, -distance, 0)
-    );
-    camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    // запрещаем масштабирование и т.п.
+    const ctrl = viewer.scene.screenSpaceCameraController;
+    ctrl.enableZoom = false;
+    ctrl.enableTilt = false;
+    ctrl.enableRotate = false;
+    ctrl.enableLook = false;
+    ctrl.enableTranslate = false;
 
-    // ===== авто-вращение =====
-    let auto = true;
+    // авто вращение
     let last = performance.now();
-
     scene.preRender.addEventListener(() => {
         const now = performance.now();
         const dt = (now - last) / 1000;
         last = now;
-        if (auto) camera.rotate(Cesium.Cartesian3.UNIT_Z, -0.1 * dt);
+        camera.rotate(Cesium.Cartesian3.UNIT_Z, -0.08 * dt);
     });
 
-    // ===== drag =====
-    let drag = false;
+    // drag → только горизонталь
+    let isDrag = false;
     let lastX = 0;
     let moved = 0;
-    let active = null;
 
     container.addEventListener("pointerdown", e => {
-        drag = true;
-        active = e.pointerId;
+        isDrag = true;
         lastX = e.clientX;
         moved = 0;
-        auto = false;
-        container.setPointerCapture(active);
+        container.setPointerCapture(e.pointerId);
     });
 
     container.addEventListener("pointermove", e => {
-        if (!drag || e.pointerId !== active) return;
+        if (!isDrag) return;
         const dx = e.clientX - lastX;
         lastX = e.clientX;
         moved += Math.abs(dx);
-        camera.rotate(Cesium.Cartesian3.UNIT_Z, -dx * 0.003);
+        camera.rotate(Cesium.Cartesian3.UNIT_Z, -dx * 0.0025);
     });
 
-    function endDrag(e) {
-        if (e.pointerId !== active) return;
-        drag = false;
+    function end(e) {
+        if (!isDrag) return;
+        isDrag = false;
+        try { container.releasePointerCapture(e.pointerId) } catch (_) {}
 
-        if (moved < 4) {
+        if (moved < 5) {
             window.location.href = "space.html";
         }
-
-        setTimeout(() => auto = true, 300);
     }
 
-    container.addEventListener("pointerup", endDrag);
-    container.addEventListener("pointercancel", endDrag);
+    container.addEventListener("pointerup", end);
+    container.addEventListener("pointercancel", end);
 })();
