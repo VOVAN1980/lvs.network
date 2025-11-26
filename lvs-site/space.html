@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <title>LVS Space – Global work map</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CesiumJS (CDN) -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/cesium@1.123.0/Build/Cesium/Widgets/widgets.css">
+    <script src="https://unpkg.com/cesium@1.123.0/Build/Cesium/Cesium.js"></script>
+
+    <!-- Наш стиль -->
     <link rel="stylesheet" href="assets/space/space.css">
 </head>
 <body>
@@ -20,29 +27,20 @@
     </header>
 
     <main class="space-main">
-        <div class="space-canvas-wrap">
-            <canvas id="lvs-space-canvas"></canvas>
-        </div>
-
-        <!-- слой с подписями городов -->
-        <div id="space-label-layer" class="space-label-layer"></div>
-
-        <!-- tooltip для клика по региону/городу -->
-        <div id="lvs-space-tooltip" class="space-tooltip" style="display:none;"></div>
+        <div id="cesiumContainer" class="space-cesium-container"></div>
 
         <div class="space-help">
             <div>⚙ Controls</div>
             <ul>
-                <li>Wheel – zoom planet in / out</li>
-                <li>Left mouse – rotate Earth (как в Google Earth)</li>
-                <li>Double click – focus &amp; open city / region info</li>
-                <li>Right mouse / Esc / Back button – return to main page</li>
+                <li>Wheel – zoom in / out</li>
+                <li>Left mouse – rotate &amp; tilt</li>
+                <li>Double click city – open work in this city</li>
+                <li>Right mouse / Esc / Back – return to main map</li>
             </ul>
         </div>
     </main>
 </div>
 
-<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script src="assets/space/space.js"></script>
 </body>
 </html>
