@@ -3,8 +3,7 @@
 (function () {
     if (typeof Cesium === "undefined") return;
 
-    // !!! СЮДА ВСТАВЬ СВОЙ CESIUM ION TOKEN !!!
-    // Зарегаться: https://cesium.com
+    // ВСТАВЬ СЮДА СВОЙ REAL TOKEN
     Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM";
 
     const backBtn = document.getElementById("space-back-btn");
@@ -39,22 +38,18 @@
     scene.skyAtmosphere.show = true;
     scene.skyBox.show = true;
 
-    // отключаем дефолтный даблклик-zoom и правую кнопку
+    // убираем дефолтный даблклик-zoom Cesium
     viewer.screenSpaceEventHandler.removeInputAction(
         Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
-    );
-    viewer.screenSpaceEventHandler.removeInputAction(
-        Cesium.ScreenSpaceEventType.RIGHT_CLICK
     );
 
     // стартовая позиция — Европа
     viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(10, 50, 15000000) // lon, lat, height (м)
+        destination: Cesium.Cartesian3.fromDegrees(10, 50, 15000000)
     });
 
-    // ----- ГОРОДА ДЛЯ ВЫБОРА РАБОТЫ -----
+    // ----- ГОРОДА -----
     const CITY_DATA = [
-        // Германия / твой регион
         { name: "Bad Kreuznach",   lat: 49.8454, lon: 7.8670 },
         { name: "Mainz",           lat: 49.9929, lon: 8.2473 },
         { name: "Frankfurt",       lat: 50.1109, lon: 8.6821 },
@@ -62,7 +57,6 @@
         { name: "Hamburg",         lat: 53.5511, lon: 9.9937 },
         { name: "Munich",          lat: 48.1351, lon: 11.5820 },
 
-        // Европа
         { name: "Paris",           lat: 48.8566, lon: 2.3522 },
         { name: "London",          lat: 51.5074, lon: -0.1278 },
         { name: "Warsaw",          lat: 52.2297, lon: 21.0122 },
@@ -71,7 +65,6 @@
         { name: "Rome",            lat: 41.9028, lon: 12.4964 },
         { name: "Madrid",          lat: 40.4168, lon: -3.7038 },
 
-        // мир
         { name: "New York",        lat: 40.7128, lon: -74.0060 },
         { name: "Los Angeles",     lat: 34.0522, lon: -118.2437 },
         { name: "Tokyo",           lat: 35.6762, lon: 139.6503 },
@@ -81,10 +74,8 @@
         { name: "São Paulo",       lat: -23.5505, lon: -46.6333 }
     ];
 
-    const cityEntities = [];
-
     CITY_DATA.forEach(city => {
-        const entity = viewer.entities.add({
+        viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(city.lon, city.lat, 0),
             point: {
                 pixelSize: 8,
@@ -108,11 +99,9 @@
                 lon: city.lon
             }
         });
-
-        cityEntities.push(entity);
     });
 
-    // ----- ОБРАБОТКА ДВОЙНОГО КЛИКА -----
+    // ----- ДВОЙНОЙ КЛИК -----
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
     handler.setInputAction(function (click) {
@@ -125,20 +114,17 @@
             const lon      = props.lon && props.lon.getValue();
 
             if (cityName && typeof lat === "number" && typeof lon === "number") {
-                // плавно подлететь к городу
                 viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(lon, lat, 800000), // высота ~800км
+                    destination: Cesium.Cartesian3.fromDegrees(lon, lat, 800000),
                     duration: 0.9
                 });
 
-                // открыть страницу города
                 const url =
                     "/lvs-site/region.html?city=" +
                     encodeURIComponent(cityName) +
                     "&lat=" + lat.toFixed(4) +
                     "&lon=" + lon.toFixed(4);
 
-                // небольшая задержка, чтобы анимация успела стартовать
                 setTimeout(() => {
                     window.location.href = url;
                 }, 400);
@@ -147,7 +133,6 @@
             }
         }
 
-        // если кликнули не по entity — просто фокус по координатам
         const ellipsoid = scene.globe.ellipsoid;
         const cartesian = viewer.camera.pickEllipsoid(click.position, ellipsoid);
         if (!cartesian) return;
@@ -162,12 +147,10 @@
         });
     }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
-    // ----- ПРАВАЯ КНОПКА / ESC = НАЗАД -----
+    // ESC = назад (по желанию)
     window.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
             goBack();
         }
     });
 })();
-
-
