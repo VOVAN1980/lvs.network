@@ -1,64 +1,70 @@
 // assets/lvs-hero-globe.js
+// Мини-глобус на главной странице (index.html → #miniGlobe)
+
 (function () {
-    // Cesium ещё не подгрузился
+    // Cesium ещё не подгрузился или нет контейнера — тихо выходим
     if (typeof Cesium === "undefined") return;
 
-    const container = document.getElementById("miniGlobe");
+    var container = document.getElementById("miniGlobe");
     if (!container) return;
 
-    // ТВОЙ REAL TOKEN
+    // ТВОЙ реальный токен (как в space.js)
     Cesium.Ion.defaultAccessToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM";
 
-    const viewer = new Cesium.Viewer("miniGlobe", {
-        imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }), // нормальная карта
-        // terrain убираем, чтобы не было лишних глюков
-        terrain: null,
+    // Создаём мини-viewer прямо в div#miniGlobe
+    var viewer = new Cesium.Viewer(container, {
+        imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }), // нормальная текстура земли
+        terrain: Cesium.Terrain.fromWorldTerrain(),
 
         animation: false,
         timeline: false,
-        fullscreenButton: false,
+        baseLayerPicker: false,
         geocoder: false,
         homeButton: false,
         sceneModePicker: false,
-        baseLayerPicker: false,
         navigationHelpButton: false,
+        fullscreenButton: false,
         infoBox: false,
         selectionIndicator: false,
         shouldAnimate: true
     });
 
-    const scene  = viewer.scene;
-    const camera = viewer.camera;
+    var scene = viewer.scene;
 
-    // Чуть-чуть атмосферы, но без сильного затемнения
-    scene.globe.enableLighting = false;      // ВАЖНО: иначе можно поймать «ночную» сторону и будет тёмный шар
-    scene.skyAtmosphere.show   = true;
-    scene.skyBox.show          = false;
+    // Космический вид: свет, атмосфера, прозрачный фон (чтобы шар был чистый в круге)
+    scene.globe.enableLighting = true;
+    scene.skyAtmosphere.show = true;
+    scene.skyBox.show = false;
+    scene.backgroundColor = Cesium.Color.TRANSPARENT;
 
-    // Убираем стандартный даблклик-zoom
+    // Начальная позиция камеры — Европа / Африка
+    viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(10.0, 15.0, 16000000.0)
+    });
+
+    // Убираем даблклик-зум, чтобы не дёргался
     viewer.screenSpaceEventHandler.removeInputAction(
         Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
     );
 
-    // Стартовая позиция — Европа + Африка, как на нормальном скрине
-    camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(10, 20, 13000000),
-        orientation: {
-            heading: Cesium.Math.toRadians(0),
-            pitch:   Cesium.Math.toRadians(-20),
-            roll:    0.0
-        }
-    });
+    // Медленное авто-вращение
+    var lastTime = viewer.clock.currentTime.clone();
+    var spinRate = 0.03; // скорость вращения
 
-    // Медленное вращение вокруг оси
-    const spinRate = Cesium.Math.toRadians(2.0); // 2 градуса в секунду
     viewer.clock.onTick.addEventListener(function (clock) {
-        const dt = clock.deltaSeconds;
-        camera.rotate(Cesium.Cartesian3.UNIT_Z, -spinRate * dt);
+        var currentTime = clock.currentTime;
+        var deltaSeconds = Cesium.JulianDate.secondsDifference(
+            currentTime,
+            lastTime
+        );
+        lastTime = currentTime;
+
+        // Плавный поворот вокруг оси Z (долгота)
+        viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, -spinRate * deltaSeconds);
     });
 
-    // Клик по мини-глобусу -> полная карта
+    // Клик по мини-глобусу → перейти на полную карту (space.html)
     container.style.cursor = "pointer";
     container.addEventListener("click", function () {
         window.location.href = "space.html";
