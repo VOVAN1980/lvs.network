@@ -1,11 +1,9 @@
-// assets/space/space.js — CesiumJS глобус + города
-
 (function () {
     if (typeof Cesium === "undefined") return;
 
-    // ТВОЙ REAL TOKEN (он уже есть)
+    // 🔥 Исправленный токен — В КАВЫЧКАХ!
     Cesium.Ion.defaultAccessToken =
-        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM";
 
     const backBtn = document.getElementById("space-back-btn");
 
@@ -17,10 +15,10 @@
         backBtn.addEventListener("click", goBack);
     }
 
-    // ----- VIEWER С НОРМАЛЬНОЙ ЗЕМЛЁЙ -----
+    // ----- VIEWER -----
     const viewer = new Cesium.Viewer("cesiumContainer", {
-        imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }), // нормальная карта
-        terrain: Cesium.Terrain.fromWorldTerrain(),                    // можно оставить, можно убрать
+        imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }),
+        terrain: Cesium.Terrain.fromWorldTerrain(),
 
         animation: false,
         timeline: false,
@@ -31,54 +29,53 @@
         baseLayerPicker: false,
         navigationHelpButton: false,
         infoBox: false,
-        selectionIndicator: false,
-        shouldAnimate: false
+        selectionIndicator: false
     });
+
+    viewer._cesiumWidget._creditContainer.style.display = "none";
 
     const scene = viewer.scene;
     scene.globe.enableLighting = true;
     scene.skyAtmosphere.show   = true;
     scene.skyBox.show          = true;
 
-    // убираем дефолтный даблклик-zoom Cesium
     viewer.screenSpaceEventHandler.removeInputAction(
         Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
     );
 
-    // стартовая позиция — Европа
     viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(10, 50, 15000000)
     });
 
-    // ----- ГОРОДА -----
+    // ----- CITIES -----
     const CITY_DATA = [
-        { name: "Bad Kreuznach",   lat: 49.8454, lon: 7.8670 },
-        { name: "Mainz",           lat: 49.9929, lon: 8.2473 },
-        { name: "Frankfurt",       lat: 50.1109, lon: 8.6821 },
-        { name: "Berlin",          lat: 52.5200, lon: 13.4050 },
-        { name: "Hamburg",         lat: 53.5511, lon: 9.9937 },
-        { name: "Munich",          lat: 48.1351, lon: 11.5820 },
+        { name: "Bad Kreuznach", lat: 49.8454, lon: 7.8670 },
+        { name: "Mainz", lat: 49.9929, lon: 8.2473 },
+        { name: "Frankfurt", lat: 50.1109, lon: 8.6821 },
+        { name: "Berlin", lat: 52.5200, lon: 13.4050 },
+        { name: "Hamburg", lat: 53.5511, lon: 9.9937 },
+        { name: "Munich", lat: 48.1351, lon: 11.5820 },
 
-        { name: "Paris",           lat: 48.8566, lon: 2.3522 },
-        { name: "London",          lat: 51.5074, lon: -0.1278 },
-        { name: "Warsaw",          lat: 52.2297, lon: 21.0122 },
-        { name: "Prague",          lat: 50.0755, lon: 14.4378 },
-        { name: "Vienna",          lat: 48.2082, lon: 16.3738 },
-        { name: "Rome",            lat: 41.9028, lon: 12.4964 },
-        { name: "Madrid",          lat: 40.4168, lon: -3.7038 },
+        { name: "Paris", lat: 48.8566, lon: 2.3522 },
+        { name: "London", lat: 51.5074, lon: -0.1278 },
+        { name: "Warsaw", lat: 52.2297, lon: 21.0122 },
+        { name: "Prague", lat: 50.0755, lon: 14.4378 },
+        { name: "Vienna", lat: 48.2082, lon: 16.3738 },
+        { name: "Rome", lat: 41.9028, lon: 12.4964 },
+        { name: "Madrid", lat: 40.4168, lon: -3.7038 },
 
-        { name: "New York",        lat: 40.7128, lon: -74.0060 },
-        { name: "Los Angeles",     lat: 34.0522, lon: -118.2437 },
-        { name: "Tokyo",           lat: 35.6762, lon: 139.6503 },
-        { name: "Seoul",           lat: 37.5665, lon: 126.9780 },
-        { name: "Singapore",       lat: 1.3521,  lon: 103.8198 },
-        { name: "Sydney",          lat: -33.8688, lon: 151.2093 },
-        { name: "São Paulo",       lat: -23.5505, lon: -46.6333 }
+        { name: "New York", lat: 40.7128, lon: -74.0060 },
+        { name: "Los Angeles", lat: 34.0522, lon: -118.2437 },
+        { name: "Tokyo", lat: 35.6762, lon: 139.6503 },
+        { name: "Seoul", lat: 37.5665, lon: 126.9780 },
+        { name: "Singapore", lat: 1.3521, lon: 103.8198 },
+        { name: "Sydney", lat: -33.8688, lon: 151.2093 },
+        { name: "São Paulo", lat: -23.5505, lon: -46.6333 }
     ];
 
     CITY_DATA.forEach(city => {
         viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(city.lon, city.lat, 0),
+            position: Cesium.Cartesian3.fromDegrees(city.lon, city.lat),
             point: {
                 pixelSize: 8,
                 color: Cesium.Color.YELLOW.withAlpha(0.95),
@@ -103,36 +100,33 @@
         });
     });
 
-    // ----- ДВОЙНОЙ КЛИК -----
+    // ----- DOUBLE-CLICK -----
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
     handler.setInputAction(function (click) {
         const picked = scene.pick(click.position);
 
-        if (Cesium.defined(picked) && picked.id && picked.id.properties) {
-            const props    = picked.id.properties;
-            const cityName = props.cityName && props.cityName.getValue();
-            const lat      = props.lat && props.lat.getValue();
-            const lon      = props.lon && props.lon.getValue();
+        if (picked && picked.id && picked.id.properties) {
+            const props = picked.id.properties;
 
-            if (cityName && typeof lat === "number" && typeof lon === "number") {
-                viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(lon, lat, 800000),
-                    duration: 0.9
-                });
+            const name = props.cityName.getValue();
+            const lat  = props.lat.getValue();
+            const lon  = props.lon.getValue();
 
-                const url =
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(lon, lat, 800000),
+                duration: 0.9
+            });
+
+            setTimeout(() => {
+                window.location.href =
                     "/lvs-site/region.html?city=" +
-                    encodeURIComponent(cityName) +
-                    "&lat=" + lat.toFixed(4) +
-                    "&lon=" + lon.toFixed(4);
+                    encodeURIComponent(name) +
+                    "&lat=" + lat +
+                    "&lon=" + lon;
+            }, 400);
 
-                setTimeout(() => {
-                    window.location.href = url;
-                }, 400);
-
-                return;
-            }
+            return;
         }
 
         const ellipsoid = scene.globe.ellipsoid;
@@ -140,19 +134,19 @@
         if (!cartesian) return;
 
         const cartographic = ellipsoid.cartesianToCartographic(cartesian);
-        const latDeg = Cesium.Math.toDegrees(cartographic.latitude);
-        const lonDeg = Cesium.Math.toDegrees(cartographic.longitude);
+
+        const lat = Cesium.Math.toDegrees(cartographic.latitude);
+        const lon = Cesium.Math.toDegrees(cartographic.longitude);
 
         viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(lonDeg, latDeg, 1600000),
+            destination: Cesium.Cartesian3.fromDegrees(lon, lat, 1600000),
             duration: 0.9
         });
     }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
-    // ESC = назад
-    window.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") {
-            goBack();
-        }
+    // ESC → назад
+    window.addEventListener("keydown", e => {
+        if (e.key === "Escape") goBack();
     });
+
 })();
