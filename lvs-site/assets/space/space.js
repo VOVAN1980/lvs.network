@@ -1,9 +1,10 @@
-// assets/space/space.js — полноэкранная Земля, без "окна", с наклоном
+// assets/space/space.js — глобус Земли + города
 
 (function () {
-    const canvas  = document.getElementById("lvs-space-canvas");
-    const tooltip = document.getElementById("lvs-space-tooltip");
-    const backBtn = document.getElementById("space-back-btn");
+    const canvas      = document.getElementById("lvs-space-canvas");
+    const tooltip     = document.getElementById("lvs-space-tooltip");
+    const backBtn     = document.getElementById("space-back-btn");
+    const labelLayer  = document.getElementById("space-label-layer");
 
     if (!canvas || typeof THREE === "undefined") return;
 
@@ -20,8 +21,8 @@
         renderer.outputEncoding = THREE.sRGBEncoding;
     }
 
-    const INIT_DIST = 3.6;
-    const MIN_DIST = 1.15;   // раньше 2.4
+    const INIT_DIST = 2.6;
+    const MIN_DIST  = 1.05; // почти касаемся поверхности
     const MAX_DIST  = 8.0;
 
     const camera = new THREE.PerspectiveCamera(
@@ -55,6 +56,11 @@
     if (THREE.sRGBEncoding) {
         earthTexture.encoding = THREE.sRGBEncoding;
     }
+    if (renderer.capabilities && renderer.capabilities.getMaxAnisotropy) {
+        earthTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    }
+    earthTexture.minFilter = THREE.LinearMipMapLinearFilter;
+    earthTexture.magFilter = THREE.LinearFilter;
 
     const earthMat = new THREE.MeshPhongMaterial({
         map: earthTexture,
@@ -65,21 +71,9 @@
     const earthMesh = new THREE.Mesh(sphereGeo, earthMat);
     globeGroup.add(earthMesh);
 
-    // <<< ЭТОТ БЛОК УБРАТЬ >>>
-/*
-// атмосфера
-const atmGeo = new THREE.SphereGeometry(RADIUS * 1.03, SEGMENTS, SEGMENTS);
-const atmMat = new THREE.MeshBasicMaterial({
-    color: 0x3ea6ff,
-    transparent: true,
-    opacity: 0.12,
-    side: THREE.BackSide,
-});
-const atmosphere = new THREE.Mesh(atmGeo, atmMat);
-globeGroup.add(atmosphere);
-*/
+    // никакого канта / атмосферы — чистый шар
 
-    // огоньки на поверхности
+    // огоньки "экономической активности" по поверхности
     const sparksGeo = new THREE.BufferGeometry();
     const sparksCount = 500;
     const positions = new Float32Array(sparksCount * 3);
@@ -111,14 +105,83 @@ globeGroup.add(atmosphere);
     const sparks = new THREE.Points(sparksGeo, sparksMat);
     globeGroup.add(sparks);
 
+    // ----- ГОРОДА (для выбора работы) -----
+
+    // базовый список — можешь расширять, это просто данные
+    const CITY_DATA = [
+        // Германия / твой регион
+        { name: "Bad Kreuznach",   lat: 49.8454, lon: 7.8670 },
+        { name: "Mainz",           lat: 49.9929, lon: 8.2473 },
+        { name: "Frankfurt",       lat: 50.1109, lon: 8.6821 },
+        { name: "Berlin",          lat: 52.5200, lon: 13.4050 },
+        { name: "Hamburg",         lat: 53.5511, lon: 9.9937 },
+        { name: "Munich",          lat: 48.1351, lon: 11.5820 },
+
+        // Европа
+        { name: "Paris",           lat: 48.8566, lon: 2.3522 },
+        { name: "London",          lat: 51.5074, lon: -0.1278 },
+        { name: "Warsaw",          lat: 52.2297, lon: 21.0122 },
+        { name: "Prague",          lat: 50.0755, lon: 14.4378 },
+        { name: "Vienna",          lat: 48.2082, lon: 16.3738 },
+        { name: "Rome",            lat: 41.9028, lon: 12.4964 },
+        { name: "Madrid",          lat: 40.4168, lon: -3.7038 },
+
+        // мир
+        { name: "New York",        lat: 40.7128, lon: -74.0060 },
+        { name: "Los Angeles",     lat: 34.0522, lon: -118.2437 },
+        { name: "Tokyo",           lat: 35.6762, lon: 139.6503 },
+        { name: "Seoul",           lat: 37.5665, lon: 126.9780 },
+        { name: "Singapore",       lat: 1.3521,  lon: 103.8198 },
+        { name: "Sydney",          lat: -33.8688, lon: 151.2093 },
+        { name: "São Paulo",       lat: -23.5505, lon: -46.6333 },
+    ];
+
+    function latLonToVec3(latDeg, lonDeg, radius = RADIUS) {
+        const lat = THREE.MathUtils.degToRad(latDeg);
+        const lon = THREE.MathUtils.degToRad(lonDeg);
+
+        const x = radius * Math.cos(lat) * Math.sin(lon);
+        const y = radius * Math.sin(lat);
+        const z = radius * Math.cos(lat) * Math.cos(lon);
+        return new THREE.Vector3(x, y, z);
+    }
+
+    const cityLabels = [];
+
+    CITY_DATA.forEach(city => {
+        const pos = latLonToVec3(city.lat, city.lon, RADIUS * 1.01);
+
+        // маленькая точка на сфере (можно выключить, если не надо)
+        const dotGeo = new THREE.SphereGeometry(0.012, 8, 8);
+        const dotMat = new THREE.MeshBasicMaterial({ color: 0xffe266 });
+        const dot = new THREE.Mesh(dotGeo, dotMat);
+        dot.position.copy(pos);
+        globeGroup.add(dot);
+
+        // HTML-лейбл
+        const el = document.createElement("div");
+        el.className = "space-city-label";
+        el.textContent = city.name;
+        labelLayer.appendChild(el);
+
+        cityLabels.push({
+            name: city.name,
+            lat: city.lat,
+            lon: city.lon,
+            worldPos: pos,
+            dot,
+            el,
+        });
+    });
+
     // ----- STATE -----
     let isDragging = false;
     let prevX = 0;
     let prevY = 0;
 
-    // углы камеры вокруг центра (как широта/долгота)
-    let rotX = 0;          // наклон вверх/вниз
-    let rotY = 0;          // поворот вокруг оси
+    // углы камеры вокруг центра
+    let rotX = 0;
+    let rotY = 0;
     let targetRotX = 0;
     let targetRotY = 0;
 
@@ -152,10 +215,10 @@ globeGroup.add(atmosphere);
 
         const rotSpeed = 0.005;
 
-        targetRotY += dx * rotSpeed;      // влево / вправо
-        targetRotX += -dy * rotSpeed;     // вверх / вниз
+        targetRotY += dx * rotSpeed;
+        targetRotX += -dy * rotSpeed;
 
-        const limit = Math.PI / 2 - 0.1;  // чтобы не переворачивало
+        const limit = Math.PI / 2 - 0.1;
         targetRotX = clamp(targetRotX, -limit, limit);
     }
 
@@ -194,7 +257,21 @@ globeGroup.add(atmosphere);
         backBtn.addEventListener("click", goBack);
     }
 
-    // ----- DOUBLE CLICK REGION -----
+    // ----- CITY / REGION SELECT -----
+
+    function haversineKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = THREE.MathUtils.degToRad(lat2 - lat1);
+        const dLon = THREE.MathUtils.degToRad(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(THREE.MathUtils.degToRad(lat1)) *
+            Math.cos(THREE.MathUtils.degToRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
     function onDblClick(e) {
         const rect = canvas.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -208,33 +285,70 @@ globeGroup.add(atmosphere);
 
         const p = hits[0].point.clone().normalize();
 
-        const lat = Math.asin(p.y);           // радианы
-        const lon = Math.atan2(p.x, p.z);     // радианы
-
-        // разворачиваем камеру на эту точку
-        targetRotX = -lat;
-        targetRotY = lon;
-        targetDist = clamp(targetDist * 0.8, MIN_DIST, MAX_DIST);
-
-        if (!tooltip) return;
+        const lat = Math.asin(p.y);       // рад
+        const lon = Math.atan2(p.x, p.z); // рад
 
         const latDeg = lat * 180 / Math.PI;
         const lonDeg = lon * 180 / Math.PI;
-        const regionUrl = `/lvs-site/region.html?lat=${latDeg.toFixed(2)}&lon=${lonDeg.toFixed(2)}`;
 
-        tooltip.style.display = "block";
-        tooltip.style.left = e.clientX + 14 + "px";
-        tooltip.style.top  = e.clientY + 14 + "px";
-        tooltip.innerHTML = `
-            <div style="font-weight:600;margin-bottom:4px;">Work region</div>
-            <div style="font-size:12px;opacity:0.85;margin-bottom:6px;">
-                Lat ${latDeg.toFixed(1)}°, Lon ${lonDeg.toFixed(1)}°. 
-                Open tasks and companies for this territory.
-            </div>
-            <a href="${regionUrl}">
-                Open region page
-            </a>
-        `;
+        // ищем ближайший город
+        let best = null;
+        let bestDist = Infinity;
+
+        cityLabels.forEach(c => {
+            const d = haversineKm(latDeg, lonDeg, c.lat, c.lon);
+            if (d < bestDist) {
+                bestDist = d;
+                best = c;
+            }
+        });
+
+        // если ближе 300 км — считаем, что попали в этот город
+        const CITY_THRESHOLD_KM = 300;
+
+        if (best && bestDist <= CITY_THRESHOLD_KM) {
+            // камера фокусится на город
+            targetRotX = -THREE.MathUtils.degToRad(best.lat);
+            targetRotY =  THREE.MathUtils.degToRad(best.lon);
+            targetDist  = clamp(targetDist * 0.85, MIN_DIST, MAX_DIST);
+
+            if (tooltip) {
+                const cityUrl =
+                    `/lvs-site/region.html?city=${encodeURIComponent(best.name)}` +
+                    `&lat=${best.lat.toFixed(2)}&lon=${best.lon.toFixed(2)}`;
+
+                tooltip.style.display = "block";
+                tooltip.style.left = e.clientX + 14 + "px";
+                tooltip.style.top  = e.clientY + 14 + "px";
+                tooltip.innerHTML = `
+                    <div style="font-weight:600;margin-bottom:4px;">${best.name}</div>
+                    <div style="font-size:12px;opacity:0.85;margin-bottom:6px;">
+                        Work opportunities, companies and tasks in this city.
+                    </div>
+                    <a href="${cityUrl}">
+                        Open ${best.name} page
+                    </a>
+                `;
+            }
+        } else {
+            // просто регион, как раньше
+            targetRotX = -lat;
+            targetRotY = lon;
+            targetDist = clamp(targetDist * 0.8, MIN_DIST, MAX_DIST);
+
+            if (tooltip) {
+                tooltip.style.display = "block";
+                tooltip.style.left = e.clientX + 14 + "px";
+                tooltip.style.top  = e.clientY + 14 + "px";
+                tooltip.innerHTML = `
+                    <div style="font-weight:600;margin-bottom:4px;">Work region</div>
+                    <div style="font-size:12px;opacity:0.85;margin-bottom:6px;">
+                        Lat ${latDeg.toFixed(1)}°, Lon ${lonDeg.toFixed(1)}°. 
+                        Open tasks and companies for this territory.
+                    </div>
+                `;
+            }
+        }
     }
 
     // ----- EVENTS -----
@@ -265,6 +379,34 @@ globeGroup.add(atmosphere);
     window.addEventListener("resize", resize);
 
     // ----- ANIMATE -----
+    function updateCityLabels() {
+        if (!cityLabels.length) return;
+
+        const size = renderer.getSize(new THREE.Vector2());
+        const width = size.x;
+        const height = size.y;
+
+        const showLabels = dist < 4.5; // далеко — не засоряем экран
+
+        cityLabels.forEach(c => {
+            const pos = c.worldPos.clone().multiplyScalar(1.02);
+            pos.project(camera);
+
+            // если за камерой — не рисуем
+            if (pos.z < -1 || pos.z > 1 || !showLabels) {
+                c.el.style.display = "none";
+                return;
+            }
+
+            const x = (pos.x * 0.5 + 0.5) * width;
+            const y = (-pos.y * 0.5 + 0.5) * height;
+
+            c.el.style.display = "block";
+            c.el.style.transform =
+                `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+        });
+    }
+
     function animate() {
         requestAnimationFrame(animate);
 
@@ -285,9 +427,9 @@ globeGroup.add(atmosphere);
         sparksMat.opacity = 0.75 + Math.sin(t * 1.1) * 0.15;
 
         renderer.render(scene, camera);
+
+        updateCityLabels();
     }
 
     animate();
 })();
-
-
