@@ -1,10 +1,9 @@
 // assets/lvs-hero-globe.js
-// Мини-глобус в hero: только горизонтальный drag, клик = переход в космос.
+// Мини-глобус в hero: шар вплотную в круге, только горизонтальный drag, клик = space.html
 
 (function () {
     if (typeof Cesium === "undefined") return;
 
-    // тот же токен, что в space.js
     Cesium.Ion.defaultAccessToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM";
 
@@ -25,7 +24,7 @@
         shouldAnimate: false
     });
 
-    // вырубаем ВСЕ стандартные взаимодействия камеры
+    // выключаем все стандартные контроли камеры
     const ctrl = viewer.scene.screenSpaceCameraController;
     ctrl.enableRotate    = false;
     ctrl.enableTranslate = false;
@@ -33,7 +32,7 @@
     ctrl.enableTilt      = false;
     ctrl.enableLook      = false;
 
-    // убираем кредит
+    // убираем копирайт Cesium
     if (viewer.cesiumWidget && viewer.cesiumWidget.creditContainer) {
         viewer.cesiumWidget.creditContainer.style.display = "none";
     }
@@ -44,14 +43,29 @@
     scene.globe.enableLighting = true;
     scene.skyAtmosphere.show   = true;
 
-    // стартовая позиция — просто красиво
-    camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(10, 20, 20000000)
-    });
+    // ===== КАМЕРА: шар вплотную в круге =====
+    // Делаем узкий FOV и ставим камеру ~на 2 радиуса от центра
+    camera.frustum.fov  = Cesium.Math.toRadians(25.0);
+    camera.frustum.near = 100000.0;
+    camera.frustum.far  = 50000000.0;
 
-    // авто-вращение, пока юзер не крутит сам
-    let autoRotate = true;
-    let lastTime   = performance.now();
+    const earthRadius = 6378137.0;
+    const distance    = earthRadius * 2.1; // подогнанно, чтобы шар почти касался круга
+
+    const center = Cesium.Cartesian3.fromDegrees(0, 0, 0);
+    const offset = new Cesium.Cartesian3(0.0, 0.0, distance);
+
+    camera.lookAt(center, offset);
+
+    // ===== АВТО-ВРАЩЕНИЕ + DRAG ТОЛЬКО ВЛЕВО/ВПРАВО =====
+    let autoRotate   = true;
+    let lastTime     = performance.now();
+    let dragging     = false;
+    let lastX        = 0;
+    let dragDistance = 0;
+    let activePtr    = null;
+
+    const ROT_SPEED = 0.003;
 
     scene.preRender.addEventListener(function () {
         const now   = performance.now();
@@ -63,54 +77,39 @@
         }
     });
 
-    // свой drag по оси Z
-    let dragging      = false;
-    let lastX         = 0;
-    let dragDistance  = 0;
-    let activePointer = null;
-
-    const ROT_SPEED = 0.003; // чувствительность вращения
-
     container.addEventListener("pointerdown", function (e) {
-        dragging      = true;
-        lastX         = e.clientX;
-        dragDistance  = 0;
-        activePointer = e.pointerId;
-        autoRotate    = false;
+        dragging     = true;
+        lastX        = e.clientX;
+        dragDistance = 0;
+        activePtr    = e.pointerId;
+        autoRotate   = false;
         container.setPointerCapture(e.pointerId);
     });
 
     container.addEventListener("pointermove", function (e) {
-        if (!dragging || e.pointerId !== activePointer) return;
+        if (!dragging || e.pointerId !== activePtr) return;
         const dx = e.clientX - lastX;
         lastX    = e.clientX;
         dragDistance += Math.abs(dx);
 
-        // крутим только вокруг оси Z (горизонт)
         const rot = dx * ROT_SPEED;
         camera.rotate(Cesium.Cartesian3.UNIT_Z, -rot);
     });
 
-    container.addEventListener("pointerup", function (e) {
-        if (e.pointerId !== activePointer) return;
-        dragging      = false;
-        activePointer = null;
-        container.releasePointerCapture(e.pointerId);
+    function endDrag(e) {
+        if (e.pointerId !== activePtr) return;
+        dragging  = false;
+        activePtr = null;
+        try { container.releasePointerCapture(e.pointerId); } catch (_) {}
 
-        // если почти не двигали — считаем это кликом → в космос
+        // почти не двигали — считаем кликом
         if (dragDistance < 5) {
             window.location.href = "space.html";
         } else {
-            // чуть подождали — снова включили авто-вращение
             setTimeout(() => { autoRotate = true; }, 400);
         }
-    });
+    }
 
-    container.addEventListener("pointercancel", function (e) {
-        if (e.pointerId !== activePointer) return;
-        dragging      = false;
-        activePointer = null;
-        container.releasePointerCapture(e.pointerId);
-        setTimeout(() => { autoRotate = true; }, 400);
-    });
+    container.addEventListener("pointerup", endDrag);
+    container.addEventListener("pointercancel", endDrag);
 })();
