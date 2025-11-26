@@ -1,52 +1,61 @@
-Cesium.Ion.defaultAccessToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM";
+// assets/lvs-hero-globe.js
+(function () {
+    // Если Cesium не подгрузился - тихо выходим
+    if (typeof Cesium === "undefined") return;
 
-const viewer = new Cesium.Viewer("cesiumContainer", {
-    animation: false,
-    timeline: false,
-    geocoder: false,
-    homeButton: false,
-    sceneModePicker: false,
-    navigationHelpButton: false,
-    baseLayerPicker: true,
-    fullscreenButton: false,
-});
+    const container = document.getElementById("lvs-hero-globe");
+    if (!container) return; // перестраховка, чтобы не ловить appendChild of null
 
-// Когда кликают на место на Земле
-const handler = viewer.screenSpaceEventHandler;
+    // Твой реальный токен Cesium Ion
+    Cesium.Ion.defaultAccessToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNGJlYzY3MS0wNzg0LTRhMTYtYTg4ZS0wZDk2Njk4MmJkODAiLCJpZCI6MzYzOTE1LCJpYXQiOjE3NjQxMTY4MTd9.mB7rmSUqh2vbP7RDT5B2nQMtOOoRNX0U1e3Z09v5ILM";
 
-handler.setInputAction(function (movement) {
-    const cartesian = viewer.camera.pickEllipsoid(
-        movement.position,
-        Cesium.Ellipsoid.WGS84
+    // Мини-viewer для главной страницы
+    const viewer = new Cesium.Viewer(container, {
+        imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }), // глобус как в Space
+        terrain: Cesium.Terrain.fromWorldTerrain(),
+
+        animation: false,
+        timeline: false,
+        fullscreenButton: false,
+        geocoder: false,
+        homeButton: false,
+        sceneModePicker: false,
+        baseLayerPicker: false,
+        navigationHelpButton: false,
+        infoBox: false,
+        selectionIndicator: false,
+        shouldAnimate: false
+    });
+
+    const scene = viewer.scene;
+    scene.globe.enableLighting = true;
+    scene.skyAtmosphere.show = true;
+    scene.skyBox.show = true;
+
+    // Стартовая камера — Европа / Африка примерно как на скрине
+    viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(10, 20, 20000000),
+        duration: 0
+    });
+
+    // Убираем стандартный double-click zoom, нам не нужен
+    viewer.screenSpaceEventHandler.removeInputAction(
+        Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
     );
 
-    if (!cartesian) return;
+    // Клик по кругу → переходим на полноэкранный Space-глобус
+    const clickArea = document.getElementById("lvs-globe-click-area");
+    if (clickArea) {
+        clickArea.style.cursor = "pointer";
+        clickArea.addEventListener("click", function () {
+            window.location.href = "space.html";
+        });
+    }
 
-    const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-
-    const lat = Cesium.Math.toDegrees(cartographic.latitude).toFixed(4);
-    const lon = Cesium.Math.toDegrees(cartographic.longitude).toFixed(4);
-
-    console.log("Клик по координатам:", lat, lon);
-
-    alert("Регион: " + lat + ", " + lon +
-          "\nВ будущем: показать вакансии, компании и задания.");
-}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-
-// центрирование по пользователю
-function focusMyRegion() {
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(lon, lat, 2000000),
-            });
-        },
-        () => {
-            alert("Невозможно получить местоположение.");
-        }
-    );
-}
+    // (опционально) можно чуть-чуть медленно вращать Землю
+    viewer.clock.onTick.addEventListener(function () {
+        const camera = viewer.camera;
+        camera.rotate(Cesium.Cartesian3.UNIT_Z, -0.00003); // лёгкий дрейф
+    });
+})();
