@@ -1,20 +1,573 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LVS</title>
-  <meta http-equiv="refresh" content="0; url=https://app.lvs.network/">
-  <link rel="canonical" href="https://app.lvs.network/">
-  <style>
-    html, body { margin: 0; height: 100%; background: #0b1020; color: #e8ecf8;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-    body { display: flex; align-items: center; justify-content: center; }
-    a { color: #7aa2ff; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LVS — задания рядом, оплата за доказанный результат</title>
+<meta name="description" content="Кто-то рядом делает реальное дело, LVS доказывает где и когда, заказчик платит. Android, Windows и Telegram.">
+<meta property="og:title" content="LVS — Living Value System">
+<meta property="og:description" content="Tasks nearby, paid for proven results. Android, Windows and Telegram.">
+<meta property="og:image" content="https://lvs.network/img/hero-worker.webp">
+<meta property="og:url" content="https://lvs.network/">
+<meta name="theme-color" content="#050913">
+<link rel="icon" href="img/orbit.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+:root{
+  --bg:#050913;--bg2:#0a1122;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);
+  --tx:#fff;--tx2:rgba(255,255,255,.78);--tx3:rgba(255,255,255,.55);
+  --blue:#5B8CFF;--cyan:#38D0FF;--mint:#31D6A3;--gold:#E2B86A;--violet:#7B6BFF;--orange:#FFA54B;--red:#FF6B7A;
+  --r:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{background:var(--bg);color:var(--tx);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.wrap{width:min(1240px,100% - 48px);margin-inline:auto}
+main{overflow-x:clip}
+
+/* живой фон */
+.sky{position:fixed;inset:0;z-index:-2;overflow:hidden;background:
+  radial-gradient(1200px 700px at 78% -10%,rgba(91,140,255,.22),transparent 60%),
+  radial-gradient(900px 600px at 0% 30%,rgba(123,107,255,.16),transparent 60%),
+  radial-gradient(800px 600px at 60% 110%,rgba(49,214,163,.10),transparent 60%),var(--bg)}
+.sky::before{content:"";position:absolute;inset:-50%;background:conic-gradient(from 0deg at 60% 40%,transparent 0 40%,rgba(91,140,255,.10) 50%,transparent 60% 100%);animation:spin 40s linear infinite}
+.sky::after{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 70%);opacity:.45}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* шапка */
+header{position:sticky;top:0;z-index:20;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:rgba(5,9,19,.6);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;gap:24px;height:72px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;letter-spacing:-.03em}
+.brand img{width:36px;height:36px;animation:spin 30s linear infinite}
+.by{display:flex;align-items:center;gap:7px;padding-left:14px;border-left:1px solid var(--line2);color:var(--tx3);font-size:13px;font-weight:700}
+.by:hover{color:#fff}
+.by img{width:20px;height:20px}
+.menu{display:flex;gap:24px;margin-left:auto;font-size:15px;font-weight:600;color:var(--tx2)}
+.menu a:hover{color:#fff}
+.lang{display:flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden;font-size:13px;font-weight:700}
+.lang button{all:unset;padding:7px 12px;color:var(--tx3);cursor:pointer}
+.lang button.on{background:rgba(255,255,255,.12);color:#fff}
+.burger{all:unset;display:none;cursor:pointer;width:40px;height:40px;border-radius:12px;border:1px solid var(--line2);place-items:center}
+.burger svg{width:20px;height:20px}
+.mob{display:none;flex-direction:column;padding:8px 24px 18px;border-top:1px solid var(--line)}
+.mob a{padding:12px 0;font-weight:700;color:var(--tx2);border-bottom:1px solid var(--line)}
+header.open .mob{display:flex}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:52px;padding:0 24px;border-radius:16px;font-weight:800;font-size:16px;white-space:nowrap;transition:transform .2s,box-shadow .2s,background .2s;cursor:pointer}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.pri{background:linear-gradient(135deg,#3D7BFF,#5B8CFF 45%,#38D0FF);box-shadow:0 12px 40px -10px rgba(61,123,255,.8)}
+.btn.pri:hover{transform:translateY(-2px);box-shadow:0 18px 50px -12px rgba(61,123,255,.95)}
+.btn.sec{background:rgba(255,255,255,.07);border:1px solid var(--line2)}
+.btn.sec:hover{background:rgba(255,255,255,.12)}
+.btn.sm{height:42px;padding:0 18px;border-radius:12px;font-size:14px}
+
+/* первый экран */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;padding:76px 0 88px;min-height:calc(100vh - 72px)}
+.kicker{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--line2);border-radius:999px;background:rgba(255,255,255,.04);font-size:13px;font-weight:700;color:var(--tx2)}
+.kicker i{width:8px;height:8px;border-radius:50%;background:var(--mint);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(49,214,163,.7)}70%{box-shadow:0 0 0 10px rgba(49,214,163,0)}100%{box-shadow:0 0 0 0 rgba(49,214,163,0)}}
+h1{font-size:clamp(40px,4.4vw,64px);line-height:1.04;letter-spacing:-.045em;font-weight:900;margin:22px 0}
+.g{background:linear-gradient(100deg,#fff 0%,#BFD3FF 30%,var(--gold) 70%,#FFE2A8 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:20px;line-height:1.55;color:var(--tx2);max-width:600px}
+.cta{display:flex;flex-wrap:wrap;gap:14px;margin:36px 0 32px}
+.trust{display:flex;flex-wrap:wrap;gap:10px 22px;color:var(--tx3);font-size:14px;font-weight:600}
+.trust span{display:flex;align-items:center;gap:8px}
+.chk{width:16px;height:16px;color:var(--mint);flex:none}
+
+/* макет телефона */
+.stage{position:relative;height:640px}
+.phone{position:absolute;left:50%;top:50%;width:300px;height:620px;transform:translate(-50%,-50%) rotate(-4deg);border-radius:46px;padding:12px;background:linear-gradient(160deg,#2a3550,#0d1424 40%,#1d2840);box-shadow:0 60px 120px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.06);animation:float 7s ease-in-out infinite}
+@keyframes float{50%{transform:translate(-50%,-52%) rotate(-3deg)}}
+.screen{height:100%;border-radius:36px;overflow:hidden;background:linear-gradient(180deg,#0b1328,#070c1a);position:relative}
+.notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:96px;height:26px;border-radius:20px;background:#000;z-index:2}
+.s-top{padding:48px 18px 12px;display:flex;align-items:center;justify-content:space-between}
+.s-top b{font-size:20px;letter-spacing:-.02em}
+.s-top small{display:block;color:var(--tx3);font-size:11px;font-weight:600;margin-top:2px}
+.s-chip{font-size:11px;font-weight:800;padding:6px 10px;border-radius:999px;background:rgba(91,140,255,.18);color:#BFD0FF}
+.feed{padding:4px 12px;display:flex;flex-direction:column;gap:10px}
+.card{display:flex;gap:10px;padding:9px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07)}
+.card img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex:none}
+.card b{font-size:13px;line-height:1.25;display:block}
+.card .m{display:flex;gap:8px;margin-top:6px;font-size:11px;color:var(--tx3);font-weight:600}
+.card .m em{font-style:normal;color:var(--mint);font-weight:800}
+.card .m .bon{color:var(--gold)}
+.tabbar{position:absolute;left:10px;right:10px;bottom:10px;height:58px;border-radius:20px;background:rgba(14,22,44,.92);display:flex;justify-content:space-around;align-items:center;color:var(--tx3);font-size:10px;font-weight:700}
+.tabbar span{display:flex;flex-direction:column;align-items:center;gap:4px}
+.tabbar span.on{color:#fff}
+.tabbar i{width:18px;height:18px;border-radius:6px;background:currentColor;opacity:.7}
+.float{position:absolute;padding:14px 16px;border-radius:18px;background:rgba(12,19,38,.8);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line2);box-shadow:0 24px 60px -20px rgba(0,0,0,.8);font-size:13px}
+.float .t{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
+.proof{left:-16%;top:22%;width:240px;animation:float2 8s ease-in-out infinite}
+.proof .ph{height:110px;border-radius:12px;background:url(img/task-product.webp) center/cover;position:relative;margin-bottom:10px}
+.proof .ph span{position:absolute;left:8px;bottom:8px;font-size:10px;font-weight:800;padding:4px 7px;border-radius:7px;background:rgba(0,0,0,.6)}
+.ok{display:flex;align-items:center;gap:8px;font-weight:700}
+.ok svg{width:18px;height:18px;color:var(--mint);flex:none}
+.judge{right:-8%;top:50%;width:230px;animation:float2 9s ease-in-out -2s infinite}
+.paid{left:2%;bottom:8%;display:flex;align-items:center;gap:12px;animation:float2 7.5s ease-in-out -4s infinite}
+.coin{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#7CF1CB,#1aa57c);display:grid;place-items:center;font-weight:900;font-size:12px;color:#03281c;flex:none}
+.paid b{font-size:18px;color:var(--mint)}
+@keyframes float2{50%{transform:translateY(-12px)}}
+.ring{position:absolute;inset:40px;border-radius:50%;border:1px dashed rgba(91,140,255,.25);animation:spin 60s linear infinite}
+.ring::before{content:"";position:absolute;top:-5px;left:50%;width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 20px var(--cyan)}
+
+/* секции */
+section{padding:110px 0}
+.sec-h{max-width:740px;margin-bottom:56px}
+.sec-h.c{margin-inline:auto;text-align:center}
+.eyebrow{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+h2{font-size:clamp(32px,4vw,52px);line-height:1.08;letter-spacing:-.035em;font-weight:900;margin:14px 0 16px}
+.sec-h p{font-size:19px;line-height:1.6;color:var(--tx2)}
+.panel{border-radius:var(--r);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid var(--line)}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;position:relative}
+.steps::before{content:"";position:absolute;top:58px;left:8%;right:8%;height:2px;background:linear-gradient(90deg,transparent,rgba(91,140,255,.6),rgba(226,184,106,.6),rgba(49,214,163,.6),transparent)}
+.step{position:relative;padding:28px;transition:transform .3s,border-color .3s}
+.step:hover{transform:translateY(-6px);border-color:var(--line2)}
+.num{width:60px;height:60px;border-radius:18px;display:grid;place-items:center;font-size:24px;font-weight:900;margin-bottom:22px;background:var(--bg2);border:1px solid var(--line2)}
+.step:nth-child(1) .num{color:var(--blue);box-shadow:0 0 30px -6px rgba(91,140,255,.7)}
+.step:nth-child(2) .num{color:var(--gold);box-shadow:0 0 30px -6px rgba(226,184,106,.7)}
+.step:nth-child(3) .num{color:var(--mint);box-shadow:0 0 30px -6px rgba(49,214,163,.7)}
+.step h3{font-size:24px;letter-spacing:-.02em;margin-bottom:10px}
+.step p{color:var(--tx2);line-height:1.6;font-size:16px}
+.vis{margin-top:22px;height:150px;border-radius:16px;overflow:hidden;position:relative;background-color:#0b1328;background-position:center;background-size:cover}
+.vis .tag{position:absolute;left:12px;bottom:12px;font-size:12px;font-weight:800;padding:6px 10px;border-radius:9px;background:rgba(0,0,0,.6)}
+.v1{background-image:linear-gradient(0deg,rgba(5,9,19,.5),transparent),url(img/task-address.webp)}
+.v2{background-image:linear-gradient(0deg,rgba(5,9,19,.5),transparent),url(img/hero-worker.webp)}
+.v3{display:flex;align-items:center;justify-content:center;gap:12px;background-image:radial-gradient(circle at 50% 50%,rgba(49,214,163,.18),transparent 70%)}
+.pill{padding:10px 14px;border-radius:12px;font-weight:800;font-size:14px;border:1px solid var(--line2);background:rgba(255,255,255,.05)}
+.pill.g{color:var(--mint);border-color:rgba(49,214,163,.45)}
+
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.f{padding:28px;transition:transform .3s,border-color .3s}
+.f:hover{transform:translateY(-4px);border-color:var(--line2)}
+.ic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;margin-bottom:20px;border:1px solid var(--line2);background:rgba(255,255,255,.04)}
+.ic svg{width:26px;height:26px}
+.f h3{font-size:20px;letter-spacing:-.02em;margin-bottom:10px}
+.f p{color:var(--tx2);line-height:1.6;font-size:15.5px}
+.c-blue{color:var(--blue)}.c-gold{color:var(--gold)}.c-mint{color:var(--mint)}.c-violet{color:var(--violet)}.c-cyan{color:var(--cyan)}.c-orange{color:var(--orange)}
+
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.side{padding:36px;position:relative;overflow:hidden}
+.side .img{height:200px;border-radius:16px;margin:-8px -8px 28px;background-size:cover;background-position:center}
+.side h3{font-size:28px;letter-spacing:-.03em;margin-bottom:18px}
+.list{list-style:none;display:flex;flex-direction:column;gap:14px}
+.list li{display:flex;gap:12px;color:var(--tx2);line-height:1.55;font-size:16px}
+.list li svg{margin-top:3px}
+
+.money{display:grid;grid-template-columns:1.2fr .8fr;gap:22px}
+.vu{padding:40px;position:relative;overflow:hidden}
+.vu::after{content:"";position:absolute;right:-120px;top:-120px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(49,214,163,.22),transparent 70%)}
+.bigrate{display:flex;align-items:center;gap:18px;margin:6px 0 22px;flex-wrap:wrap}
+.bigrate b{font-size:clamp(40px,5vw,64px);font-weight:900;letter-spacing:-.04em}
+.bigrate .eq{font-size:36px;color:var(--tx3);font-weight:800}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.chip{padding:9px 14px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.05);font-weight:700;font-size:14px}
+.bonc{padding:40px;position:relative;overflow:hidden}
+.bonc::after{content:"";position:absolute;left:-100px;bottom:-140px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(226,184,106,.22),transparent 70%)}
+.bonc .coin{width:64px;height:64px;font-size:16px;background:radial-gradient(circle at 35% 30%,#FFE2A8,#B8872F);color:#2b1c03;margin-bottom:20px}
+.p{color:var(--tx2);line-height:1.65;font-size:16.5px}
+.p+.p{margin-top:12px}
+
+.sec2{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}
+.judgebox{padding:40px;background:radial-gradient(700px 400px at 100% 0%,rgba(91,140,255,.18),transparent 60%),linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03))}
+.flow{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+.flow div{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-weight:600;color:var(--tx2)}
+.flow b{min-width:72px;color:#fff}
+.seclist{padding:40px}
+
+.dl{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.d{padding:28px;display:flex;flex-direction:column;gap:12px}
+.d h3{font-size:22px;letter-spacing:-.02em}
+.d p{color:var(--tx2);line-height:1.55;font-size:15px;flex:1}
+.d .btn{margin-top:8px}
+.d.soon{opacity:.7}
+.note{margin-top:22px;color:var(--tx3);font-size:14px;line-height:1.6;text-align:center}
+.note a{color:var(--tx2);text-decoration:underline}
+
+.faq{max-width:880px;margin-inline:auto;display:flex;flex-direction:column;gap:12px}
+details{border-radius:18px;background:rgba(255,255,255,.05);border:1px solid var(--line);transition:border-color .2s}
+details[open]{border-color:var(--line2);background:rgba(255,255,255,.07)}
+summary{list-style:none;cursor:pointer;padding:22px 26px;font-weight:800;font-size:18px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-size:26px;font-weight:500;color:var(--tx3);transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{padding:0 26px 24px;color:var(--tx2);line-height:1.65;font-size:16px}
+
+.final{padding:64px;text-align:center;background:radial-gradient(600px 300px at 50% 0%,rgba(91,140,255,.28),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03))}
+.final h2{margin-top:0}
+.final .cta{justify-content:center;margin-bottom:0}
+
+footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:40px}
+.foot{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px}
+.foot h4{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:16px}
+.foot a{display:block;color:var(--tx2);padding:5px 0;font-size:15px}
+.foot a:hover{color:#fff}
+.foot .about{color:var(--tx3);line-height:1.6;font-size:14.5px;margin-top:14px;max-width:340px}
+.copy{margin-top:40px;color:var(--tx3);font-size:13px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+
+@media(max-width:1100px){
+  .menu{display:none}.burger{display:grid}
+  .hero{grid-template-columns:1fr;gap:16px;padding:48px 0 64px;min-height:0}
+  .stage{height:620px}
+  .proof{left:0}.judge{right:0}
+  .steps,.feat{grid-template-columns:1fr 1fr}.steps::before{display:none}
+  .duo,.money,.sec2{grid-template-columns:1fr}
+  .dl{grid-template-columns:1fr 1fr}
+  .foot{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  .wrap{width:calc(100% - 32px)}
+  .by span{display:none}
+  .nav{gap:14px}
+  .nav .btn{display:none}
+  .lead{font-size:18px}
+  .stage{height:560px;transform:scale(.9);margin:-20px 0}
+  .proof{width:200px}.judge{width:190px}
+  .steps,.feat,.dl,.foot{grid-template-columns:1fr}
+  section{padding:72px 0}
+  .side,.vu,.bonc,.judgebox,.seclist{padding:26px}
+  .final{padding:40px 22px}
+  .cta .btn{flex:1 1 100%}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
 </head>
 <body>
-  <p><a href="https://app.lvs.network/">LVS → app.lvs.network</a></p>
-  <script>location.replace('https://app.lvs.network/' + location.search + location.hash);</script>
+<div class="sky"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="chk" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="and" viewBox="0 0 24 24"><path fill="currentColor" d="M17.6 9.48l1.84-3.18a.38.38 0 10-.66-.38l-1.86 3.22A11.4 11.4 0 0012 8.1c-1.77 0-3.42.38-4.92 1.04L5.22 5.92a.38.38 0 10-.66.38L6.4 9.48A10.8 10.8 0 001 18h22a10.8 10.8 0 00-5.4-8.52zM7 15.25a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm10 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></symbol>
+  <symbol id="win" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5.1l7.4-1v7.2H3V5.1zm8.3-1.1L21 2.7v8.6h-9.7V4zM3 12.6h7.4v7.2l-7.4-1v-6.2zm8.3 0H21v8.7l-9.7-1.3v-7.4z"/></symbol>
+  <symbol id="tg" viewBox="0 0 24 24"><path fill="currentColor" d="M21.9 4.4l-3.3 15.5c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.2-8.3c.4-.4-.1-.6-.6-.2L6 13.4 1.1 11.9c-1.1-.3-1.1-1.1.2-1.6l19.1-7.4c.9-.3 1.7.2 1.5 1.5z"/></symbol>
+  <symbol id="apl" viewBox="0 0 24 24"><path fill="currentColor" d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.3.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.8-1-2.8-4.1zM13.9 5.2c.7-.8 1.2-2 1-3.2-1 .1-2.3.7-3 1.6-.7.7-1.3 1.9-1.1 3.1 1.2.1 2.4-.6 3.1-1.5z"/></symbol>
+  <symbol id="shield" viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.4 8.5-8 9-4.6-.5-8-4-8-9V7l8-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+</svg>
+
+<header id="top">
+  <div class="wrap nav">
+    <a class="brand" href="#top"><img src="img/orbit.webp" alt="">LVS</a>
+    <a class="by" href="https://vovan1980.github.io/IBITILabs/" target="_blank" rel="noopener"><img src="img/ibiti.webp" alt=""><span>IBITI Labs</span></a>
+    <nav class="menu">
+      <a href="#how" data-i="m1">Как это работает</a><a href="#features" data-i="m2">Возможности</a><a href="#money" data-i="m3">Деньги</a><a href="#safety" data-i="m4">Безопасность</a><a href="#faq" data-i="m5">Вопросы</a>
+    </nav>
+    <div class="lang"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+    <a class="btn pri sm" href="#download" data-i="dl">Скачать</a>
+    <button class="burger" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+  <nav class="mob">
+    <a href="#how" data-i="m1">Как это работает</a><a href="#features" data-i="m2">Возможности</a><a href="#money" data-i="m3">Деньги</a><a href="#safety" data-i="m4">Безопасность</a><a href="#download" data-i="dl">Скачать</a><a href="#faq" data-i="m5">Вопросы</a>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <span class="kicker"><i></i><span data-i="kick">Работает на Android, Windows и в Telegram</span></span>
+      <h1 data-i="h1">Реальные дела рядом.<br><span class="g">Оплата за доказанный результат.</span></h1>
+      <p class="lead" data-i="lead">Сфотографировать вывеску, проверить, открыт ли магазин, показать место в Live — кто-то рядом делает, LVS доказывает где и когда, заказчик платит.</p>
+      <div class="cta">
+        <a class="btn pri" href="https://github.com/VOVAN1980/lvs-core/releases/latest/download/LVS-Android.apk"><svg><use href="#and"/></svg><span data-i="dlA">Скачать для Android</span></a>
+        <a class="btn sec" href="https://github.com/VOVAN1980/lvs-core/releases/latest/download/LVS-Windows-x64.zip"><svg><use href="#win"/></svg>Windows</a>
+        <a class="btn sec" href="https://t.me/LVS_official" target="_blank" rel="noopener"><svg><use href="#tg"/></svg>Telegram</a>
+      </div>
+      <div class="trust">
+        <span><svg class="chk"><use href="#chk"/></svg>1 VU = 1 USDT/USDC</span>
+        <span><svg class="chk"><use href="#chk"/></svg><span data-i="tr2">Споры решает судья по доказательствам</span></span>
+        <span><svg class="chk"><use href="#chk"/></svg><span data-i="tr3">30 языков</span></span>
+      </div>
+    </div>
+
+    <div class="stage" aria-hidden="true">
+      <div class="ring"></div>
+      <div class="phone"><div class="screen">
+        <div class="notch"></div>
+        <div class="s-top"><div><b data-i="ph1">Задания рядом</b><small data-i="ph2">Вена · вся область</small></div><span class="s-chip">VU · BON</span></div>
+        <div class="feed">
+          <div class="card"><img src="img/task-product.webp" alt=""><div><b data-i="c1">Проверить цену на витрине</b><div class="m"><em>0.50 VU</em><span data-i="km18">1.8 км</span><span data-i="min45">45 мин</span></div></div></div>
+          <div class="card"><img src="img/task-auto.webp" alt=""><div><b data-i="c2">Сфотографировать авто у дома</b><div class="m"><em>0.80 VU</em><span data-i="km24">2.4 км</span></div></div></div>
+          <div class="card"><img src="img/task-address.webp" alt=""><div><b data-i="c3">Открыт ли магазин на углу?</b><div class="m"><em class="bon">5 BON</em><span data-i="m600">600 м</span></div></div></div>
+          <div class="card"><img src="img/task-delivery.webp" alt=""><div><b data-i="c4">Подтвердить доставку</b><div class="m"><em>0.60 VU</em><span data-i="km31">3.1 км</span></div></div></div>
+          <div class="card"><img src="img/task-inspection.webp" alt=""><div><b data-i="c5">Live: показать вход</b><div class="m"><em>1.20 VU</em><span data-i="m900">900 м</span></div></div></div>
+        </div>
+        <div class="tabbar"><span class="on"><i></i><span data-i="tb1">Лента</span></span><span><i></i><span data-i="tb2">Задания</span></span><span><i></i><span data-i="tb3">Создать</span></span><span><i></i><span data-i="tb4">Кошелёк</span></span></div>
+      </div></div>
+      <div class="float proof"><div class="t" data-i="fl1">Доказательство</div><div class="ph"><span>18:42 · 48.21°N 16.37°E</span></div>
+        <div class="ok"><svg><use href="#chk"/></svg><span data-i="fl2">Камера LVS · время и GPS</span></div></div>
+      <div class="float judge"><div class="t" data-i="fl3">Встроенный судья</div>
+        <div class="ok"><svg><use href="#shield"/></svg><span data-i="fl4">Решение в пользу исполнителя</span></div></div>
+      <div class="float paid"><div class="coin">VU</div><div><div class="t" style="margin:0 0 2px" data-i="fl5">Выплачено</div><b>+0.50 VU</b></div></div>
+    </div>
+  </div>
+
+  <!-- как это работает -->
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-h reveal">
+        <div class="eyebrow" data-i="m1">Как это работает</div>
+        <h2 data-i="howT">Три шага от задания до оплаты</h2>
+        <p data-i="howP">Никаких «на слово». Доказательство снимается в момент работы, а деньги идут по результату.</p>
+      </div>
+      <div class="steps">
+        <div class="step panel reveal"><div class="num">1</div><h3 data-i="s1t">Опубликуйте задание</h3>
+          <p data-i="s1p">Что сделать, где — страна, область, город или точный адрес — и цена в VU или BON.</p>
+          <div class="vis v1"><span class="tag" data-i="s1g">📍 Вся область · 0.50 VU</span></div></div>
+        <div class="step panel reveal" style="transition-delay:.12s"><div class="num">2</div><h3 data-i="s2t">Кто-то рядом выполняет</h3>
+          <p data-i="s2p">Исполнитель снимает камерой LVS: время и GPS привязаны к фото и видео. Можно показать место в Live.</p>
+          <div class="vis v2"><span class="tag">● Live · 18:42</span></div></div>
+        <div class="step panel reveal" style="transition-delay:.24s"><div class="num">3</div><h3 data-i="s3t">Оплата по результату</h3>
+          <p data-i="s3p">Заказчик принял — выплата сразу. Промолчал — исполнитель получает автоматически. Спор решает судья по данным.</p>
+          <div class="vis v3"><span class="pill" data-i="s3a">Принято</span><span class="pill g">+0.50 VU</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- возможности -->
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-h reveal">
+        <div class="eyebrow" data-i="m2">Возможности</div>
+        <h2 data-i="ftT">Всё, чтобы доверять результату</h2>
+        <p data-i="ftP">Доказательство, связь, решение споров и честный рейтинг — внутри одного приложения.</p>
+      </div>
+      <div class="feat">
+        <div class="f panel reveal"><div class="ic c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+          <h3 data-i="f1t">Камера LVS</h3><p data-i="f1p">Фото и видео снимаются в приложении: время и GPS привязаны к кадру. Лица и номера можно скрыть по желанию.</p></div>
+        <div class="f panel reveal" style="transition-delay:.08s"><div class="ic c-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z" stroke-linejoin="round"/></svg></div>
+          <h3 data-i="f2t">Live с места</h3><p data-i="f2p">Покажите место заказчику в прямом эфире — когда фото недостаточно.</p></div>
+        <div class="f panel reveal" style="transition-delay:.16s"><div class="ic c-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
+          <h3 data-i="f3t">Лента по реальным границам</h3><p data-i="f3p">Страна, область, населённый пункт — задания видны по настоящим границам. Радиус — только дополнительно.</p></div>
+        <div class="f panel reveal"><div class="ic c-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-5 4z" stroke-linejoin="round"/></svg></div>
+          <h3 data-i="f4t">Чат задания и перевод</h3><p data-i="f4p">Чат открывается после назначения исполнителя. Платный перевод чата и голоса в Live — 30 языков интерфейса.</p></div>
+        <div class="f panel reveal" style="transition-delay:.08s"><div class="ic c-gold"><svg><use href="#shield"/></svg></div>
+          <h3 data-i="f5t">Встроенный судья</h3><p data-i="f5p">Спор решается по данным — место, время, медиа — в пределах 24 часов. Для заданий за VU есть апелляция к администрации.</p></div>
+        <div class="f panel reveal" style="transition-delay:.16s"><div class="ic c-mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" stroke-linejoin="round"/></svg></div>
+          <h3 data-i="f6t">Честный рейтинг</h3><p data-i="f6p">Меняется только по реальному исходу: выплата или решение судьи. Никаких накруток «на слово».</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- исполнителям / заказчикам -->
+  <section>
+    <div class="wrap">
+      <div class="sec-h c reveal">
+        <div class="eyebrow" data-i="duoE">Для кого</div>
+        <h2 data-i="duoT">Зарабатывайте рядом или получайте проверку на месте</h2>
+      </div>
+      <div class="duo">
+        <div class="side panel reveal"><div class="img" style="background-image:linear-gradient(0deg,rgba(5,9,19,.55),transparent),url(img/hero-worker.webp)"></div>
+          <h3 data-i="wT">Исполнителям</h3>
+          <ul class="list">
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="w1">Задания рядом — в своём городе или области.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="w2">Деньги сразу после принятия. Заказчик промолчал — выплата автоматически.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="w3">Начните без денег: задания за BON.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="w4">Рейтинг растёт с каждым честным результатом.</span></li>
+          </ul></div>
+        <div class="side panel reveal" style="transition-delay:.12s"><div class="img" style="background-image:linear-gradient(0deg,rgba(5,9,19,.55),transparent),url(img/hero-city.webp)"></div>
+          <h3 data-i="rT">Заказчикам</h3>
+          <ul class="list">
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="r1">Проверка на месте без поездки: срок задания — от 30 минут.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="r2">Деньги заблокированы до результата — платите только за доказанное.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="r3">Фото и видео с временем и GPS, Live по желанию.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="r4">Спор решает судья по данным, а не по словам.</span></li>
+          </ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- деньги -->
+  <section id="money">
+    <div class="wrap">
+      <div class="sec-h reveal">
+        <div class="eyebrow" data-i="m3">Деньги</div>
+        <h2 data-i="moT">Прозрачные деньги и бонусы для старта</h2>
+      </div>
+      <div class="money">
+        <div class="vu panel reveal">
+          <div class="eyebrow" style="color:var(--mint)">VU</div>
+          <div class="bigrate"><b>1 VU</b><span class="eq">=</span><b class="g">1 USDT / USDC</b></div>
+          <p class="p" data-i="vu1">Внутренняя единица для платных заданий. Пополнение и вывод — на ваш собственный криптокошелёк. Ввели 1 VU — заплатили ровно 1 USDT, без добавок к сумме.</p>
+          <p class="p" data-i="vu2">Деньги за задание блокируются до начала работы и уходят только по результату: принятие, молчание заказчика или решение судьи.</p>
+          <div class="chips"><span class="chip">BNB Chain</span><span class="chip">Ethereum</span><span class="chip">Polygon</span><span class="chip">Base</span><span class="chip">TON</span></div>
+        </div>
+        <div class="bonc panel reveal" style="transition-delay:.12s">
+          <div class="coin">BON</div>
+          <h3 style="font-size:28px;letter-spacing:-.03em;margin-bottom:14px" data-i="bnT">BON — старт без денег</h3>
+          <p class="p" data-i="bn1">Бонусные очки, чтобы попробовать LVS: 10 BON за подтверждение личности в @LVSNetworkBot и +1 BON за каждого приглашённого друга.</p>
+          <p class="p" data-i="bn2">BON — не деньги: их нельзя вывести. Задания за BON — без риска для обеих сторон.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- безопасность -->
+  <section id="safety">
+    <div class="wrap">
+      <div class="sec-h reveal">
+        <div class="eyebrow" data-i="m4">Безопасность</div>
+        <h2 data-i="saT">Решают данные и правила, а не обещания</h2>
+      </div>
+      <div class="sec2">
+        <div class="judgebox panel reveal">
+          <h3 style="font-size:28px;letter-spacing:-.03em" data-i="jT">Как работает судья</h3>
+          <div class="flow">
+            <div><b data-i="j1a">Спор</b><span data-i="j1b">Заказчик не принял результат</span></div>
+            <div><b data-i="j2a">24 ч</b><span data-i="j2b">Судья проверяет место, время и медиа</span></div>
+            <div><b data-i="j3a">Итог</b><span data-i="j3b">Доказательство верно — платят исполнителю</span></div>
+            <div><b data-i="j4a">30 мин</b><span data-i="j4b">Апелляция к администрации — для заданий за VU</span></div>
+          </div>
+        </div>
+        <div class="seclist panel reveal" style="transition-delay:.12s">
+          <ul class="list">
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="sa1">Каждое действие — подписанное событие. Все устройства проверяют одни и те же правила.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="sa2">Чаты и медиа между сторонами задания зашифрованы. Сервер только передаёт их и не хранит постоянно.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="sa3">Ключи, которые двигают деньги, — в отдельной службе подписи, не в сервере приложения.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="sa4">Сервер — помощник, а не центр: задания передаются между участниками.</span></li>
+            <li><svg class="chk"><use href="#chk"/></svg><span data-i="sa5">Администрация никогда не пишет первой и не просит ключи, пароли или коды.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- скачать -->
+  <section id="download">
+    <div class="wrap">
+      <div class="sec-h c reveal">
+        <div class="eyebrow" data-i="dl">Скачать</div>
+        <h2 data-i="dT">Установите LVS</h2>
+        <p data-i="dP">Один аккаунт на всех устройствах. Сейчас LVS работает в тестовом режиме.</p>
+      </div>
+      <div class="dl">
+        <div class="d panel reveal"><div class="ic c-mint"><svg><use href="#and"/></svg></div><h3>Android</h3>
+          <p data-i="dA">Android 7 и новее, APK около 160 МБ. При установке разрешите установку из этого источника.</p>
+          <a class="btn pri sm" href="https://github.com/VOVAN1980/lvs-core/releases/latest/download/LVS-Android.apk" data-i="dlB">Скачать</a></div>
+        <div class="d panel reveal" style="transition-delay:.08s"><div class="ic c-blue"><svg><use href="#win"/></svg></div><h3>Windows</h3>
+          <p data-i="dW">Windows 10 и 11, архив около 80 МБ. Распакуйте и запустите LVS.exe.</p>
+          <a class="btn pri sm" href="https://github.com/VOVAN1980/lvs-core/releases/latest/download/LVS-Windows-x64.zip" data-i="dlB">Скачать</a></div>
+        <div class="d panel reveal" style="transition-delay:.16s"><div class="ic c-cyan"><svg><use href="#tg"/></svg></div><h3>Telegram</h3>
+          <p data-i="dT2">Мини-приложение: аккаунт, BON и приглашения друзей — прямо в Telegram.</p>
+          <a class="btn sec sm" href="https://t.me/LVSNetworkBot" target="_blank" rel="noopener" data-i="dOpen">Открыть</a></div>
+        <div class="d panel soon reveal" style="transition-delay:.24s"><div class="ic"><svg><use href="#apl"/></svg></div><h3>iPhone</h3>
+          <p data-i="dI">Версия для iPhone готовится.</p>
+          <span class="btn sec sm" style="cursor:default" data-i="soon">Скоро</span></div>
+      </div>
+      <p class="note" data-i="dNote">Все версии и контрольные суммы — в <a href="https://github.com/VOVAN1980/lvs-core/releases" target="_blank" rel="noopener">Releases на GitHub</a>. Скачивайте LVS только отсюда.</p>
+    </div>
+  </section>
+
+  <!-- вопросы -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="sec-h c reveal"><div class="eyebrow" data-i="m5">Вопросы</div><h2 data-i="qT">Частые вопросы</h2></div>
+      <div class="faq reveal">
+        <details><summary data-i="q1">Сколько это стоит?</summary><p data-i="a1">Скачать LVS и начать — бесплатно. Заказчик платит цену задания, которую назначил сам. Дополнительные услуги, например перевод чата, — платные. Пополнение — без добавок к сумме.</p></details>
+        <details><summary data-i="q2">Что, если заказчик не принял результат?</summary><p data-i="a2">Открывается спор. Встроенный судья в пределах 24 часов решает по данным: месту, времени и медиа. Исправлений результата нет — его принимают или решает судья. Для заданий за VU есть 30 минут на апелляцию к администрации.</p></details>
+        <details><summary data-i="q3">Что такое BON?</summary><p data-i="a3">Бонусные очки для старта: 10 BON за подтверждение личности в @LVSNetworkBot и +1 BON за каждого приглашённого друга. На BON можно давать и выполнять задания, но это не деньги и их нельзя вывести.</p></details>
+        <details><summary data-i="q4">Как вывести деньги?</summary><p data-i="a4">В кошельке выберите сеть — BNB Chain, Ethereum, Polygon, Base или TON — и адрес своего криптокошелька. 1 VU = 1 USDT/USDC.</p></details>
+        <details><summary data-i="q5">Кто видит мои фото и видео?</summary><p data-i="a5">Только участники задания. Медиа между ними зашифровано, сервер его постоянно не хранит. Лица и номера можно скрыть по желанию.</p></details>
+        <details><summary data-i="q6">Сколько времени дают на задание?</summary><p data-i="a6">Срок задаёт заказчик — от 30 минут.</p></details>
+        <details><summary data-i="q7">LVS уже работает?</summary><p data-i="a7">Да, в тестовом режиме на Android, Windows и в Telegram. Официальный запуск начнётся с чистой книги: тестовые балансы не переносятся.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="final panel reveal">
+        <h2 data-i="fT">Начните с первого задания</h2>
+        <p class="p" style="max-width:620px;margin:0 auto" data-i="fP">Скачайте LVS, получите 10 BON за подтверждение личности и попробуйте без риска.</p>
+        <div class="cta">
+          <a class="btn pri" href="https://github.com/VOVAN1980/lvs-core/releases/latest/download/LVS-Android.apk"><svg><use href="#and"/></svg><span data-i="dlA">Скачать для Android</span></a>
+          <a class="btn sec" href="https://github.com/VOVAN1980/lvs-core/releases/latest/download/LVS-Windows-x64.zip"><svg><use href="#win"/></svg>Windows</a>
+          <a class="btn sec" href="https://t.me/LVS_official" target="_blank" rel="noopener"><svg><use href="#tg"/></svg>Telegram</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div><a class="brand" href="#top" style="padding:0"><img src="img/orbit.webp" alt="">LVS</a>
+        <p class="about" data-i="ab">Living Value System — задания рядом, оплата за доказанный результат. Проект IBITI Labs.</p></div>
+      <div><h4 data-i="h4a">Продукт</h4><a href="#how" data-i="m1">Как это работает</a><a href="#features" data-i="m2">Возможности</a><a href="#money" data-i="m3">Деньги</a><a href="#download" data-i="dl">Скачать</a></div>
+      <div><h4 data-i="h4b">Сообщество</h4><a href="https://t.me/LVS_official" target="_blank" rel="noopener" data-i="ch">Канал в Telegram</a><a href="https://t.me/LVSNetworkBot" target="_blank" rel="noopener">@LVSNetworkBot</a><a href="https://github.com/VOVAN1980/lvs-core" target="_blank" rel="noopener">GitHub</a><a href="https://vovan1980.github.io/IBITILabs/" target="_blank" rel="noopener">IBITI Labs</a></div>
+      <div><h4 data-i="h4c">Помощь</h4><a href="mailto:support@lvs.network">support@lvs.network</a><a href="https://app.lvs.network/terms.html" data-lnk="terms" data-i="tm">Условия использования</a><a href="https://app.lvs.network/privacy.html" data-lnk="privacy" data-i="pv">Конфиденциальность</a></div>
+    </div>
+    <div class="copy"><span>© 2025–2026 LVS</span><span data-i="adm">Администрация никогда не пишет первой.</span></div>
+  </div>
+</footer>
+
+<script>
+const EN={m1:'How it works',m2:'Features',m3:'Money',m4:'Safety',m5:'FAQ',dl:'Download',
+kick:'Works on Android, Windows and Telegram',
+h1:'Real tasks nearby.<br><span class="g">Paid for proven results.</span>',
+lead:'Photograph a shop sign, check whether a store is open, show a place on Live — someone nearby does it, LVS proves where and when, the requester pays.',
+dlA:'Download for Android',tr2:'Disputes are decided by a judge from evidence',tr3:'30 languages',
+ph1:'Tasks nearby',ph2:'Vienna · whole region',c1:'Check the price in a shop window',c2:'Photograph a car by the house',c3:'Is the corner shop open?',c4:'Confirm a delivery',c5:'Live: show the entrance',
+km18:'1.8 km',min45:'45 min',km24:'2.4 km',m600:'600 m',km31:'3.1 km',m900:'900 m',tb1:'Feed',tb2:'Tasks',tb3:'Create',tb4:'Wallet',
+fl1:'Proof',fl2:'LVS camera · time and GPS',fl3:'Built-in judge',fl4:'Decision in favour of the worker',fl5:'Paid',
+howT:'Three steps from task to payout',howP:'No "take my word for it". Proof is captured at the moment of work, and money follows the result.',
+s1t:'Post a task',s1p:'What to do, where — country, region, town or exact address — and the price in VU or BON.',s1g:'📍 Whole region · 0.50 VU',
+s2t:'Someone nearby does it',s2p:'The worker shoots with the LVS camera: time and GPS are bound to photos and videos. The place can be shown on Live.',
+s3t:'Paid by the result',s3p:'The requester accepts — paid at once. Stays silent — the worker is paid automatically. A dispute is decided by the judge from data.',s3a:'Accepted',
+ftT:'Everything to trust the result',ftP:'Proof, contact, dispute resolution and an honest rating — in one app.',
+f1t:'LVS camera',f1p:'Photos and videos are taken in the app with time and GPS bound to the frame. Faces and number plates can be hidden on request.',
+f2t:'Live from the spot',f2p:'Show the place to the requester live — when a photo is not enough.',
+f3t:'Feed by real borders',f3p:'Country, region, town — tasks follow real borders. A radius is only an extra filter.',
+f4t:'Task chat and translation',f4p:'The chat opens once a worker is assigned. Paid translation of chat and Live voice; 30 interface languages.',
+f5t:'Built-in judge',f5p:'A dispute is decided from data — place, time, media — within 24 hours. VU tasks allow an appeal to the administration.',
+f6t:'Honest rating',f6p:'It changes only on real outcomes: a payout or a judge\'s decision. Nothing "on your word".',
+duoE:'Who it is for',duoT:'Earn nearby or get a check on the spot',
+wT:'For workers',w1:'Tasks near you — in your town or region.',w2:'Paid right after acceptance. Requester silent — paid automatically.',w3:'Start without money: tasks for BON.',w4:'Your rating grows with every honest result.',
+rT:'For requesters',r1:'A check on the spot without travelling: task deadlines from 30 minutes.',r2:'Money is locked until the result — pay only for what is proven.',r3:'Photos and videos with time and GPS, Live on request.',r4:'A dispute is decided by the judge from data, not words.',
+moT:'Clear money and bonuses to start',
+vu1:'The in-app unit for paid tasks. Deposits and withdrawals go to your own crypto wallet. Enter 1 VU — pay exactly 1 USDT, nothing added.',
+vu2:'Money for a task is locked before the work starts and released only by the result: acceptance, the requester\'s silence or the judge\'s decision.',
+bnT:'BON — start without money',bn1:'Bonus points to try LVS: 10 BON for confirming your identity in @LVSNetworkBot and +1 BON for every invited friend.',bn2:'BON are not money and cannot be withdrawn. BON tasks carry no risk for either side.',
+saT:'Data and rules decide, not promises',jT:'How the judge works',
+j1a:'Dispute',j1b:'The requester did not accept the result',j2a:'24 h',j2b:'The judge checks place, time and media',j3a:'Outcome',j3b:'Proof is valid — the worker is paid',j4a:'30 min',j4b:'Appeal to the administration — for VU tasks',
+sa1:'Every action is a signed event. All devices check the same rules.',sa2:'Chats and media between the two sides are encrypted. The server only relays them and does not keep them.',sa3:'Keys that can move money live in a separate signing service, not in the application server.',sa4:'The server is a helper, not the centre: tasks travel between participants.',sa5:'The administration never messages you first and never asks for keys, passwords or codes.',
+dT:'Install LVS',dP:'One account on all your devices. LVS is in test mode now.',
+dA:'Android 7 or newer, APK about 160 MB. Allow installing from this source when asked.',dW:'Windows 10 and 11, ZIP about 80 MB. Unpack and run LVS.exe.',dT2:'Mini app: account, BON and friend invitations — right in Telegram.',dI:'The iPhone version is in the works.',dlB:'Download',dOpen:'Open',soon:'Soon',
+dNote:'All versions and checksums are in <a href="https://github.com/VOVAN1980/lvs-core/releases" target="_blank" rel="noopener">Releases on GitHub</a>. Download LVS only from here.',
+qT:'Frequently asked questions',
+q1:'How much does it cost?',a1:'Downloading LVS and getting started is free. The requester pays the task price they set. Extra services, such as chat translation, are paid. Deposits come with nothing added.',
+q2:'What if the requester does not accept the result?',a2:'A dispute opens. The built-in judge decides within 24 hours from data: place, time and media. Results are not corrected — they are accepted or the judge decides. VU tasks allow 30 minutes for an appeal to the administration.',
+q3:'What is BON?',a3:'Bonus points to start: 10 BON for confirming your identity in @LVSNetworkBot and +1 BON for every invited friend. You can post and do tasks for BON, but they are not money and cannot be withdrawn.',
+q4:'How do I withdraw money?',a4:'In the wallet, choose a network — BNB Chain, Ethereum, Polygon, Base or TON — and the address of your own crypto wallet. 1 VU = 1 USDT/USDC.',
+q5:'Who sees my photos and videos?',a5:'Only the participants of the task. Media between them is encrypted and the server does not keep it. Faces and number plates can be hidden on request.',
+q6:'How much time does a task get?',a6:'The requester sets the deadline — from 30 minutes.',
+q7:'Is LVS already working?',a7:'Yes, in test mode on Android, Windows and Telegram. The official launch will start with a clean ledger: test balances are not carried over.',
+fT:'Start with your first task',fP:'Download LVS, get 10 BON for confirming your identity and try it without risk.',
+ab:'Living Value System — tasks nearby, paid for proven results. A project by IBITI Labs.',h4a:'Product',h4b:'Community',h4c:'Help',ch:'Telegram channel',tm:'Terms of Use',pv:'Privacy',adm:'The administration never messages you first.'};
+const RU={};document.querySelectorAll('[data-i]').forEach(e=>{if(!(e.dataset.i in RU))RU[e.dataset.i]=e.innerHTML});
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const q=(location.search.match(/[?&]lang=(ru|en)/)||[])[1];
+let lang=q||store.get('lvs_lang')||(/^(ru|uk|be|kk)/i.test(navigator.language||'')?'ru':'en');
+function apply(){
+  const d=lang==='en'?EN:RU;
+  document.querySelectorAll('[data-i]').forEach(e=>{const v=d[e.dataset.i];if(v!==undefined)e.innerHTML=v});
+  document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on',b.dataset.lang===lang));
+  document.querySelectorAll('[data-lnk]').forEach(a=>a.href='https://app.lvs.network/'+a.dataset.lnk+'.html?lang='+lang);
+  document.documentElement.lang=lang;
+  document.title=lang==='en'?'LVS — tasks nearby, paid for proven results':'LVS — задания рядом, оплата за доказанный результат';
+}
+document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{lang=b.dataset.lang;store.set('lvs_lang',lang);apply()});
+const hdr=document.querySelector('header');
+document.querySelector('.burger').onclick=()=>hdr.classList.toggle('open');
+document.querySelectorAll('.mob a').forEach(a=>a.onclick=()=>hdr.classList.remove('open'));
+apply();
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
 </body>
 </html>
