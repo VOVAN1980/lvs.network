@@ -116,6 +116,14 @@ h1{font-size:clamp(40px,4.4vw,64px);line-height:1.04;letter-spacing:-.045em;font
 
 /* секции */
 section{padding:110px 0}
+#video{padding-top:40px}
+.vid{position:relative;max-width:1040px;margin-inline:auto;aspect-ratio:16/9;border-radius:var(--r);overflow:hidden;border:1px solid var(--line2);box-shadow:0 30px 90px rgba(0,0,0,.55),0 0 80px rgba(91,140,255,.18);background:#050913;cursor:pointer}
+.vid img,.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
+.vid .play{position:absolute;left:50%;top:50%;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),var(--violet));box-shadow:0 0 0 10px rgba(91,140,255,.18),0 12px 40px rgba(91,140,255,.55);transition:transform .25s}
+.vid:hover .play{transform:scale(1.08)}
+.vid .play svg{width:34px;height:34px;margin-left:5px;fill:#fff}
+.vid .len{position:absolute;right:16px;bottom:14px;padding:6px 11px;border-radius:10px;background:rgba(5,9,19,.8);font-size:13px;font-weight:800}
+@media(max-width:700px){.vid .play{width:60px;height:60px;margin:-30px 0 0 -30px;box-shadow:0 0 0 7px rgba(91,140,255,.18),0 8px 28px rgba(91,140,255,.5)}.vid .play svg{width:24px;height:24px;margin-left:3px}.vid .len{right:10px;bottom:9px;font-size:12px;padding:4px 8px}}
 .sec-h{max-width:740px;margin-bottom:56px}
 .sec-h.c{margin-inline:auto;text-align:center}
 .eyebrow{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
@@ -305,6 +313,22 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:40px}
       <div class="float paid"><div class="coin">VU</div><div><div class="t" style="margin:0 0 2px" data-i="fl5">Выплачено</div><b>+0.50 VU</b></div></div>
     </div>
   </div>
+
+  <!-- видео -->
+  <section id="video">
+    <div class="wrap">
+      <div class="sec-h c reveal">
+        <div class="eyebrow" data-i="vE">Видео</div>
+        <h2 data-i="vT">LVS за 5 минут</h2>
+        <p data-i="vP">Как задание из Сингапура выполняют в Лос-Анджелесе: лента, доказательства, кошелёк, доверие и мини-приложение в Telegram.</p>
+      </div>
+      <div class="vid reveal" role="button" tabindex="0" aria-label="Play video">
+        <img src="img/video-cover.webp" alt="LVS — Living Value System" loading="lazy">
+        <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        <span class="len">5:19</span>
+      </div>
+    </div>
+  </section>
 
   <!-- как это работает -->
   <section id="how">
@@ -515,6 +539,7 @@ dlA:'Download for Android',tr2:'Disputes are decided by a judge from evidence',t
 ph1:'Tasks nearby',ph2:'Vienna · whole region',c1:'Check the price in a shop window',c2:'Photograph a car by the house',c3:'Is the corner shop open?',c4:'Confirm a delivery',c5:'Live: show the entrance',
 km18:'1.8 km',min45:'45 min',km24:'2.4 km',m600:'600 m',km31:'3.1 km',m900:'900 m',tb1:'Feed',tb2:'Tasks',tb3:'Create',tb4:'Wallet',
 fl1:'Proof',fl2:'LVS camera · time and GPS',fl3:'Built-in judge',fl4:'Decision in favour of the worker',fl5:'Paid',
+vE:'Video',vT:'LVS in 5 minutes',vP:'How a task from Singapore gets done in Los Angeles: the feed, the evidence, the wallet, trust and the Telegram Mini App.',
 howT:'Three steps from task to payout',howP:'No "take my word for it". Proof is captured at the moment of work, and money follows the result.',
 s1t:'Post a task',s1p:'What to do, where — country, region, town or exact address — and the price in VU or BON.',s1g:'📍 Whole region · 0.50 VU',
 s2t:'Someone nearby does it',s2p:'The worker shoots with the LVS camera: time and GPS are bound to photos and videos. The place can be shown on Live.',
@@ -566,6 +591,10 @@ const hdr=document.querySelector('header');
 document.querySelector('.burger').onclick=()=>hdr.classList.toggle('open');
 document.querySelectorAll('.mob a').forEach(a=>a.onclick=()=>hdr.classList.remove('open'));
 apply();
+// The video loads from YouTube only after a click; subtitles follow the site language.
+const vid=document.querySelector('.vid');
+function playVid(){vid.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/BihWwOcwBkM?autoplay=1&rel=0&cc_load_policy=1&cc_lang_pref='+lang+'&hl='+lang+'" title="LVS — Living Value System" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';vid.onclick=vid.onkeydown=null;vid.style.cursor='default'}
+vid.onclick=playVid;vid.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();playVid()}};
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 </script>
