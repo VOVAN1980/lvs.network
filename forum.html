@@ -93,6 +93,8 @@ h2{font-size:clamp(23px,3vw,30px);line-height:1.2;letter-spacing:-.025em;font-we
 .who b{font-weight:700;color:var(--tx2)}
 .post .text{font-size:15.5px;line-height:1.6;color:rgba(255,255,255,.9);white-space:pre-wrap;overflow-wrap:anywhere}
 .post.staff{background:rgba(226,184,106,.055)}
+.react{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.react span{font-size:13px;color:var(--tx2);border:1px solid var(--line2);border-radius:999px;padding:2px 9px}
 .post.staff .who b{color:var(--gold)}
 .note{margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:18px;font-size:14px;color:var(--tx2)}
 
@@ -291,6 +293,10 @@ async function showTopic(id){
     const post=el('article','post'+(p.staff?' staff':''));
     const who=el('div','who');who.append(el('b','',p.staff?w('staff'):p.author),el('span','',ago(p.at)));
     post.append(who,el('div','text',p.body));
+    // Reactions are put in the app; here only how many.
+    const r=p.reactions||{},marks={up:'👍',heart:'❤️',laugh:'😄',down:'👎'};
+    const shown=Object.keys(marks).filter(k=>Number.isInteger(r[k])&&r[k]>0);
+    if(shown.length){const box=el('div','react');shown.forEach(k=>box.append(el('span','',marks[k]+' '+r[k])));post.append(box)}
     panel.append(post);
   });
   const note=el('div','note');
