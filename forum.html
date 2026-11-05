@@ -294,7 +294,7 @@ async function showTopic(id){
     const who=el('div','who');who.append(el('b','',p.staff?w('staff'):p.author),el('span','',ago(p.at)));
     post.append(who,el('div','text',p.body));
     // Reactions are put in the app; here only how many.
-    const r=p.reactions||{},marks={up:'👍',heart:'❤️',laugh:'😄',down:'👎'};
+    const r=p.reactions||{},marks={up:'👍',heart:'💖',laugh:'😂',down:'👎'};
     const shown=Object.keys(marks).filter(k=>Number.isInteger(r[k])&&r[k]>0);
     if(shown.length){const box=el('div','react');shown.forEach(k=>box.append(el('span','',marks[k]+' '+r[k])));post.append(box)}
     panel.append(post);
