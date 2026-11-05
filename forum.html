@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Форум LVS</title>
+<meta name="description" content="Вопросы, идеи и опыт участников LVS.">
+<meta property="og:title" content="LVS Forum">
+<meta property="og:description" content="Questions, ideas and experience from LVS members.">
+<meta property="og:image" content="https://lvs.network/img/hero-worker.webp">
+<meta property="og:url" content="https://lvs.network/forum.html">
+<meta name="theme-color" content="#050913">
+<link rel="icon" href="img/orbit.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+:root{
+  --bg:#050913;--bg2:#0a1122;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);
+  --tx:#fff;--tx2:rgba(255,255,255,.78);--tx3:rgba(255,255,255,.55);
+  --blue:#5B8CFF;--cyan:#38D0FF;--mint:#31D6A3;--gold:#E2B86A;--violet:#7B6BFF;--orange:#FFA54B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;flex-direction:column;color:var(--tx);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;background:
+  radial-gradient(1100px 560px at 82% -8%,rgba(91,140,255,.18),transparent 60%),
+  radial-gradient(800px 500px at 0% 22%,rgba(123,107,255,.10),transparent 60%),var(--bg);background-attachment:fixed}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit}
+img{display:block;max-width:100%}
+.wrap{width:min(1120px,100% - 40px);margin-inline:auto}
+
+header{position:sticky;top:0;z-index:20;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:rgba(5,9,19,.72);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;gap:20px;height:68px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:900;font-size:21px;letter-spacing:-.03em}
+.brand img{width:34px;height:34px}
+.menu{display:flex;gap:22px;margin-left:auto;font-size:15px;font-weight:600;color:var(--tx2)}
+.menu a:hover{color:#fff}
+.menu a.on{color:#fff}
+.lang{display:flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden;font-size:13px;font-weight:700}
+.lang button{all:unset;padding:7px 12px;color:var(--tx3);cursor:pointer}
+.lang button.on{background:rgba(255,255,255,.12);color:#fff}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:44px;padding:0 20px;border-radius:13px;font-weight:800;font-size:15px;white-space:nowrap;cursor:pointer;border:0}
+.btn.pri{background:linear-gradient(135deg,#3D7BFF,#5B8CFF 45%,#38D0FF)}
+.btn.sec{background:rgba(255,255,255,.07);border:1px solid var(--line2)}
+.btn.sec:hover{background:rgba(255,255,255,.12)}
+.btn.sm{height:40px;padding:0 16px;font-size:14px;border-radius:12px}
+
+main{flex:1;padding:40px 0 64px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:26px}
+h1{font-size:clamp(32px,4vw,44px);line-height:1.08;letter-spacing:-.035em;font-weight:900}
+.sub{color:var(--tx2);font-size:16px;line-height:1.5;margin-top:8px}
+
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{all:unset;cursor:pointer;flex:none;padding:8px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--tx2);border:1px solid transparent}
+.tab:hover{color:#fff}
+.tab.on{background:rgba(255,255,255,.1);border-color:var(--line2);color:#fff}
+
+.panel{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 72px 92px;gap:14px;align-items:center;padding:15px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+a.row:hover{background:rgba(255,255,255,.04)}
+.row b{display:block;font-size:16px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:5px;font-size:13px;color:var(--tx3)}
+.cat{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--tx2)}
+.cat i{width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.cat.questions i{background:var(--cyan)}.cat.tasks i{background:var(--mint)}.cat.ideas i{background:var(--violet)}
+.pin{width:14px;height:14px;color:var(--gold);flex:none}
+.flag{font-size:12px;font-weight:700;color:var(--tx3);border:1px solid var(--line2);padding:1px 7px;border-radius:999px}
+.num{text-align:right;font-size:13px;color:var(--tx3)}
+.num strong{display:block;color:#fff;font-size:15px;font-weight:700}
+.when{text-align:right;font-size:13px;color:var(--tx3)}
+.state{padding:44px 20px;text-align:center;color:var(--tx3);font-size:15px}
+.more{display:flex;justify-content:center;padding:14px;border-top:1px solid var(--line)}
+
+aside{display:grid;gap:14px}
+.box{padding:18px;background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:18px}
+.box h3{font-size:15px;font-weight:800;margin-bottom:8px}
+.box p,.box li{font-size:14px;line-height:1.55;color:var(--tx2)}
+.box ul{list-style:none;display:grid;gap:7px}
+.box .btn{width:100%;margin-top:12px}
+.box .btn + .btn{margin-top:8px}
+
+.back{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:14px;color:var(--tx2);margin-bottom:16px;cursor:pointer}
+.back:hover{color:#fff}
+.back svg{width:16px;height:16px}
+h2{font-size:clamp(23px,3vw,30px);line-height:1.2;letter-spacing:-.025em;font-weight:800;overflow-wrap:anywhere}
+.post{padding:16px 18px;border-top:1px solid var(--line)}
+.post:first-child{border-top:0}
+.who{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:var(--tx3);margin-bottom:7px}
+.who b{font-weight:700;color:var(--tx2)}
+.post .text{font-size:15.5px;line-height:1.6;color:rgba(255,255,255,.9);white-space:pre-wrap;overflow-wrap:anywhere}
+.post.staff{background:rgba(226,184,106,.055)}
+.post.staff .who b{color:var(--gold)}
+.note{margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:18px;font-size:14px;color:var(--tx2)}
+
+footer{border-top:1px solid var(--line);padding:22px 0;font-size:13.5px;color:var(--tx3)}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 22px}
+.foot a:hover{color:#fff}
+
+@media(max-width:880px){
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .head{flex-direction:column;align-items:stretch}
+  .menu a.hide{display:none}
+}
+@media(max-width:560px){
+  .wrap{width:calc(100% - 32px)}
+  .nav{gap:12px;height:60px}
+  .menu{gap:12px;font-size:14px}
+  main{padding:26px 0 44px}
+  .row{grid-template-columns:minmax(0,1fr) 44px;padding:13px 14px;gap:10px}
+  .when{display:none}
+  .post{padding:14px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="./"><img src="img/orbit.webp" alt="">LVS</a>
+    <nav class="menu">
+      <a class="hide" href="./" data-i="home">Главная</a>
+      <a class="on" href="forum.html" data-i="forum">Форум</a>
+    </nav>
+    <div class="lang"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="head" id="listHead">
+      <div>
+        <h1 data-i="forum">Форум</h1>
+        <p class="sub" data-i="sub">Вопросы, идеи и опыт участников LVS.</p>
+      </div>
+      <a class="btn pri" href="https://t.me/LVSNetworkBot" target="_blank" rel="noopener" data-i="write">Новая тема</a>
+    </div>
+    <div class="cols">
+      <div id="view"></div>
+      <aside>
+        <div class="box">
+          <h3 data-i="how">Как написать</h3>
+          <p data-i="howt">Читать может каждый. Создавать темы и отвечать можно из приложения LVS: Помощь → Форум.</p>
+          <a class="btn pri sm" href="https://t.me/LVSNetworkBot" target="_blank" rel="noopener" data-i="tg">Открыть в Telegram</a>
+          <a class="btn sec sm" href="./#download" data-i="dl">Скачать приложение</a>
+        </div>
+        <div class="box">
+          <h3 data-i="ask">Вопрос администрации</h3>
+          <p data-i="askt">Вопрос или жалобу можно отправить прямо администрации: в приложении Помощь → Написать в администрацию. Ответ придёт туда же.</p>
+        </div>
+        <div class="box">
+          <h3 data-i="rules">Правила</h3>
+          <ul>
+            <li data-i="r1">Пишите по делу и уважайте других.</li>
+            <li data-i="r2">Не публикуйте ключи, коды и личные данные.</li>
+            <li data-i="r3">Администрация никогда не пишет первой.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>© 2025–2026 LVS</span>
+    <span><a href="./" data-i="home">Главная</a> · <a href="https://t.me/LVS_official" target="_blank" rel="noopener" data-i="ch">Канал в Telegram</a></span>
+  </div>
+</footer>
+
+<script>
+const API='https://api.lvs.network/auth/forum/';
+const PAGE=50;
+const EN={home:'Home',forum:'Forum',sub:'Questions, ideas and experience from LVS members.',write:'New topic',
+how:'How to write',howt:'Anyone can read. Topics and replies are written from the LVS app: Help → Forum.',
+tg:'Open in Telegram',dl:'Download the app',ask:'Ask the administration',
+askt:'A question or complaint can go straight to the administration: in the app, Help → Write to the administration. The answer arrives there.',
+rules:'Rules',r1:'Stay on topic and respect others.',r2:'Never post keys, codes or personal data.',r3:'The administration never messages you first.',
+ch:'Telegram channel'};
+const WORDS={
+ru:{all:'Все',general:'Общее',questions:'Вопросы',tasks:'Задания',ideas:'Идеи',loading:'Загрузка…',
+failed:'Форум сейчас недоступен. Попробуйте позже.',none:'Тем пока нет. Первую можно создать в приложении.',more:'Показать ещё',
+back:'Все темы',closed:'закрыта',closedNote:'Тема закрыта, новые ответы не принимаются.',replyNote:'Ответить можно из приложения LVS.',
+reply:'Ответить',staff:'Администрация LVS',missing:'Такой темы нет.',now:'только что',min:' мин назад',hour:' ч назад',day:' дн назад'},
+en:{all:'All',general:'General',questions:'Questions',tasks:'Tasks',ideas:'Ideas',loading:'Loading…',
+failed:'The forum is unavailable right now. Please try later.',none:'No topics yet. The first one can be created in the app.',more:'Show more',
+back:'All topics',closed:'closed',closedNote:'This topic is closed to new replies.',replyNote:'Replies are written from the LVS app.',
+reply:'Reply',staff:'LVS Administration',missing:'This topic does not exist.',now:'just now',min:' min ago',hour:' h ago',day:' d ago'}};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const RU={};document.querySelectorAll('[data-i]').forEach(e=>{if(!(e.dataset.i in RU))RU[e.dataset.i]=e.textContent});
+const asked=(location.search.match(/[?&]lang=(ru|en)/)||[])[1];
+let lang=asked||store.get('lvs_lang')||(/^(ru|uk|be|kk)/i.test(navigator.language||'')?'ru':'en');
+const w=k=>WORDS[lang][k];
+function repliesWord(n){
+  if(lang==='en')return n===1?'reply':'replies';
+  const a=n%10,b=n%100;
+  if(a===1&&b!==11)return 'ответ';
+  if(a>=2&&a<=4&&(b<12||b>14))return 'ответа';
+  return 'ответов';
+}
+const view=document.getElementById('view');
+
+// Everything a person wrote goes in as plain text, never as markup.
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+function ago(sec){
+  const d=Math.max(0,Math.floor(Date.now()/1000)-sec);
+  if(d<60)return w('now');
+  if(d<3600)return Math.floor(d/60)+w('min');
+  if(d<86400)return Math.floor(d/3600)+w('hour');
+  if(d<86400*30)return Math.floor(d/86400)+w('day');
+  return new Date(sec*1000).toLocaleDateString(lang==='en'?'en-GB':'ru-RU');
+}
+function cat(key){const c=el('span','cat '+key);c.append(el('i'),document.createTextNode(w(key)||key));return c}
+const PIN='<svg class="pin" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9V4h1a1 1 0 0 0 0-2H7a1 1 0 0 0 0 2h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/></svg>';
+async function get(path){
+  const r=await fetch(API+path,{headers:{accept:'application/json'}});
+  if(r.status===404)return null;
+  if(!r.ok)throw new Error(String(r.status));
+  return r.json();
+}
+
+let chosen=null,topics=[];
+function tabs(){
+  const box=el('div','tabs');
+  [null,'general','questions','tasks','ideas'].forEach(key=>{
+    const t=el('button','tab'+(chosen===key?' on':''),key?w(key):w('all'));
+    t.type='button';
+    t.onclick=()=>{chosen=key;topics=[];showList()};
+    box.append(t);
+  });
+  return box;
+}
+function row(t){
+  const a=el('a','row');a.href='#t'+t.topic;
+  const main=el('div');main.append(el('b','',t.title));
+  const meta=el('div','meta');
+  if(t.pinned){const s=el('span');s.innerHTML=PIN;s.style.display='inline-flex';meta.append(s)}
+  meta.append(cat(t.category),el('span','',t.staff?w('staff'):t.author));
+  if(t.closed)meta.append(el('span','flag',w('closed')));
+  main.append(meta);
+  const count=Math.max(0,t.posts-1);const n=el('div','num');n.append(el('strong','',String(count)),document.createTextNode(repliesWord(count)));
+  a.append(main,n,el('div','when',ago(t.last_post_at)));
+  return a;
+}
+async function showList(){
+  document.getElementById('listHead').style.display='';
+  view.replaceChildren(tabs());
+  const panel=el('div','panel');view.append(panel);
+  if(!topics.length)panel.append(el('div','state',w('loading')));
+  const page=await more();
+  panel.replaceChildren();
+  if(page===null){panel.append(el('div','state',w('failed')));return}
+  if(!topics.length){panel.append(el('div','state',w('none')));return}
+  topics.forEach(t=>panel.append(row(t)));
+  if(page>=PAGE){
+    const m=el('div','more');const b=el('button','btn sec sm',w('more'));b.type='button';
+    b.onclick=async()=>{b.disabled=true;const n=await more();if(n===null){b.disabled=false;return}showList()};
+    m.append(b);panel.append(m);
+  }
+}
+async function more(){
+  try{
+    const q=new URLSearchParams();
+    if(chosen)q.set('category',chosen);
+    if(topics.length)q.set('after',String(topics.length));
+    const s=q.toString();
+    const body=await get('topics'+(s?'?'+s:''));
+    topics=topics.concat(body.topics);
+    return body.topics.length;
+  }catch(e){return null}
+}
+async function showTopic(id){
+  document.getElementById('listHead').style.display='none';
+  const back=el('a','back');back.href='#';
+  back.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+  back.append(document.createTextNode(w('back')));
+  const panel=el('div','panel');panel.append(el('div','state',w('loading')));
+  view.replaceChildren(back,panel);
+  let t;
+  try{t=await get('topic/'+id)}catch(e){panel.replaceChildren(el('div','state',w('failed')));return}
+  if(!t){panel.replaceChildren(el('div','state',w('missing')));return}
+  const title=el('div');title.style.marginBottom='14px';title.append(el('h2','',t.title));
+  const meta=el('div','meta');meta.append(cat(t.category));
+  if(t.closed)meta.append(el('span','flag',w('closed')));
+  title.append(meta);
+  panel.before(title);
+  panel.replaceChildren();
+  t.posts.forEach(p=>{
+    const post=el('article','post'+(p.staff?' staff':''));
+    const who=el('div','who');who.append(el('b','',p.staff?w('staff'):p.author),el('span','',ago(p.at)));
+    post.append(who,el('div','text',p.body));
+    panel.append(post);
+  });
+  const note=el('div','note');
+  if(t.closed)note.append(el('span','',w('closedNote')));
+  else{
+    note.append(el('span','',w('replyNote')));
+    const r=el('a','btn pri sm',w('reply'));r.href='https://t.me/LVSNetworkBot';r.target='_blank';r.rel='noopener';
+    note.append(r);
+  }
+  panel.after(note);
+  window.scrollTo(0,0);
+}
+function route(){
+  const m=location.hash.match(/^#t(\d+)$/);
+  if(m)showTopic(m[1]);else showList();
+}
+function apply(){
+  const d=lang==='en'?EN:RU;
+  document.querySelectorAll('[data-i]').forEach(e=>{const v=d[e.dataset.i];if(v!==undefined)e.textContent=v});
+  document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on',b.dataset.lang===lang));
+  document.documentElement.lang=lang;
+  document.title=lang==='en'?'LVS Forum':'Форум LVS';
+}
+document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{lang=b.dataset.lang;store.set('lvs_lang',lang);apply();topics=[];route()});
+window.addEventListener('hashchange',route);
+apply();route();
+</script>
+</body>
+</html>
