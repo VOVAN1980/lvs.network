@@ -156,7 +156,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;font-size:13.5px;color:va
         <h1 data-i="forum">Форум</h1>
         <p class="sub" data-i="sub">Вопросы, идеи и опыт участников LVS.</p>
       </div>
-      <a class="btn pri" href="https://t.me/LVSNetworkBot" target="_blank" rel="noopener" data-i="write">Писать — в приложении LVS</a>
+      <a class="btn pri" href="./#download" data-i="write">Писать — в приложении LVS</a>
     </div>
     <div class="cols">
       <div id="view"></div>
@@ -164,7 +164,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;font-size:13.5px;color:va
         <div class="box">
           <h3 data-i="how">Как написать</h3>
           <p data-i="howt">Читать может каждый. Писать, создавать темы и обсуждать могут только участники LVS: войдите через Telegram или скачайте приложение для телефона или ПК.</p>
-          <a class="btn pri sm" href="https://t.me/LVSNetworkBot" target="_blank" rel="noopener" data-i="tg">Открыть в Telegram</a>
+          <a class="btn pri sm" href="https://t.me/LVS_official" target="_blank" rel="noopener" data-i="tg">Открыть в Telegram</a>
           <a class="btn sec sm" href="./#download" data-i="dl">Скачать приложение</a>
         </div>
         <div class="box">
@@ -372,7 +372,8 @@ async function showTopic(id){
   if(t.closed)note.append(el('span','',w('closedNote')));
   else{
     note.append(el('span','',w('replyNote')));
-    const r=el('a','btn pri sm',w('reply'));r.href='https://t.me/LVSNetworkBot';r.target='_blank';r.rel='noopener';
+    // For now the app is reached through its download on the site (owner 07.11).
+    const r=el('a','btn pri sm',w('reply'));r.href='./#download';
     note.append(r);
   }
   panel.after(note);
