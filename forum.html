@@ -59,7 +59,7 @@ h1{font-size:clamp(32px,4vw,44px);line-height:1.08;letter-spacing:-.035em;font-w
 .tab.on{background:rgba(255,255,255,.1);border-color:var(--line2);color:#fff}
 
 .panel{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:18px;overflow:hidden}
-.row{display:grid;grid-template-columns:minmax(0,1fr) 72px 92px;gap:14px;align-items:center;padding:15px 18px;border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 72px 104px;gap:14px;align-items:center;padding:15px 18px;border-top:1px solid var(--line)}
 .row:first-child{border-top:0}
 a.row:hover{background:rgba(255,255,255,.04)}
 .row b{display:block;font-size:16px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
@@ -71,7 +71,24 @@ a.row:hover{background:rgba(255,255,255,.04)}
 .flag{font-size:12px;font-weight:700;color:var(--tx3);border:1px solid var(--line2);padding:1px 7px;border-radius:999px}
 .num{text-align:right;font-size:13px;color:var(--tx3)}
 .num strong{display:block;color:#fff;font-size:15px;font-weight:700}
-.when{text-align:right;font-size:13px;color:var(--tx3)}
+.when{text-align:right;font-size:13px;color:var(--tx3);white-space:pre-line;line-height:1.45}
+.subs{display:inline-flex;align-items:center;gap:5px}
+.subs svg{width:15px;height:15px}
+.search{position:relative;margin-bottom:14px}
+.search svg{position:absolute;left:15px;top:50%;width:18px;height:18px;transform:translateY(-50%);color:var(--tx3);pointer-events:none}
+.search input{width:100%;height:46px;padding:0 44px 0 44px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.05);color:#fff;font:inherit;font-size:15px;outline:none}
+.search input:focus{border-color:var(--blue)}
+.search input::placeholder{color:var(--tx3)}
+.search button{all:unset;position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--tx3);font-size:18px;line-height:1;padding:4px}
+.search button:hover{color:#fff}
+.search button[hidden]{display:none}
+.hit{display:block;padding:15px 18px;border-top:1px solid var(--line)}
+.hit:first-child{border-top:0}
+.hit:hover{background:rgba(255,255,255,.04)}
+.hit b{display:block;font-size:16px;font-weight:700;line-height:1.35}
+.hit p{margin-top:5px;font-size:14px;color:var(--tx2);line-height:1.45;overflow-wrap:anywhere}
+.hit mark{background:none;color:var(--cyan);font-weight:800}
+.label{padding:10px 18px;font-size:13px;font-weight:700;color:var(--tx3);border-bottom:1px solid var(--line)}
 .state{padding:44px 20px;text-align:center;color:var(--tx3);font-size:15px}
 .more{display:flex;justify-content:center;padding:14px;border-top:1px solid var(--line)}
 
@@ -113,8 +130,9 @@ footer{border-top:1px solid var(--line);padding:22px 0;font-size:13.5px;color:va
   .nav{gap:12px;height:60px}
   .menu{gap:12px;font-size:14px}
   main{padding:26px 0 44px}
-  .row{grid-template-columns:minmax(0,1fr) 44px;padding:13px 14px;gap:10px}
-  .when{display:none}
+  .row{grid-template-columns:minmax(0,1fr) 44px;padding:13px 14px;gap:4px 10px}
+  /* The day and time stay on a phone too, on a line of their own (owner 07.11). */
+  .when{grid-column:1/-1;text-align:left;white-space:normal}
   .post{padding:14px}
 }
 </style>
@@ -138,7 +156,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;font-size:13.5px;color:va
         <h1 data-i="forum">Форум</h1>
         <p class="sub" data-i="sub">Вопросы, идеи и опыт участников LVS.</p>
       </div>
-      <a class="btn pri" href="https://t.me/LVSNetworkBot" target="_blank" rel="noopener" data-i="write">Новая тема</a>
+      <a class="btn pri" href="https://t.me/LVSNetworkBot" target="_blank" rel="noopener" data-i="write">Писать — в приложении LVS</a>
     </div>
     <div class="cols">
       <div id="view"></div>
@@ -176,7 +194,7 @@ footer{border-top:1px solid var(--line);padding:22px 0;font-size:13.5px;color:va
 <script>
 const API='https://api.lvs.network/auth/forum/';
 const PAGE=50;
-const EN={home:'Home',forum:'Forum',sub:'Questions, ideas and experience from LVS members.',write:'New topic',
+const EN={home:'Home',forum:'Forum',sub:'Questions, ideas and experience from LVS members.',write:'Write — in the LVS app',
 how:'How to write',howt:'Anyone can read. Only LVS members can write, start topics and discuss: sign in through Telegram or download the app for phone or PC.',
 tg:'Open in Telegram',dl:'Download the app',ask:'Ask the administration',
 askt:'A question or complaint can go straight to the administration: in the app, Help → Write to the administration. The answer arrives there.',
@@ -186,11 +204,13 @@ const WORDS={
 ru:{all:'Все',general:'Общее',questions:'Вопросы',tasks:'Задания',ideas:'Идеи',loading:'Загрузка…',
 failed:'Форум сейчас недоступен. Попробуйте позже.',none:'Тем пока нет. Первую можно создать в приложении.',more:'Показать ещё',
 back:'Все темы',closed:'закрыта',closedNote:'Тема закрыта, новые ответы не принимаются.',replyNote:'Писать могут только участники LVS: через Telegram или приложение.',
-reply:'Ответить',staff:'Администрация LVS',missing:'Такой темы нет.',now:'только что',min:' мин назад',hour:' ч назад',day:' дн назад'},
+reply:'Ответить в приложении',staff:'Администрация LVS',missing:'Такой темы нет.',now:'только что',min:' мин назад',hour:' ч назад',day:' дн назад',
+created:'Создана',subs:'Подписчики',find:'Поиск по форуму',nothing:'Ничего не найдено',alike:'Похожие темы'},
 en:{all:'All',general:'General',questions:'Questions',tasks:'Tasks',ideas:'Ideas',loading:'Loading…',
 failed:'The forum is unavailable right now. Please try later.',none:'No topics yet. The first one can be created in the app.',more:'Show more',
 back:'All topics',closed:'closed',closedNote:'This topic is closed to new replies.',replyNote:'Only LVS members can write: through Telegram or the app.',
-reply:'Reply',staff:'LVS Administration',missing:'This topic does not exist.',now:'just now',min:' min ago',hour:' h ago',day:' d ago'}};
+reply:'Reply in the app',staff:'LVS Administration',missing:'This topic does not exist.',now:'just now',min:' min ago',hour:' h ago',day:' d ago',
+created:'Created',subs:'Subscribers',find:'Search the forum',nothing:'Nothing found',alike:'Similar topics'}};
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const RU={};document.querySelectorAll('[data-i]').forEach(e=>{if(!(e.dataset.i in RU))RU[e.dataset.i]=e.textContent});
 const asked=(location.search.match(/[?&]lang=(ru|en)/)||[])[1];
@@ -215,6 +235,14 @@ function ago(sec){
   if(d<86400*30)return Math.floor(d/86400)+w('day');
   return new Date(sec*1000).toLocaleDateString(lang==='en'?'en-GB':'ru-RU');
 }
+function stamp(sec,two){
+  const d=new Date(sec*1000),loc=lang==='en'?'en-GB':'ru-RU';
+  const day=d.toLocaleDateString(loc,{day:'2-digit',month:'2-digit',year:'numeric'});
+  const time=d.toLocaleTimeString(loc,{hour:'2-digit',minute:'2-digit'});
+  return day+(two?'\n':' ')+time;
+}
+const PEOPLE='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>';
+function subs(n){const s=el('span','subs');s.title=w('subs');s.innerHTML=PEOPLE;s.append(document.createTextNode(String(n||0)));return s}
 function cat(key){const c=el('span','cat '+key);c.append(el('i'),document.createTextNode(w(key)||key));return c}
 const PIN='<svg class="pin" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9V4h1a1 1 0 0 0 0-2H7a1 1 0 0 0 0 2h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/></svg>';
 async function get(path){
@@ -224,38 +252,73 @@ async function get(path){
   return r.json();
 }
 
-let chosen=null,topics=[];
-function tabs(){
-  const box=el('div','tabs');
-  [null,'general','questions','tasks','ideas'].forEach(key=>{
-    const t=el('button','tab'+(chosen===key?' on':''),key?w(key):w('all'));
-    t.type='button';
-    t.onclick=()=>{chosen=key;topics=[];showList()};
-    box.append(t);
-  });
+let chosen=null,topics=[],words='',pause=null,searchAsk=0;
+const LENS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+function searchLine(){
+  const box=el('div','search');box.innerHTML=LENS;
+  const input=el('input');input.type='search';input.placeholder=w('find');input.value=words;input.maxLength=100;
+  input.setAttribute('aria-label',w('find'));
+  const clear=el('button','','✕');clear.type='button';clear.setAttribute('aria-label','✕');clear.hidden=!words;
+  clear.onclick=()=>{words='';searchAsk++;showList()};
+  input.oninput=()=>{
+    clearTimeout(pause);clear.hidden=!input.value;
+    const q=input.value.trim();
+    if(q.length<3){if(words){words='';searchAsk++;results(null)}return}
+    pause=setTimeout(()=>{words=q;find(q)},300);
+  };
+  box.append(input,clear);
   return box;
+}
+function marked(text,q){
+  const out=el('span'),low=text.toLowerCase(),ql=q.toLowerCase();let at=0;
+  for(let i=low.indexOf(ql);q&&i>=0;i=low.indexOf(ql,i+ql.length)){
+    out.append(document.createTextNode(text.slice(at,i)),el('mark','',text.slice(i,i+ql.length)));at=i+ql.length;
+  }
+  out.append(document.createTextNode(text.slice(at)));return out;
+}
+async function find(q){
+  const ask=++searchAsk;
+  let body;
+  try{body=await get('search?q='+encodeURIComponent(q))}catch(e){body=undefined}
+  if(ask!==searchAsk)return;
+  results(body===undefined?'failed':body);
+}
+function results(body){
+  const panel=view.querySelector('.panel');if(!panel)return;
+  panel.replaceChildren();
+  if(body===null){topics.forEach(t=>panel.append(row(t)));return}
+  if(body==='failed'){panel.append(el('div','state',w('failed')));return}
+  if(!body||!body.topics.length){panel.append(el('div','state',w('nothing')));return}
+  if(body.similar)panel.append(el('div','label',w('alike')));
+  body.topics.forEach(h=>{
+    const a=el('a','hit');a.href='#t'+h.topic;
+    const b=el('b');b.append(body.similar?document.createTextNode(h.title):marked(h.title,words));a.append(b);
+    if(h.snippet){const p=el('p');p.append(marked(h.snippet,words));a.append(p)}
+    panel.append(a);
+  });
 }
 function row(t){
   const a=el('a','row');a.href='#t'+t.topic;
   const main=el('div');main.append(el('b','',t.title));
   const meta=el('div','meta');
   if(t.pinned){const s=el('span');s.innerHTML=PIN;s.style.display='inline-flex';meta.append(s)}
-  meta.append(cat(t.category),el('span','',t.staff?w('staff'):t.author));
+  meta.append(cat(t.category),el('span','',t.staff?w('staff'):t.author),subs(t.followers));
   if(t.closed)meta.append(el('span','flag',w('closed')));
   main.append(meta);
   const count=Math.max(0,t.posts-1);const n=el('div','num');n.append(el('strong','',String(count)),document.createTextNode(repliesWord(count)));
-  a.append(main,n,el('div','when',ago(t.last_post_at)));
+  a.append(main,n,el('div','when',stamp(t.last_post_at,true)));
   return a;
 }
 async function showList(){
   document.getElementById('listHead').style.display='';
-  view.replaceChildren(tabs());
+  view.replaceChildren(searchLine());
   const panel=el('div','panel');view.append(panel);
   if(!topics.length)panel.append(el('div','state',w('loading')));
   const page=await more();
   panel.replaceChildren();
   if(page===null){panel.append(el('div','state',w('failed')));return}
   if(!topics.length){panel.append(el('div','state',w('none')));return}
+  if(words){find(words);return}
   topics.forEach(t=>panel.append(row(t)));
   if(page>=PAGE){
     const m=el('div','more');const b=el('button','btn sec sm',w('more'));b.type='button';
@@ -286,13 +349,15 @@ async function showTopic(id){
   if(!t){panel.replaceChildren(el('div','state',w('missing')));return}
   const title=el('div');title.style.marginBottom='14px';title.append(el('h2','',t.title));
   const meta=el('div','meta');meta.append(cat(t.category));
+  if(Number.isInteger(t.created_at))meta.append(el('span','',w('created')+' '+stamp(t.created_at)));
+  meta.append(subs(t.followers));
   if(t.closed)meta.append(el('span','flag',w('closed')));
   title.append(meta);
   panel.before(title);
   panel.replaceChildren();
   t.posts.forEach(p=>{
     const post=el('article','post'+(p.staff?' staff':''));
-    const who=el('div','who');who.append(el('b','',p.staff?w('staff'):p.author),el('span','',ago(p.at)));
+    const who=el('div','who');who.append(el('b','',p.staff?w('staff'):p.author),el('span','',stamp(p.at)));
     post.append(who);
     if(p.body)post.append(el('div','text',p.body));
     // A photo the person attached; hidden with the message.
