@@ -3,12 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LVS — задания рядом, оплата за доказанный результат</title>
-<meta name="description" content="Кто-то рядом делает реальное дело, LVS доказывает где и когда, заказчик платит. Android, Windows и Telegram.">
+<title>LVS Network — задания рядом, оплата за доказанный результат</title>
+<meta name="description" id="desc" content="Кто-то рядом делает реальное дело, LVS доказывает где и когда, заказчик платит. Android, Windows и Telegram.">
 <meta property="og:title" content="LVS — Living Value System">
 <meta property="og:description" content="Tasks nearby, paid for proven results. Android, Windows and Telegram.">
 <meta property="og:image" content="https://lvs.network/img/hero-worker.webp">
 <meta property="og:url" content="https://lvs.network/">
+<link rel="alternate" hreflang="ru" href="https://lvs.network/?lang=ru">
+<link rel="alternate" hreflang="en" href="https://lvs.network/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://lvs.network/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"Organization","@id":"https://lvs.network/#org","name":"LVS Network","alternateName":["LVS","Living Value System"],"url":"https://lvs.network/","logo":"https://lvs.network/img/orbit.webp","sameAs":["https://t.me/LVS_official","https://github.com/VOVAN1980/lvs-core","https://devpost.com/software/lvs-living-value-system"]},
+{"@type":"SoftwareApplication","name":"LVS — Living Value System","operatingSystem":"Android, Windows","applicationCategory":"BusinessApplication","url":"https://lvs.network/","description":"Tasks nearby, paid for proven results: someone close by does a real-world task, LVS proves where and when, the requester pays. Android, Windows and a Telegram Mini App.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@id":"https://lvs.network/#org"}}
+]}
+</script>
 <meta name="theme-color" content="#050913">
 <link rel="icon" href="img/orbit.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +593,8 @@ function apply(){
   document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on',b.dataset.lang===lang));
   document.querySelectorAll('[data-lnk]').forEach(a=>a.href='https://app.lvs.network/'+a.dataset.lnk+'.html?lang='+lang);
   document.documentElement.lang=lang;
-  document.title=lang==='en'?'LVS — tasks nearby, paid for proven results':'LVS — задания рядом, оплата за доказанный результат';
+  document.title=lang==='en'?'LVS Network — tasks nearby, paid for proven results':'LVS Network — задания рядом, оплата за доказанный результат';
+  document.getElementById('desc').content=lang==='en'?'Someone close by does a real-world task, LVS proves where and when, the requester pays. Android, Windows and Telegram.':'Кто-то рядом делает реальное дело, LVS доказывает где и когда, заказчик платит. Android, Windows и Telegram.';
 }
 document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{lang=b.dataset.lang;store.set('lvs_lang',lang);apply()});
 const hdr=document.querySelector('header');
